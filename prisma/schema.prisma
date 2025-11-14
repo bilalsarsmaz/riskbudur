@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  nickname      String    @unique
+  fullName      String?
+  bio           String?
+  website       String?
+  profileImage  String?
+  coverImage    String?
+  role          Role      @default(USER)
+  isBanned      Boolean   @default(false)
+  hasBlueTick   Boolean   @default(false)
+  hasOrangeTick Boolean   @default(false)
+  blueTickUntil DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  posts         Post[]
+  likes         Like[]
+  comments      Comment[]
+  quotes        Quote[]
+  followers     Follow[]  @relation("following")
+  following     Follow[]  @relation("followers")
+}
+
+model Post {
+  id          BigInt    @id @default(autoincrement())
+  content     String
+  mediaUrl    String?
+  imageUrl    String?
+  authorId    String
+  isAnonymous Boolean   @default(false)
+  author      User      @relation(fields: [authorId], references: [id])
+  likes       Like[]
+  comments    Comment[]
+  quotes      Quote[]
+  hashtags    Hashtag[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    BigInt
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  authorId    String
+  postId      BigInt
+  isAnonymous Boolean  @default(false)
+  author      User     @relation(fields: [authorId], references: [id])
+  post        Post     @relation(fields: [postId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Quote {
+  id             String   @id @default(cuid())
+  content        String
+  authorId       String
+  quotedPostId   BigInt
+  isAnonymous    Boolean  @default(false)
+  author         User     @relation(fields: [authorId], references: [id])
+  quotedPost     Post     @relation(fields: [quotedPostId], references: [id])
+  createdAt      DateTime @default(now())
+}
+
+model Hashtag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  follower    User     @relation("following", fields: [followerId], references: [id])
+  following   User     @relation("followers", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}

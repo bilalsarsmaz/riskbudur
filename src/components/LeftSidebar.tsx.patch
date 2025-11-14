@@ -1,0 +1,4 @@
+85c85
+<     <div className="bg-white px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]">
+---
+>     <div className="px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]" style={{backgroundColor: '#0a0a0a', border: 'none'}}>
