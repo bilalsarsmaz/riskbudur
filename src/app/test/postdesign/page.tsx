@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   HeartIcon as HeartIconOutline,
   ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftIconOutline,
   ArrowPathIcon as ArrowPathIconOutline,
-  CheckBadgeIcon as CheckBadgeIconOutline
+  CheckBadgeIcon as CheckBadgeIconOutline,
+  EllipsisHorizontalIcon,
+  UserPlusIcon,
+  UserMinusIcon,
+  NoSymbolIcon,
+  ChartBarSquareIcon,
+  CodeBracketSquareIcon,
+  FlagIcon,
+  BookmarkIcon as BookmarkIconOutline,
+  ArrowUpTrayIcon
 } from "@heroicons/react/24/outline";
 import { 
   HeartIcon as HeartIconSolid,
   ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftIconSolid,
   ArrowPathIcon as ArrowPathIconSolid,
-  CheckBadgeIcon
+  CheckBadgeIcon,
+  BookmarkIcon as BookmarkIconSolid
 } from "@heroicons/react/24/solid";
 
 // Post tipi tanımı
@@ -292,6 +302,8 @@ interface PostProps {
   variant?: PostVariant;
   isThreadItem?: boolean;
   isLastThreadItem?: boolean;
+  isThreadParent?: boolean;
+  isThreadReply?: boolean;
 }
 
 // Sayıyı formatlama fonksiyonu (1000 -> 1K)
@@ -305,11 +317,47 @@ const formatNumber = (num: number): string => {
 };
 
 // Post bileşeni
-const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadItem = false }: PostProps) => {
+const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadItem = false, isThreadParent = false, isThreadReply = false }: PostProps) => {
   const [liked, setLiked] = useState(false);
   const [commented, setCommented] = useState(false);
   const [quoted, setQuoted] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current && 
+        !menuRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
+      ) {
+        setShowMenu(false);
+      }
+      if (
+        shareMenuRef.current && 
+        !shareMenuRef.current.contains(event.target as Node) &&
+        !shareButtonRef.current?.contains(event.target as Node)
+      ) {
+        setShowShareMenu(false);
+      }
+    };
+
+    if (showMenu || showShareMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMenu, showShareMenu]);
   
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -317,14 +365,26 @@ const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadIte
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     
     if (diffInSeconds < 60) {
-      return `${diffInSeconds} saniye önce`;
-    } else if (diffInSeconds < 3600) {
-      return `${Math.floor(diffInSeconds / 60)} dakika önce`;
-    } else if (diffInSeconds < 86400) {
-      return `${Math.floor(diffInSeconds / 3600)} saat önce`;
-    } else {
-      return `${Math.floor(diffInSeconds / 86400)} gün önce`;
+      return "şimdi";
     }
+    
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}d`;
+    }
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours}s`;
+    }
+    
+    if (date.getFullYear() === now.getFullYear()) {
+      const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+      return `${date.getDate()} ${months[date.getMonth()]}`;
+    }
+    
+    const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
   
   const handleLike = () => {
@@ -343,6 +403,49 @@ const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadIte
   const handleQuote = () => {
     setQuoted(!quoted);
   };
+
+  const handleFollowToggle = () => {
+    setIsFollowing(!isFollowing);
+    setShowMenu(false);
+  };
+
+  const handleBlock = () => {
+    if (confirm(`@${post.author.nickname} adlı kullanıcıyı engellemek istediğinize emin misiniz?`)) {
+      console.log("Engelle:", post.author.nickname);
+    }
+    setShowMenu(false);
+  };
+
+  const handleViewStats = () => {
+    console.log("Etkileşimleri görüntüle:", post.id);
+    setShowMenu(false);
+  };
+
+  const handlePin = () => {
+    console.log("Gönderiyi yerleştir:", post.id);
+    setShowMenu(false);
+  };
+
+  const handleReport = () => {
+    console.log("Gönderiyi bildir:", post.id);
+    setShowMenu(false);
+  };
+
+  const handleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+    console.log("Bookmark:", post.id, isBookmarked ? "kaldırıldı" : "eklendi");
+  };
+
+  const handleCopyLink = () => {
+    const postUrl = `https://ultraswall.com/status/${post.id}`;
+    navigator.clipboard.writeText(postUrl).then(() => {
+      console.log("Link kopyalandı:", postUrl);
+      alert("Gönderi bağlantısı kopyalandı!");
+    }).catch(err => {
+      console.error("Kopyalama hatası:", err);
+    });
+    setShowShareMenu(false);
+  };
   
   // Farklı varyantlar için stil sınıfları
   const variantClasses: Record<PostVariant, string> = {
@@ -353,45 +456,121 @@ const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadIte
     "thread-item": "bg-white",
   };
   
+  // Thread türüne göre class'lar
+  const threadItemClass = isThreadItem 
+    ? (isThreadParent ? 'thread-item thread-item-parent' : 'thread-item thread-item-reply')
+    : '';
+  
   return (
-    <div className={`border border-gray-200 rounded-none ${isThreadItem ? 'mb-0 p-4 border-b-0' : 'mb-4 p-4'} max-w-[600px] w-full mx-auto ${variantClasses[variant]} ${isThreadItem && isLastThreadItem ? 'border-b' : ''} ${isThreadItem && post.isThreadParent ? '' : ''} relative`}>
+    <div className={`post border border-gray-200 rounded-none ${isThreadItem ? 'mb-0 p-4 border-b-0' : 'mb-4 p-4'} max-w-[600px] w-full mx-auto ${variantClasses[variant]} ${isThreadItem && isLastThreadItem ? 'border-b' : ''} ${threadItemClass} relative`}>
       {/* Thread çizgisi */}
-      {isThreadItem && !isLastThreadItem && !post.isThreadParent && (
-        <div className="absolute left-9 top-0 bottom-0 w-0.5 bg-orange-400 h-full" style={{zIndex: 1}}></div>
+      {isThreadItem && !isLastThreadItem && !isThreadParent && (
+        <div className="post-thread-line thread-line absolute left-9 top-0 bottom-0 w-0.5 bg-orange-400 h-full" style={{zIndex: 1}}></div>
       )}
-      {isThreadItem && isLastThreadItem && !post.isThreadParent && (
-        <div className="absolute left-9 top-0 h-10 w-0.5 bg-orange-400" style={{zIndex: 1}}></div>
+      {isThreadItem && isLastThreadItem && !isThreadParent && (
+        <div className="post-thread-line thread-line thread-line-end absolute left-9 top-0 h-10 w-0.5 bg-orange-400" style={{zIndex: 1}}></div>
       )}
-      <div className="flex items-start relative z-10">
+      
+      <div className="post-container flex items-start relative z-10">
         {/* Profil resmi */}
-        <div className="relative">
+        <div className="post-avatar relative">
           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3 relative z-10">
             {post.author.nickname.charAt(0).toUpperCase()}
           </div>
         </div>
         
-        <div className="flex-1">
+        <div className="post-content-wrapper flex-1">
           {/* Kullanıcı bilgisi ve tarih */}
-          <div className="flex items-center mb-1">
-            <span className="font-medium text-gray-900">
-              {post.author.nickname}
-            </span>
-            {post.author.hasBlueTick && (
-              <CheckBadgeIcon className="w-5 h-5 ml-1 text-blue-500" />
-            )}
-            {post.isPopular && (
-              <CheckBadgeIconOutline className="w-5 h-5 ml-1 text-orange-500" />
-            )}
-            <span className="mx-2 text-gray-500">•</span>
-            <span className="text-sm text-gray-500">{formatDate(post.createdAt)}</span>
-            {post.isThreadParent && (
-              <span className="ml-2 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Thread</span>
-            )}
+          <div className="post-header flex items-center justify-between mb-1">
+            <div className="flex items-center">
+              <span className="post-author-name font-medium text-gray-900">
+                {post.author.nickname}
+              </span>
+              {post.author.hasBlueTick && (
+                <CheckBadgeIcon className="post-badge post-badge-blue w-5 h-5 ml-1 text-blue-500" />
+              )}
+              {post.isPopular && (
+                <CheckBadgeIconOutline className="post-badge post-badge-orange w-5 h-5 ml-1 text-orange-500" />
+              )}
+              <span className="post-author-nickname ml-1 text-gray-500">@{post.author.nickname}</span>
+              <span className="post-separator mx-2 text-gray-500">•</span>
+              <span className="post-date text-sm text-gray-500">{formatDate(post.createdAt)}</span>
+              {post.isThreadParent && (
+                <span className="post-thread-badge ml-2 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Thread</span>
+              )}
+            </div>
+            
+            {/* Üç nokta menü butonu */}
+            <div className="relative">
+              <button 
+                ref={buttonRef}
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <EllipsisHorizontalIcon className="w-5 h-5 text-gray-500" />
+              </button>
+              
+              {showMenu && (
+                <div 
+                  ref={menuRef}
+                  className="absolute right-0 mt-2 rounded-lg border border-gray-200 bg-white shadow-lg"
+                  style={{
+                    width: "350px", 
+                    zIndex: 9999
+                  }}
+                >
+                  <button
+                    onClick={handleFollowToggle}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 first:rounded-t-lg flex items-center text-gray-900"
+                  >
+                    {isFollowing ? (
+                      <>
+                        <UserMinusIcon className="w-5 h-5 mr-3 text-gray-500" />
+                        @{post.author.nickname} adlı kişinin takibini bırak
+                      </>
+                    ) : (
+                      <>
+                        <UserPlusIcon className="w-5 h-5 mr-3 text-gray-500" />
+                        @{post.author.nickname} adlı kişiyi takip et
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleBlock}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 text-red-500 flex items-center"
+                  >
+                    <NoSymbolIcon className="w-5 h-5 mr-3" />
+                    @{post.author.nickname} adlı kişiyi engelle
+                  </button>
+                  <button
+                    onClick={handleViewStats}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center text-gray-900"
+                  >
+                    <ChartBarSquareIcon className="w-5 h-5 mr-3 text-gray-500" />
+                    Gönderi etkileşimlerini görüntüle
+                  </button>
+                  <button
+                    onClick={handlePin}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center text-gray-900"
+                  >
+                    <CodeBracketSquareIcon className="w-5 h-5 mr-3 text-gray-500" />
+                    Gönderiyi yerleştir
+                  </button>
+                  <button
+                    onClick={handleReport}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 last:rounded-b-lg text-red-500 flex items-center"
+                  >
+                    <FlagIcon className="w-5 h-5 mr-3" />
+                    Gönderiyi bildir
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Yanıtlanan post referansı */}
           {post.replyToPost && (
-            <div className="mb-2 text-sm text-gray-500">
+            <div className="post-reply mb-2 text-sm text-gray-500">
               <span className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -402,13 +581,13 @@ const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadIte
           )}
           
           {/* Post içeriği */}
-          <div className="text-gray-800 mb-3">
+          <div className="post-content text-gray-800 mb-3">
             {post.content}
           </div>
           
           {/* Post resmi veya GIF'i */}
           {(post.mediaUrl || post.imageUrl) && (
-            <div className="mb-3 rounded-lg overflow-hidden">
+            <div className="post-media mb-3 rounded-lg overflow-hidden">
               <img 
                 src={post.imageUrl || post.mediaUrl} 
                 alt="Post görseli" 
@@ -419,33 +598,33 @@ const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadIte
           
           {/* Alıntılanan post */}
           {post.quotedPost && (
-            <div className="border border-gray-200 rounded-lg p-3 mb-3">
+            <div className="post-quote border border-gray-200 rounded-lg p-3 mb-3">
               <div className="flex items-start">
                 {/* Profil resmi */}
-                <div>
+                <div className="post-quote-avatar">
                   <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-2">
                     {post.quotedPost.author.nickname.charAt(0).toUpperCase()}
                   </div>
                 </div>
                 
-                <div className="flex-1">
+                <div className="post-quote-content flex-1">
                   {/* Kullanıcı bilgisi ve tarih */}
-                  <div className="flex items-center mb-1">
-                    <span className="font-medium text-gray-900 text-sm">
+                  <div className="post-quote-header flex items-center mb-1">
+                    <span className="post-quote-author font-medium text-gray-900 text-sm">
                       {post.quotedPost.author.nickname}
                     </span>
                     {post.quotedPost.author.hasBlueTick && (
-                      <CheckBadgeIcon className="w-5 h-5 ml-1 text-blue-500" />
+                      <CheckBadgeIcon className="post-quote-badge post-quote-badge-blue w-5 h-5 ml-1 text-blue-500" />
                     )}
                     {post.quotedPost.isPopular && (
-                      <CheckBadgeIconOutline className="w-5 h-5 ml-1 text-orange-500" />
+                      <CheckBadgeIconOutline className="post-quote-badge post-quote-badge-orange w-5 h-5 ml-1 text-orange-500" />
                     )}
-                    <span className="mx-2 text-gray-500 text-xs">•</span>
-                    <span className="text-xs text-gray-500">{formatDate(post.quotedPost.createdAt)}</span>
+                    <span className="post-quote-separator mx-2 text-gray-500 text-xs">•</span>
+                    <span className="post-quote-date text-xs text-gray-500">{formatDate(post.quotedPost.createdAt)}</span>
                   </div>
                   
                   {/* Post içeriği */}
-                  <div className="text-gray-800 text-sm line-clamp-3">
+                  <div className="post-quote-text text-gray-800 text-sm line-clamp-3">
                     {post.quotedPost.content}
                   </div>
                 </div>
@@ -454,45 +633,92 @@ const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadIte
           )}
           
           {/* Etkileşim butonları */}
-          <div className="flex items-center text-gray-500 text-sm">
+          <div className="post-actions flex items-center text-gray-500 text-sm">
             {/* Beğeni butonu */}
             <button 
               onClick={handleLike} 
-              className={`flex items-center mr-4 ${liked ? 'text-red-500' : 'hover:text-red-500'}`}
+              className={`post-action post-action-like flex items-center mr-4 ${liked ? 'text-red-500' : 'hover:text-red-500'}`}
             >
               {liked ? (
                 <HeartIconSolid className="w-5 h-5 mr-1" />
               ) : (
                 <HeartIconOutline className="w-5 h-5 mr-1" />
               )}
-              <span>{post.isPopular ? formatNumber(likeCount) : likeCount}</span>
+              <span className="post-action-count">{post.isPopular ? formatNumber(likeCount) : likeCount}</span>
             </button>
             
             {/* Yorum butonu */}
             <button 
               onClick={handleComment}
-              className={`flex items-center mr-4 ${commented ? 'text-blue-500' : 'hover:text-blue-500'}`}
+              className={`post-action post-action-comment flex items-center mr-4 ${commented ? 'text-blue-500' : 'hover:text-blue-500'}`}
             >
               {commented ? (
                 <ChatBubbleOvalLeftIconSolid className="w-5 h-5 mr-1" />
               ) : (
                 <ChatBubbleOvalLeftIconOutline className="w-5 h-5 mr-1" />
               )}
-              <span>{post.isPopular ? formatNumber(post.commentCount) : post.commentCount}</span>
+              <span className="post-action-count">{post.isPopular ? formatNumber(post.commentCount) : post.commentCount}</span>
             </button>
             
             {/* Alıntıla butonu */}
             <button 
               onClick={handleQuote}
-              className={`flex items-center ${quoted ? 'text-green-500' : 'hover:text-green-500'}`}
+              className={`post-action post-action-quote flex items-center mr-4 ${quoted ? 'text-green-500' : 'hover:text-green-500'}`}
             >
               {quoted ? (
                 <ArrowPathIconSolid className="w-5 h-5 mr-1" />
               ) : (
                 <ArrowPathIconOutline className="w-5 h-5 mr-1" />
               )}
-              <span>{post.isPopular ? formatNumber(post.quoteCount) : post.quoteCount}</span>
+              <span className="post-action-count">{post.isPopular ? formatNumber(post.quoteCount) : post.quoteCount}</span>
             </button>
+
+            {/* Bookmark ve Paylaşım butonları */}
+            <div className="ml-auto flex items-center gap-2">
+              {/* Bookmark butonu */}
+              <button 
+                onClick={handleBookmark}
+                className={`post-action post-action-bookmark p-1 rounded-full transition-colors ${isBookmarked ? 'text-blue-500' : 'hover:text-blue-500'}`}
+              >
+                {isBookmarked ? (
+                  <BookmarkIconSolid className="w-5 h-5" />
+                ) : (
+                  <BookmarkIconOutline className="w-5 h-5" />
+                )}
+              </button>
+
+              {/* Paylaşım butonu */}
+              <div className="relative">
+                <button 
+                  ref={shareButtonRef}
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  className="post-action post-action-share p-1 rounded-full transition-colors hover:text-gray-700"
+                >
+                  <ArrowUpTrayIcon className="w-5 h-5" />
+                </button>
+                
+                {showShareMenu && (
+                  <div 
+                    ref={shareMenuRef}
+                    className="absolute right-0 bottom-full mb-2 rounded-lg border border-gray-200 bg-white shadow-lg"
+                    style={{
+                      width: "200px", 
+                      zIndex: 9999
+                    }}
+                  >
+                    <button
+                      onClick={handleCopyLink}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg flex items-center text-gray-900"
+                    >
+                      <svg className="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Gönderi bağlantısını kopyala
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -501,18 +727,30 @@ const Post = ({ post, variant = "default", isThreadItem = false, isLastThreadIte
 };
 
 // Thread bileşeni
-const Thread = ({ posts }: { posts: PostType[] }) => {
+const Thread = ({ posts, isMultiUser = false }: { posts: PostType[]; isMultiUser?: boolean }) => {
+  // Thread'in tek kullanıcı mı çoklu kullanıcı mı olduğunu kontrol et
+  const firstAuthorId = posts[0]?.author.id;
+  const hasMultipleAuthors = posts.some(post => post.author.id !== firstAuthorId);
+  const threadType = hasMultipleAuthors || isMultiUser ? 'thread-multi-user' : 'thread-single-user';
+  
   return (
-    <div className="max-w-[600px] mx-auto overflow-hidden">
-      {posts.map((post, index) => (
-        <Post 
-          key={post.id} 
-          post={post} 
-          variant="thread-item" 
-          isThreadItem={true}
-          isLastThreadItem={index === posts.length - 1}
-        />
-      ))}
+    <div className={`thread ${threadType} max-w-[600px] mx-auto overflow-hidden`}>
+      {posts.map((post, index) => {
+        const isParent = post.isThreadParent || index === 0;
+        const isReply = !isParent;
+        
+        return (
+          <Post 
+            key={post.id} 
+            post={post} 
+            variant="thread-item" 
+            isThreadItem={true}
+            isLastThreadItem={index === posts.length - 1}
+            isThreadParent={isParent}
+            isThreadReply={isReply}
+          />
+        );
+      })}
     </div>
   );
 };
@@ -560,15 +798,15 @@ export default function PostDesignPage() {
       </div>
       
       <div className="mb-8 flex flex-col items-center">
-        <h2 className="text-xl font-semibold mb-4 text-center">Thread</h2>
+        <h2 className="text-xl font-semibold mb-4 text-center">Thread (Tek Kullanıcı)</h2>
         <p className="mb-2 text-gray-600 text-center">Aynı kişi tarafından oluşturulan thread örneği:</p>
-        <Thread posts={threadPosts} />
+        <Thread posts={threadPosts} isMultiUser={false} />
       </div>
       
       <div className="mb-8 flex flex-col items-center">
         <h2 className="text-xl font-semibold mb-4 text-center">Thread (Birden Fazla Kişi)</h2>
         <p className="mb-2 text-gray-600 text-center">Birden fazla kişinin katıldığı tartışma thread örneği:</p>
-        <Thread posts={multiUserThreadPosts} />
+        <Thread posts={multiUserThreadPosts} isMultiUser={true} />
       </div>
       
       <div className="mb-8 flex flex-col items-center">
@@ -583,4 +821,4 @@ export default function PostDesignPage() {
       </div>
     </div>
   );
-} 
+}

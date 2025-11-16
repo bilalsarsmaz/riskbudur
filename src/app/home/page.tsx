@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
@@ -10,22 +10,16 @@ import Announcements from "@/components/Announcements";
 import { Post } from "@/components/PostList";
 import { fetchApi } from "@/lib/api";
 
-interface PostsResponse {
-  posts: Post[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
 export default function HomePage() {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAnnouncementVisible, setIsAnnouncementVisible] = useState(true);
+  const observerTarget = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
 
   useEffect(() => {
     // Kullanıcı girişi kontrolü
@@ -37,29 +31,77 @@ export default function HomePage() {
     }
     
     setIsAuthenticated(true);
+  }, [router]);
 
-    // API'den postları çek
-    const fetchPosts = async () => {
-      try {
-        const data = await fetchApi("/posts") as PostsResponse;
-        setPosts(data.posts || []);
-      } catch (error) {
-        console.error("Postlar yüklenirken hata oluştu:", error);
-        
-        // Eğer 401 hatası alınırsa (token geçersiz), çıkış yap
-        if (error instanceof Error && error.message.includes("401")) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          router.push("/");
-          return;
+  const loadPosts = useCallback(async (pageNum: number, reset: boolean = false) => {
+    if (loadingRef.current) return;
+    
+    loadingRef.current = true;
+    setLoading(true);
+
+    try {
+      const data = await fetchApi(`/posts?skip=${pageNum * 20}&take=20`) as Post[];
+      
+      // API response formatını kontrol et
+      const newPosts = Array.isArray(data) ? data : [];
+      
+      if (newPosts.length === 0) {
+        setHasMore(false);
+      } else {
+        if (reset || pageNum === 0) {
+          setPosts(newPosts);
+        } else {
+          setPosts(prev => [...prev, ...newPosts]);
         }
-      } finally {
-        setLoading(false);
+        setPage(pageNum);
+      }
+    } catch (error) {
+      console.error("Postlar yüklenirken hata oluştu:", error);
+      
+      // Eğer 401 hatası alınırsa (token geçersiz), çıkış yap
+      if (error instanceof Error && error.message.includes("401")) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        router.push("/");
+        return;
+      }
+      
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+      loadingRef.current = false;
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadPosts(0, true);
+    }
+  }, [isAuthenticated, loadPosts]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingRef.current) {
+          loadPosts(page + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
       }
     };
-
-    fetchPosts();
-  }, [router]);
+  }, [hasMore, loading, page, loadPosts, isAuthenticated]);
 
   // Duyuru görünürlüğü değiştiğinde çağrılacak fonksiyon
   const handleAnnouncementVisibilityChange = (visible: boolean) => {
@@ -103,13 +145,33 @@ export default function HomePage() {
 
             {/* Post Listesi */}
             <div>
-              {loading ? (
+              {loading && posts.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                   <p className="mt-2 text-gray-500">Postlar yükleniyor...</p>
                 </div>
               ) : (
-                <PostList posts={posts} />
+                <>
+                  <PostList posts={posts} />
+                  
+                  {/* Sonsuz scroll için gözlemci */}
+                  {hasMore && (
+                    <div ref={observerTarget} className="flex justify-center py-4">
+                      {loading && (
+                        <div className="text-center">
+                          <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                          <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {!hasMore && posts.length > 0 && (
+                    <div className="flex justify-center py-4 text-gray-500 text-sm">
+                      Tüm postlar yüklendi
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -124,4 +186,4 @@ export default function HomePage() {
       </div>
     </div>
   );
-} 
+}
