@@ -437,7 +437,7 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
 
   return (
     <>
-      <div className={`post ${!isFirst ? 'border-t border-[#2a2a2a]' : ''} p-4 relative`} style={{zIndex: showMenu ? 9999 : 'auto'}}>
+      <div className="post p-4 relative border-b border-[#2a2a2a]" style={{zIndex: showMenu ? 9999 : 'auto'}}>
         <div className="post-container flex items-start relative z-10">
           <div className="post-avatar relative">
             {isAnonymous ? (

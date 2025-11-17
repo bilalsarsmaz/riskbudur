@@ -101,7 +101,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
             <Link href="/privacy" className="hover:underline">Gizlilik</Link>
             <Link href="/contact" className="hover:underline">İletişim</Link>
           </div>
-          <p>© 2023 Nown. Tüm hakları saklıdır.</p>
+          <p>© 2025 Ultraswall.com | Tüm hakları saklıdır.</p>
         </div>
       </div>
     </div>

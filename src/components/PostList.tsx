@@ -39,7 +39,7 @@ export default function PostList({ posts }: PostListProps) {
   }
 
   return (
-    <div className="border border-[#2a2a2a] rounded-b-lg bg-white">
+    <div className="rounded-b-lg bg-white">
       {posts.map((post, index) => (
         <PostItem key={post.id} post={post} isFirst={index === 0} />
       ))}

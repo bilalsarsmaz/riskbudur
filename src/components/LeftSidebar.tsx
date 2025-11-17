@@ -90,9 +90,9 @@ export default function LeftSidebar() {
   }
 
   return (
-    <div className="px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]" style={{ backgroundColor: '#0a0a0a' }}>
-      {/* Logo */}
-      <div className="mb-4 px-2">
+    <div className="px-2 sm:px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]" style={{ backgroundColor: '#0a0a0a' }}>
+      {/* Logo - Mobilde gizli, büyük ekranda görünür */}
+      <div className="mb-4 px-2 hidden lg:block">
         <Link href="/home" className="inline-block">
           <div className="text-2xl font-bold font-montserrat" style={{ color: 'oklch(0.71 0.24 43.55)' }}>
             ultraswall
@@ -110,19 +110,19 @@ export default function LeftSidebar() {
               <li key={item.id}>
                 <Link 
                   href={item.href} 
-                  className="flex items-center p-2 hover:bg-gray-800 rounded-lg"
+                  className="flex items-center justify-center lg:justify-start p-2 hover:bg-gray-800 rounded-lg"
                   style={{ color: '#d9dadd' }}
                   onClick={() => {
                     setActiveMenu(item.id);
                   }}
                 >
                   <Icon 
-                    className={`h-6 w-6 mr-3`}
+                    className={`h-6 w-6 lg:mr-3`}
                     style={{ color: isActive ? 'oklch(0.71 0.24 43.55)' : '#d9dadd' }}
                   />
-                  <span className={isActive ? 'font-bold' : ''}>{item.label}</span>
+                  <span className={`hidden lg:inline ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
                   {item.count && (
-                    <span className="ml-auto text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" style={{ backgroundColor: 'oklch(0.71 0.24 43.55)' }}>
+                    <span className="hidden lg:flex ml-auto text-white rounded-full w-5 h-5 items-center justify-center text-xs" style={{ backgroundColor: 'oklch(0.71 0.24 43.55)' }}>
                       {item.count}
                     </span>
                   )}
@@ -133,25 +133,25 @@ export default function LeftSidebar() {
         </ul>
       </nav>
       
-      {/* Kullanıcı profil menüsü */}
+      {/* Kullanıcı profil menüsü - Mobilde sadece avatar, büyük ekranda tam bilgi */}
       <div className="mt-auto relative">
         <div 
-          className="flex items-center p-2 rounded-lg hover:bg-gray-800 cursor-pointer"
+          className="flex items-center justify-center lg:justify-start p-2 rounded-lg hover:bg-gray-800 cursor-pointer"
           onClick={handleUserMenuToggle}
         >
           {userInfo.profileImage ? (
             <img
               src={userInfo.profileImage}
               alt={userInfo.nickname}
-              className="w-10 h-10 rounded-full object-cover mr-3"
+              className="w-10 h-10 rounded-full object-cover lg:mr-3"
               style={{ border: '0.5px solid #2a2a2a' }}
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3" style={{ border: '0.5px solid #2a2a2a', color: '#d9dadd' }}>
+            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center lg:mr-3" style={{ border: '0.5px solid #2a2a2a', color: '#d9dadd' }}>
               {userInfo.nickname?.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="flex-1 flex flex-col">
+          <div className="hidden lg:flex flex-1 flex-col">
             <div className="flex items-center text-[15px] font-bold" style={{ color: '#d9dadd' }}>
               {userInfo.fullName || userInfo.nickname}
               {userInfo.hasBlueTick && (
@@ -162,12 +162,12 @@ export default function LeftSidebar() {
               @{userInfo.nickname}
             </div>
           </div>
-          <EllipsisHorizontalIcon className="w-5 h-5" style={{ color: '#6e767d' }} />
+          <EllipsisHorizontalIcon className="hidden lg:block w-5 h-5" style={{ color: '#6e767d' }} />
         </div>
         
         {/* Açılır menü */}
         {showUserMenu && (
-          <div className="absolute bottom-full left-0 mb-2 w-full rounded-lg shadow-lg overflow-hidden z-10" style={{ backgroundColor: '#0a0a0a', border: '1px solid #2a2a2a' }}>
+          <div className="absolute bottom-full left-0 mb-2 w-full lg:w-auto min-w-[200px] rounded-lg shadow-lg overflow-hidden z-10" style={{ backgroundColor: '#0a0a0a', border: '1px solid #2a2a2a' }}>
             <div className="p-2">
               <button 
                 className="flex items-center w-full p-2 hover:bg-gray-800 rounded-lg"

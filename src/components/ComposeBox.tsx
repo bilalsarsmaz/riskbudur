@@ -167,7 +167,7 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
   };
   
   return (
-    <div className="bg-white border-t border-l border-r border-gray-200 rounded-t-lg p-4">
+    <div className="composebox bg-white p-4 border-t border-b border-[#2a2a2a] w-full lg:w-[598px]">
       <form onSubmit={handleSubmit} className="relative">
         <div className="mb-3">
           <textarea
