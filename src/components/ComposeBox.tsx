@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Post } from "./PostList";
 import { postApi } from "@/lib/api";
-import { PhotoIcon, GifIcon, FaceSmileIcon } from "@heroicons/react/24/outline";
+import { IconPhoto, IconGif, IconMoodSmile } from "@tabler/icons-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import GifPicker, { TenorImage } from 'gif-picker-react';
 
@@ -167,7 +167,7 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
   };
   
   return (
-    <div className="composebox bg-white p-4 border-t border-b border-[#2a2a2a] w-full lg:w-[598px]">
+    <div className="composebox bg-black text-white p-4 border-t border-b border-[#222222] w-full lg:w-[598px]">
       <form onSubmit={handleSubmit} className="relative">
         <div className="mb-3">
           <textarea
@@ -215,8 +215,8 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
         
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <label htmlFor="photo-upload" className="cursor-pointer hover:opacity-80" style={{color: 'oklch(0.71 0.24 43.55)'}}>
-              <PhotoIcon className="h-5 w-5" />
+            <label htmlFor="photo-upload" className="cursor-pointer hover:opacity-80" style={{color: '#1DCD9F'}}>
+              <IconPhoto className="h-5 w-5" />
               <span className="sr-only">Fotoğraf ekle</span>
               <input
                 id="photo-upload"
@@ -231,24 +231,24 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
             
             <button 
               type="button" 
-              className="cursor-pointer hover:opacity-80 ml-3" style={{color: 'oklch(0.71 0.24 43.55)'}}
+              className="cursor-pointer hover:opacity-80 ml-3" style={{color: '#1DCD9F'}}
               onClick={toggleGifPicker}
               data-gif-button
               aria-label="GIF ekle"
               ref={gifButtonRef}
             >
-              <GifIcon className="h-5 w-5" />
+              <IconGif className="h-5 w-5" />
             </button>
             
             <button 
               type="button" 
-              className="cursor-pointer hover:opacity-80 ml-3" style={{color: 'oklch(0.71 0.24 43.55)'}}
+              className="cursor-pointer hover:opacity-80 ml-3" style={{color: '#1DCD9F'}}
               onClick={toggleEmojiPicker}
               data-emoji-button
               aria-label="Emoji ekle"
               ref={emojiButtonRef}
             >
-              <FaceSmileIcon className="h-5 w-5" />
+              <IconMoodSmile className="h-5 w-5" />
             </button>
             
             <div className="mx-3 h-6 border-l border-gray-300"></div>
@@ -270,7 +270,7 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
           
           <button
             type="submit"
-            style={{backgroundColor: 'oklch(0.71 0.24 43.55)', color: '#ffffff', border: 'none'}}
+            style={{backgroundColor: '#1DCD9F', color: '#ffffff', border: 'none'}}
             className={`px-4 py-2 rounded-full font-medium ${
               isLoading
                 ? "opacity-50 cursor-not-allowed"

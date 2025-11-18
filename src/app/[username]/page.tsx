@@ -143,7 +143,7 @@ export default function UserProfilePage() {
         </div>
 
         <div className="w-full max-w-[600px]">
-          <div className="border border-[#2a2a2a] rounded-t-lg overflow-hidden" style={{backgroundColor: '#0a0a0a'}}>
+          <div className="border border-[#222222] rounded-t-lg overflow-hidden" style={{backgroundColor: '#0a0a0a'}}>
             {profile.coverImage && (
               <div className="w-full h-48">
                 <img
@@ -172,7 +172,7 @@ export default function UserProfilePage() {
                 
                 <button 
                   onClick={() => isOwnProfile ? setIsEditModalOpen(true) : null}
-                  className="px-4 py-2 rounded-full font-medium border border-[#2a2a2a] hover:bg-gray-800"
+                  className="px-4 py-2 rounded-full font-medium border border-[#222222] hover:bg-gray-800"
                 >
                   {isOwnProfile ? "Profili Düzenle" : "Takip Et"}
                 </button>
@@ -219,7 +219,7 @@ export default function UserProfilePage() {
               </div>
             </div>
 
-            <div className="flex border-t border-[#2a2a2a]">
+            <div className="flex border-t border-[#222222]">
               <button
                 onClick={() => setActiveTab("posts")}
                 className={`flex-1 py-4 text-center font-medium ${
@@ -258,14 +258,14 @@ export default function UserProfilePage() {
               posts.length > 0 ? (
                 <PostList posts={posts} />
               ) : (
-                <div className="p-4 border-x border-b border-[#2a2a2a]" style={{backgroundColor: '#0a0a0a'}}>
+                <div className="p-4 border-x border-b border-[#222222]" style={{backgroundColor: '#0a0a0a'}}>
                   <p style={{color: "#6e767d"}}>Henüz gönderi yok.</p>
                 </div>
               )
             )}
 
             {activeTab === "replies" && (
-              <div className="p-4 border-x border-b border-[#2a2a2a]" style={{backgroundColor: '#0a0a0a'}}>
+              <div className="p-4 border-x border-b border-[#222222]" style={{backgroundColor: '#0a0a0a'}}>
                 <p style={{color: "#6e767d"}}>Henüz yanıt yok.</p>
               </div>
             )}
@@ -274,7 +274,7 @@ export default function UserProfilePage() {
               mediaPosts.length > 0 ? (
                 <PostList posts={mediaPosts} />
               ) : (
-                <div className="p-4 border-x border-b border-[#2a2a2a]" style={{backgroundColor: '#0a0a0a'}}>
+                <div className="p-4 border-x border-b border-[#222222]" style={{backgroundColor: '#0a0a0a'}}>
                   <p style={{color: "#6e767d"}}>Henüz medya paylaşımı yok.</p>
                 </div>
               )

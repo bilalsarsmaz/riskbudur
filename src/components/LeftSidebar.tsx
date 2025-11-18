@@ -2,33 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Cookies from 'js-cookie';
 import { fetchApi } from "@/lib/api";
 import { 
-  HomeIcon,
-  UserIcon,
-  BookmarkIcon,
-  MagnifyingGlassIcon,
-  BellIcon,
-  EnvelopeIcon,
-  ArrowRightStartOnRectangleIcon,
-  EllipsisHorizontalIcon,
-  Cog6ToothIcon
-} from "@heroicons/react/24/outline";
-import { 
-  HomeIcon as HomeIconSolid,
-  MagnifyingGlassIcon as MagnifyingGlassIconSolid,
-  BellIcon as BellIconSolid,
-  EnvelopeIcon as EnvelopeIconSolid,
-  UserIcon as UserIconSolid,
-  BookmarkIcon as BookmarkIconSolid
-} from "@heroicons/react/24/solid";
-import { CheckBadgeIcon } from "@heroicons/react/24/solid";
+  IconHome,
+  IconHomeFilled,
+  IconSearch,
+  IconBell,
+  IconBellFilled,
+  IconMail,
+  IconMailFilled,
+  IconUser,
+  IconUserFilled,
+  IconTargetArrow,
+  IconLogout,
+  IconSettings,
+  IconDots,
+  IconRosetteDiscountCheckFilled
+} from "@tabler/icons-react";
 
 export default function LeftSidebar() {
   const router = useRouter();
-  const [activeMenu, setActiveMenu] = useState("home");
+  const pathname = usePathname();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
   
@@ -50,7 +46,6 @@ export default function LeftSidebar() {
         if (storedUserInfo) {
           setUserInfo(JSON.parse(storedUserInfo));
         } else {
-          // Fallback
           setUserInfo({
             id: "user",
             nickname: "kullanici",
@@ -65,12 +60,56 @@ export default function LeftSidebar() {
   }, []);
   
   const menuItems = [
-    { id: "home", label: "Ana Sayfa", icon: HomeIcon, activeIcon: HomeIconSolid, href: "/home" },
-    { id: "explore", label: "Keşfet", icon: MagnifyingGlassIcon, activeIcon: MagnifyingGlassIconSolid, href: "/explore" },
-    { id: "notifications", label: "Bildirimler", icon: BellIcon, activeIcon: BellIconSolid, href: "/notifications", count: 5 },
-    { id: "messages", label: "Mesajlar", icon: EnvelopeIcon, activeIcon: EnvelopeIconSolid, href: "/messages", count: 2 },
-    { id: "profile", label: "Profilim", icon: UserIcon, activeIcon: UserIconSolid, href: userInfo ? `/${userInfo.nickname}` : "/profile" },
-    { id: "bookmarks", label: "Kaydedilenler", icon: BookmarkIcon, activeIcon: BookmarkIconSolid, href: "/bookmarks" }
+    { 
+      id: "home", 
+      label: "Anasayfa", 
+      icon: IconHome, 
+      iconFilled: IconHomeFilled, 
+      href: "/home",
+      hasFilled: true
+    },
+    { 
+      id: "explore", 
+      label: "Keşfet", 
+      icon: IconSearch, 
+      iconFilled: IconSearch, 
+      href: "/explore",
+      hasFilled: false
+    },
+    { 
+      id: "notifications", 
+      label: "Bildirim", 
+      icon: IconBell, 
+      iconFilled: IconBellFilled, 
+      href: "/notifications", 
+      count: 5,
+      hasFilled: true
+    },
+    { 
+      id: "messages", 
+      label: "Mesajlar", 
+      icon: IconMail, 
+      iconFilled: IconMailFilled, 
+      href: "/messages", 
+      count: 2,
+      hasFilled: true
+    },
+    { 
+      id: "profile", 
+      label: "Profilim", 
+      icon: IconUser, 
+      iconFilled: IconUserFilled, 
+      href: userInfo ? `/${userInfo.nickname}` : "/profile",
+      hasFilled: true
+    },
+    { 
+      id: "bookmarks", 
+      label: "Kaydedilenler", 
+      icon: IconTargetArrow, 
+      iconFilled: IconTargetArrow, 
+      href: "/bookmarks",
+      hasFilled: false
+    }
   ];
 
   const handleUserMenuToggle = () => {
@@ -89,12 +128,23 @@ export default function LeftSidebar() {
     return null;
   }
 
+  const getActiveMenuId = () => {
+    if (pathname === "/home") return "home";
+    if (pathname === "/explore") return "explore";
+    if (pathname === "/notifications") return "notifications";
+    if (pathname === "/messages") return "messages";
+    if (pathname === `/${userInfo.nickname}` || pathname === "/profile") return "profile";
+    if (pathname === "/bookmarks") return "bookmarks";
+    return "";
+  };
+
+  const activeMenuId = getActiveMenuId();
+
   return (
-    <div className="px-2 sm:px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]" style={{ backgroundColor: '#0a0a0a' }}>
-      {/* Logo - Mobilde gizli, büyük ekranda görünür */}
+    <div className="px-2 sm:px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]" style={{ backgroundColor: '#000000' }}>
       <div className="mb-4 px-2 hidden lg:block">
         <Link href="/home" className="inline-block">
-          <div className="text-2xl font-bold font-montserrat" style={{ color: 'oklch(0.71 0.24 43.55)' }}>
+          <div className="text-2xl font-bold font-montserrat" style={{ color: '#1DCD9F' }}>
             ultraswall
           </div>
         </Link>
@@ -103,8 +153,8 @@ export default function LeftSidebar() {
       <nav className="flex-1">
         <ul className="space-y-2 pt-0">
           {menuItems.map(item => {
-            const isActive = activeMenu === item.id;
-            const Icon = isActive ? item.activeIcon : item.icon;
+            const isActive = activeMenuId === item.id;
+            const Icon = (isActive && item.hasFilled) ? item.iconFilled : item.icon;
             
             return (
               <li key={item.id}>
@@ -112,17 +162,14 @@ export default function LeftSidebar() {
                   href={item.href} 
                   className="flex items-center justify-center lg:justify-start p-2 hover:bg-gray-800 rounded-lg"
                   style={{ color: '#d9dadd' }}
-                  onClick={() => {
-                    setActiveMenu(item.id);
-                  }}
                 >
                   <Icon 
-                    className={`h-6 w-6 lg:mr-3`}
-                    style={{ color: isActive ? 'oklch(0.71 0.24 43.55)' : '#d9dadd' }}
+                    className="h-6 w-6 lg:mr-3"
+                    style={{ color: '#d9dadd' }}
                   />
                   <span className={`hidden lg:inline ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
                   {item.count && (
-                    <span className="hidden lg:flex ml-auto text-white rounded-full w-5 h-5 items-center justify-center text-xs" style={{ backgroundColor: 'oklch(0.71 0.24 43.55)' }}>
+                    <span className="hidden lg:flex ml-auto text-white rounded-full w-5 h-5 items-center justify-center text-xs" style={{ backgroundColor: '#1DCD9F' }}>
                       {item.count}
                     </span>
                   )}
@@ -133,7 +180,6 @@ export default function LeftSidebar() {
         </ul>
       </nav>
       
-      {/* Kullanıcı profil menüsü - Mobilde sadece avatar, büyük ekranda tam bilgi */}
       <div className="mt-auto relative">
         <div 
           className="flex items-center justify-center lg:justify-start p-2 rounded-lg hover:bg-gray-800 cursor-pointer"
@@ -144,10 +190,10 @@ export default function LeftSidebar() {
               src={userInfo.profileImage}
               alt={userInfo.nickname}
               className="w-10 h-10 rounded-full object-cover lg:mr-3"
-              style={{ border: '0.5px solid #2a2a2a' }}
+              style={{ border: '0.5px solid #222222' }}
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center lg:mr-3" style={{ border: '0.5px solid #2a2a2a', color: '#d9dadd' }}>
+            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center lg:mr-3" style={{ border: '0.5px solid #222222', color: '#d9dadd' }}>
               {userInfo.nickname?.charAt(0).toUpperCase()}
             </div>
           )}
@@ -155,19 +201,18 @@ export default function LeftSidebar() {
             <div className="flex items-center text-[15px] font-bold" style={{ color: '#d9dadd' }}>
               {userInfo.fullName || userInfo.nickname}
               {userInfo.hasBlueTick && (
-                <CheckBadgeIcon className="w-5 h-5 ml-1 text-blue-500" />
+                <IconRosetteDiscountCheckFilled className="w-5 h-5 ml-1" style={{ color: '#1DCD9F' }} />
               )}
             </div>
             <div className="text-[13px]" style={{ color: '#6e767d' }}>
               @{userInfo.nickname}
             </div>
           </div>
-          <EllipsisHorizontalIcon className="hidden lg:block w-5 h-5" style={{ color: '#6e767d' }} />
+          <IconDots className="hidden lg:block w-5 h-5" style={{ color: '#6e767d' }} />
         </div>
         
-        {/* Açılır menü */}
         {showUserMenu && (
-          <div className="absolute bottom-full left-0 mb-2 w-full lg:w-auto min-w-[200px] rounded-lg shadow-lg overflow-hidden z-10" style={{ backgroundColor: '#0a0a0a', border: '1px solid #2a2a2a' }}>
+          <div className="absolute bottom-full left-0 mb-2 w-full lg:w-auto min-w-[200px] rounded-lg shadow-lg overflow-hidden z-10" style={{ backgroundColor: '#000000', border: '1px solid #222222' }}>
             <div className="p-2">
               <button 
                 className="flex items-center w-full p-2 hover:bg-gray-800 rounded-lg"
@@ -177,7 +222,7 @@ export default function LeftSidebar() {
                   setShowUserMenu(false);
                 }}
               >
-                <Cog6ToothIcon className="h-5 w-5 mr-2" />
+                <IconSettings className="h-5 w-5 mr-2" />
                 Ayarlar
               </button>
               <button 
@@ -185,7 +230,7 @@ export default function LeftSidebar() {
                 style={{ color: '#d9dadd' }}
                 onClick={handleLogout}
               >
-                <ArrowRightStartOnRectangleIcon className="h-5 w-5 mr-2" />
+                <IconLogout className="h-5 w-5 mr-2" />
                 Çıkış Yap
               </button>
             </div>

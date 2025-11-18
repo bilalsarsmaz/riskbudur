@@ -66,7 +66,7 @@ export default function ExplorePage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-center">
             <div className="w-full max-w-[600px]">
-              <div className="border border-[#2a2a2a] rounded-t-lg p-4 mb-0" style={{backgroundColor: '#0a0a0a'}}>
+              <div className="border border-[#222222] rounded-t-lg p-4 mb-0" style={{backgroundColor: '#0a0a0a'}}>
                 <h1 className="text-2xl font-bold" style={{color: '#d9dadd'}}>Keşfet</h1>
                 <p className="text-sm mt-1" style={{color: '#6e767d'}}>Gündemdeki etiketler</p>
               </div>
@@ -76,7 +76,7 @@ export default function ExplorePage() {
                   <div
                     key={hashtag.id}
                     onClick={() => router.push(`/hashtag/${hashtag.name}`)}
-                    className="p-4 border-x border-b border-[#2a2a2a] hover:bg-gray-800 cursor-pointer transition-colors"
+                    className="p-4 border-x border-b border-[#222222] hover:bg-gray-800 cursor-pointer transition-colors"
                   >
                     <div className="flex items-start">
                       <div className="flex-shrink-0">

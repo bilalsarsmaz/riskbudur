@@ -40,30 +40,19 @@ export async function GET(req: NextRequest) {
           select: {
             likes: true,
             comments: true,
+            quotes: true,
           },
         },
-        quotes: {
-          include: {
-            quotedPost: {
-              include: {
-                author: {
-                  select: {
-                    id: true,
-                    nickname: true,
-                    fullName: true,
-                    profileImage: true,
-                    hasBlueTick: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+
       },
     });
 
     // Kullanıcının beğendiği postları ayrı sorgu ile al
     let likedPostIds: string[] = [];
+    let commentedPostIds: string[] = [];
+    let quotedPostIds: string[] = [];
+    let bookmarkedPostIds: string[] = [];
+    
     if (userId) {
       try {
         const userLikes = await prisma.like.findMany({
@@ -82,11 +71,91 @@ export async function GET(req: NextRequest) {
         console.error("Likes fetch error:", likeError);
         // Likes hatası olsa bile devam et
       }
+      
+      try {
+        const userComments = await prisma.comment.findMany({
+          where: {
+            authorId: userId,
+            postId: {
+              in: posts.map(p => p.id.toString()),
+            },
+          },
+          select: {
+            postId: true,
+          },
+        });
+        commentedPostIds = userComments.map(comment => comment.postId.toString());
+      } catch (commentError) {
+        console.error("Comments fetch error:", commentError);
+        // Comments hatası olsa bile devam et
+      }
+      
+      try {
+        const userQuotes = await prisma.quote.findMany({
+          where: {
+            authorId: userId,
+            quotedPostId: {
+              in: posts.map(p => p.id.toString()),
+            },
+          },
+          select: {
+            quotedPostId: true,
+          },
+        });
+        quotedPostIds = userQuotes.map(quote => quote.quotedPostId.toString());
+      } catch (quoteError) {
+        console.error("Quotes fetch error:", quoteError);
+        // Quotes hatası olsa bile devam et
+      }
+      
+      try {
+        const userBookmarks = await prisma.bookmark.findMany({
+          where: {
+            userId: userId,
+            postId: {
+              in: posts.map(p => p.id.toString()),
+            },
+          },
+          select: {
+            postId: true,
+          },
+        });
+        bookmarkedPostIds = userBookmarks.map(bookmark => bookmark.postId.toString());
+      } catch (bookmarkError) {
+        console.error("Bookmarks fetch error:", bookmarkError);
+        // Bookmarks hatası olsa bile devam et
+      }
     }
 
-    const formattedPosts = posts.map((post) => {
-      // quotes array'inden ilk quote'u al (eğer varsa)
-      const quote = post.quotes && post.quotes.length > 0 ? post.quotes[0] : null;
+    // Her post için alıntı bilgisini çek
+    const formattedPosts = await Promise.all(posts.map(async (post) => {
+      // Bu post'un alıntı yaptığı postu bul (Quote tablosundan)
+      const quote = await prisma.quote.findFirst({
+        where: {
+          authorId: post.authorId,
+          content: post.content,
+          createdAt: {
+            gte: new Date(post.createdAt.getTime() - 1000), // 1 saniye tolerans
+            lte: new Date(post.createdAt.getTime() + 1000),
+          },
+        },
+        include: {
+          quotedPost: {
+            include: {
+              author: {
+                select: {
+                  id: true,
+                  nickname: true,
+                  fullName: true,
+                  profileImage: true,
+                  hasBlueTick: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
       const basePost = {
         id: post.id.toString(),
         content: post.content,
@@ -96,10 +165,17 @@ export async function GET(req: NextRequest) {
         isAnonymous: post.isAnonymous,
         author: post.author,
         isLiked: userId ? likedPostIds.includes(post.id.toString()) : false,
-        _count: post._count,
+        isCommented: userId ? commentedPostIds.includes(post.id.toString()) : false,
+        isQuoted: userId ? quotedPostIds.includes(post.id.toString()) : false,
+        isBookmarked: userId ? bookmarkedPostIds.includes(post.id.toString()) : false,
+        _count: {
+          ...post._count,
+          quotes: post._count?.quotes || 0,
+        },
         isPopular: (post._count?.likes || 0) > 30 || (post._count?.comments || 0) > 10,
       };
 
+      // Eğer alıntı varsa, alıntılanan postu ekle
       if (quote && quote.quotedPost) {
         return {
           ...basePost,
@@ -116,11 +192,95 @@ export async function GET(req: NextRequest) {
       }
 
       return basePost;
-    });
+    }));
 
     return NextResponse.json(formattedPosts);
   } catch (error) {
     console.error("Posts fetch error:", error);
     return NextResponse.json({ error: "Posts yüklenirken hata oluştu" }, { status: 500 });
+  }
+}
+
+// Post oluştur
+export async function POST(req: NextRequest) {
+  try {
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return NextResponse.json(
+        { message: "Yetkilendirme gerekli" },
+        { status: 401 }
+      );
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+    const userId = decoded.userId;
+
+    const body = await req.json();
+    const { content, imageUrl, mediaUrl, isAnonymous } = body;
+
+    if (!content || content.trim().length === 0) {
+      return NextResponse.json(
+        { message: "Post içeriği boş olamaz" },
+        { status: 400 }
+      );
+    }
+
+    // Post oluştur
+    const post = await prisma.post.create({
+      data: {
+        content: content.trim(),
+        authorId: userId,
+        imageUrl: imageUrl || null,
+        mediaUrl: mediaUrl || null,
+        isAnonymous: isAnonymous || false,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            nickname: true,
+            fullName: true,
+            profileImage: true,
+            hasBlueTick: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            quotes: true,
+          },
+        },
+      },
+    });
+
+    // BigInt serialization için
+    const formattedPost = {
+      id: post.id.toString(),
+      content: post.content,
+      createdAt: post.createdAt,
+      imageUrl: post.imageUrl,
+      mediaUrl: post.mediaUrl,
+      isAnonymous: post.isAnonymous,
+      author: post.author,
+      isLiked: false,
+      isCommented: false,
+      isQuoted: false,
+      isBookmarked: false,
+      _count: {
+        likes: post._count.likes,
+        comments: post._count.comments,
+        quotes: post._count.quotes || 0,
+      },
+      isPopular: false,
+    };
+
+    return NextResponse.json(formattedPost, { status: 201 });
+  } catch (error) {
+    console.error("Post oluşturma hatası:", error);
+    return NextResponse.json(
+      { message: "Post oluşturulurken hata oluştu" },
+      { status: 500 }
+    );
   }
 }

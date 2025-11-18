@@ -10,6 +10,9 @@ import { Post } from "@/components/PostList";
 import { fetchApi } from "@/lib/api";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import TimelineTabs from "@/components/TimelineTabs";
+
+type TimelineType = "all" | "following";
 
 export default function HomePage() {
   const router = useRouter();
@@ -18,6 +21,7 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTimeline, setActiveTimeline] = useState<TimelineType>("all");
   const observerTarget = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
@@ -107,17 +111,24 @@ export default function HomePage() {
 
   return (
     <>
+      {/* Mobil Header - sadece mobilde görünür */}
       <MobileHeader />
 
+      {/* Desktop Header - sadece desktop'ta görünür */}
       <header className="left-nav hidden lg:block fixed left-0 top-0 h-screen overflow-y-auto z-10 w-[68px] sm:w-[88px] lg:w-[595px]">
         <div className="absolute left-0 sm:left-0 lg:left-[320px] w-full sm:w-full lg:w-[275px] h-full p-0 m-0 border-0">
           <LeftSidebar />
         </div>
       </header>
 
+      {/* Ana içerik */}
       <div className="lg:ml-[68px] sm:ml-[88px] lg:ml-[595px] flex justify-center">
         <main className="content flex w-full max-w-[1310px] min-h-screen">
-          <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-center lg:border-l lg:border-r border-[#2a2a2a] pt-14 pb-16 lg:pt-0 lg:pb-0">
+          {/* Timeline */}
+          <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-center lg:border-l lg:border-r border-[#222222] pt-14 pb-16 lg:pt-0 lg:pb-0">
+            {/* Timeline Tabs */}
+            <TimelineTabs activeTab={activeTimeline} onTabChange={setActiveTimeline} />
+            
             <ComposeBox onPostCreated={(newPost: Post) => setPosts([newPost, ...posts])} />
 
             {loading && posts.length === 0 ? (
@@ -147,6 +158,7 @@ export default function HomePage() {
             )}
           </section>
 
+          {/* Sağ taraf – çok geniş ekranlarda */}
           <aside className="right-side hidden 2xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
             <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
               <RightSidebar />
@@ -155,6 +167,7 @@ export default function HomePage() {
         </main>
       </div>
 
+      {/* Mobil Bottom Nav - sadece mobilde görünür */}
       <MobileBottomNav />
     </>
   );

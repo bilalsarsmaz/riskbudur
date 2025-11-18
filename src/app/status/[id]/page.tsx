@@ -325,7 +325,7 @@ export default function PostDetailPage() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-center">
           <div className="w-full max-w-[600px]">
-            <div className="border border-[#2a2a2a] rounded-lg p-8 text-center" style={{backgroundColor: '#0a0a0a'}}>
+            <div className="border border-[#222222] rounded-lg p-8 text-center" style={{backgroundColor: '#0a0a0a'}}>
               <p className="text-red-500 mb-4">{error || "Post bulunamadı"}</p>
               <button
                 onClick={() => router.push("/home")}
@@ -353,7 +353,7 @@ export default function PostDetailPage() {
         </div>
 
         <div className="w-full max-w-[600px]">
-          <div className="border border-[#2a2a2a] rounded-t-lg p-4 mb-0 flex items-center" style={{backgroundColor: '#0a0a0a'}}>
+          <div className="border border-[#222222] rounded-t-lg p-4 mb-0 flex items-center" style={{backgroundColor: '#0a0a0a'}}>
             <button
               onClick={() => router.push("/home")}
               className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -363,7 +363,7 @@ export default function PostDetailPage() {
             <h1 className="text-xl font-bold">Gönderi Detayı</h1>
           </div>
 
-          <div className="border-x border-b border-[#2a2a2a] p-4 mb-0" style={{backgroundColor: '#0a0a0a'}}>
+          <div className="border-x border-b border-[#222222] p-4 mb-0" style={{backgroundColor: '#0a0a0a'}}>
             <div className="flex items-start mb-4">
               {isAnonymous ? (
                 <div className="w-12 h-12 rounded-full mr-3 flex items-center justify-center">
@@ -438,7 +438,7 @@ export default function PostDetailPage() {
             </div>
 
             {(post.mediaUrl || post.imageUrl) && (
-              <div className="mb-4 rounded-lg overflow-hidden" style={{border: "0.4px solid #2a2a2a"}}>
+              <div className="mb-4 rounded-lg overflow-hidden" style={{border: "0.4px solid #222222"}}>
                 <img
                   src={post.mediaUrl || post.imageUrl || ""}
                   alt="Post media"
@@ -449,7 +449,7 @@ export default function PostDetailPage() {
 
             {/* Alıntılanan post */}
             {post.quotedPost && (
-              <div className="post-quote mb-4 rounded-lg overflow-hidden" style={{border: "0.4px solid #2a2a2a"}}>
+              <div className="post-quote mb-4 rounded-lg overflow-hidden" style={{border: "0.4px solid #222222"}}>
                 <div className="p-3">
                   <div className="flex items-start">
                     {/* Profil resmi */}
@@ -492,7 +492,7 @@ export default function PostDetailPage() {
                         
                         {/* Alıntılanan postun medyası varsa */}
                         {(post.quotedPost.mediaUrl || post.quotedPost.imageUrl) && (
-                          <div className={`post-quote-media rounded-lg overflow-hidden ${post.quotedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #2a2a2a"}}>
+                          <div className={`post-quote-media rounded-lg overflow-hidden ${post.quotedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #222222"}}>
                             <img 
                               src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl} 
                               alt="Alıntılanan post görseli" 
@@ -509,7 +509,7 @@ export default function PostDetailPage() {
 
             {/* İçerikteki post linklerinden alıntılanan postlar */}
             {linkedPosts.map((linkedPost, index) => (
-              <div key={`linked-post-${index}`} className="post-quote mb-4 rounded-lg overflow-hidden" style={{border: "0.4px solid #2a2a2a"}}>
+              <div key={`linked-post-${index}`} className="post-quote mb-4 rounded-lg overflow-hidden" style={{border: "0.4px solid #222222"}}>
                 <div className="p-3">
                   <div className="flex items-start">
                     {/* Profil resmi */}
@@ -552,7 +552,7 @@ export default function PostDetailPage() {
                         
                         {/* Alıntılanan postun medyası varsa */}
                         {(linkedPost.mediaUrl || linkedPost.imageUrl) && (
-                          <div className={`post-quote-media rounded-lg overflow-hidden ${linkedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #2a2a2a"}}>
+                          <div className={`post-quote-media rounded-lg overflow-hidden ${linkedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #222222"}}>
                             <img 
                               src={linkedPost.imageUrl || linkedPost.mediaUrl} 
                               alt="Alıntılanan post görseli" 
@@ -571,7 +571,7 @@ export default function PostDetailPage() {
               {new Date(post.createdAt).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} · {new Date(post.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} · <span className="font-semibold" style={{color: "#d9dadd"}}>{Math.floor(Math.random() * 1000) + 100}</span> Görüntülenme
             </div>
 
-            <hr className="border-[#2a2a2a] mb-3" />
+            <hr className="border-[#222222] mb-3" />
 
             <div className="flex items-center">
               <button className="flex items-center mr-4 hover:text-red-500">
@@ -595,7 +595,7 @@ export default function PostDetailPage() {
 
           {!isCommentBoxFocused ? (
             <div
-              className="border-x border-[#2a2a2a] p-4"
+              className="border-x border-[#222222] p-4"
               style={{backgroundColor: '#0a0a0a'}}
             >
               <div className="flex items-center justify-between">
@@ -626,7 +626,7 @@ export default function PostDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="border-x border-[#2a2a2a] p-4" style={{backgroundColor: '#0a0a0a'}}>
+            <div className="border-x border-[#222222] p-4" style={{backgroundColor: '#0a0a0a'}}>
               <CommentComposeBox
                 postId={postId}
                 onCommentAdded={handleCommentAdded}
@@ -637,14 +637,14 @@ export default function PostDetailPage() {
             </div>
           )}
 
-          <div className="border border-[#2a2a2a] rounded-b-lg" style={{backgroundColor: '#0a0a0a'}}>
+          <div className="border border-[#222222] rounded-b-lg" style={{backgroundColor: '#0a0a0a'}}>
 
             {post.comments && post.comments.length > 0 ? (
               <div>
                 {post.comments.map((comment, index) => (
                   <div
                     key={comment.id}
-                    className={`p-4 ${index !== post.comments.length - 1 ? 'border-b border-[#2a2a2a]' : ''}`}
+                    className={`p-4 ${index !== post.comments.length - 1 ? 'border-b border-[#222222]' : ''}`}
                   >
                     <div className="flex items-start">
                       {comment.author.profileImage ? (
@@ -670,8 +670,8 @@ export default function PostDetailPage() {
                           >
                             {comment.author.nickname}
                           </span>
-                          <span className="mx-2" style={{color: "#2a2a2a"}}>•</span>
-                          <span className="text-sm" style={{color: "#2a2a2a"}}>
+                          <span className="mx-2" style={{color: "#222222"}}>•</span>
+                          <span className="text-sm" style={{color: "#222222"}}>
                             {new Date(comment.createdAt).toLocaleDateString("tr-TR")}
                           </span>
                         </div>
@@ -682,7 +682,7 @@ export default function PostDetailPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center" style={{color: "#2a2a2a"}}>
+              <div className="p-8 text-center" style={{color: "#222222"}}>
                 Henüz yorum yok. İlk yorumu sen yap!
               </div>
             )}

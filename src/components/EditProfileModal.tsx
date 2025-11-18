@@ -188,10 +188,10 @@ export default function EditProfileModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
       <div
         className="w-full max-w-[600px] rounded-lg overflow-hidden"
-        style={{ backgroundColor: "#0a0a0a", border: "1px solid #2a2a2a" }}
+        style={{ backgroundColor: "#0a0a0a", border: "1px solid #222222" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
+        <div className="flex items-center justify-between p-4 border-b border-[#222222]">
           <div className="flex items-center">
             <button
               onClick={onClose}
@@ -220,7 +220,7 @@ export default function EditProfileModal({
               type="file"
               accept="image/*"
               onChange={handleCoverImageChange}
-              className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+              className="w-full px-4 py-2 rounded-lg border border-[#222222]"
               style={{ backgroundColor: "#1a1a1a" }}
             />
             {coverImage && (
@@ -237,7 +237,7 @@ export default function EditProfileModal({
               type="file"
               accept="image/*"
               onChange={handleProfileImageChange}
-              className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+              className="w-full px-4 py-2 rounded-lg border border-[#222222]"
               style={{ backgroundColor: "#1a1a1a" }}
             />
             {profileImage && (
@@ -254,7 +254,7 @@ export default function EditProfileModal({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+              className="w-full px-4 py-2 rounded-lg border border-[#222222]"
               style={{ backgroundColor: "#1a1a1a" }}
               placeholder="Tam adınız"
             />
@@ -266,7 +266,7 @@ export default function EditProfileModal({
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+              className="w-full px-4 py-2 rounded-lg border border-[#222222]"
               style={{ backgroundColor: "#1a1a1a" }}
               rows={3}
               placeholder="Kendiniz hakkında birkaç kelime"
@@ -280,7 +280,7 @@ export default function EditProfileModal({
               type="url"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+              className="w-full px-4 py-2 rounded-lg border border-[#222222]"
               style={{ backgroundColor: "#1a1a1a" }}
               placeholder="https://example.com"
             />

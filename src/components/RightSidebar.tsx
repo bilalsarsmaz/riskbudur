@@ -63,7 +63,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     <div className="space-y-4">
       {/* Trending Hashtags */}
       {!hideHashtags && (
-        <div className="border border-[#2a2a2a] p-4 rounded-lg" style={{backgroundColor: '#0a0a0a'}}>
+        <div className="border border-[#222222] p-4 rounded-lg" style={{backgroundColor: '#000000'}}>
           <h2 className="text-xl font-bold mb-4" style={{color: '#d9dadd'}}>Gündem</h2>
           {loading ? (
             <div className="flex justify-center py-4">
@@ -77,7 +77,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                   href={`/hashtag/${hashtag.name}`}
                   className="flex items-center justify-between p-2 hover:bg-gray-800 rounded-lg"
                 >
-                  <span className="text-blue-500">#{hashtag.name}</span>
+                  <span className="text-[#1DCD9F]">#{hashtag.name}</span>
                   <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} post</span>
                 </Link>
               ))}
@@ -87,13 +87,13 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
       )}
 
       {/* Popüler Postlar */}
-      <div className="border border-[#2a2a2a] p-4 rounded-lg" style={{backgroundColor: '#0a0a0a'}}>
+      <div className="border border-[#222222] p-4 rounded-lg" style={{backgroundColor: '#000000'}}>
         <h2 className="text-xl font-bold mb-4" style={{color: '#d9dadd'}}>Popüler Postlar</h2>
         <PopularPostsSlider />
       </div>
 
       {/* Footer */}
-      <div className="border border-[#2a2a2a] p-4 rounded-lg" style={{backgroundColor: '#0a0a0a'}}>
+      <div className="border border-[#222222] p-4 rounded-lg" style={{backgroundColor: '#000000'}}>
         <div className="text-xs space-y-2" style={{color: '#6e767d'}}>
           <div className="flex flex-wrap gap-2">
             <Link href="/about" className="hover:underline">Hakkında</Link>

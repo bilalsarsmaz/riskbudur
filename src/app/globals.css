@@ -1,86 +1,173 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #d9dadd;
-  --font-montserrat: 'Montserrat', sans-serif;
+  --app-body-bg: #000000;
+  --app-body-text: #EEEEEE;
+  --app-border: #222222;
+  --app-surface: #000000;
+  --app-header-bg: #000000;
+  --app-header-hover: #111111;
+  --app-right-bg: #000000;
+  --app-footer-bg: #050505;
+  --app-accent: #1DCD9F;
+  --app-muted: #6e767d;
+  --app-icon-menu: #c0c0c0;
+  --app-icon-compose: #1DCD9F;
+  --app-icon-nav: #c0c0c0;
+  --app-icon-verified: #1DCD9F;
+  --app-icon-interaction: #6e6e6e;
+  --font-montserrat: "Montserrat", sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--app-body-bg);
+  --color-foreground: var(--app-body-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--app-body-bg) !important;
+  color: var(--app-body-text) !important;
 }
 
 .font-montserrat {
   font-family: var(--font-montserrat);
 }
 
-/* Dark Theme */
-
-.bg-white {
-  background-color: #0a0a0a !important;
+/* Utility helpers */
+.app-text-primary { color: var(--app-body-text) !important; }
+.app-text-muted { color: var(--app-muted) !important; }
+.app-text-accent { color: var(--app-accent) !important; }
+.app-bg-accent { background-color: var(--app-accent) !important; color: #000 !important; }
+.app-bg-header { background-color: var(--app-header-bg) !important; }
+.app-bg-surface { background-color: var(--app-surface) !important; }
+.app-bg-right { background-color: var(--app-right-bg) !important; }
+.app-bg-footer { background-color: var(--app-footer-bg) !important; }
+.app-border { border-color: var(--app-border) !important; }
+.app-border-bottom { border-bottom-color: var(--app-border) !important; }
+.app-border-top { border-top-color: var(--app-border) !important; }
+.app-border-left { border-left-color: var(--app-border) !important; }
+.app-border-right { border-right-color: var(--app-border) !important; }
+.app-surface-card {
+  background-color: var(--app-surface) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-body-text) !important;
 }
 
-.bg-gray-50 {
-  background-color: #0a0a0a !important;
+/* Layout */
+header.left-nav,
+.left-nav,
+.left-nav .sticky {
+  background-color: var(--app-header-bg) !important;
+  color: var(--app-body-text) !important;
 }
 
-.shadow-lg {
-  box-shadow: none !important;
+.left-nav a { color: var(--app-body-text) !important; }
+.left-nav a:hover { background-color: var(--app-header-hover) !important; }
+.left-nav svg { color: var(--app-icon-menu) !important; }
+.left-nav .active,
+.left-nav .font-bold,
+.left-nav .text-accent { color: var(--app-accent) !important; }
+.left-nav .active svg,
+.left-nav .font-bold svg { color: var(--app-accent) !important; }
+
+.timeline {
+  background-color: var(--app-body-bg) !important;
+  color: var(--app-body-text) !important;
+  border-color: var(--app-border) !important;
 }
 
-input {
-  background-color: #1a1a1a !important;
-  border-color: #2a2a2a !important;
-  color: #d9dadd !important;
+.timeline .composebox,
+.timeline .post {
+  background-color: var(--app-surface) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-body-text) !important;
 }
 
-button {
-  background-color: transparent;
-  border-color: #2a2a2a;
-  color: #d9dadd;
+.timeline .post button,
+.timeline .composebox button {
+  color: var(--app-body-text) !important;
 }
 
-label {
-  background-color: transparent !important;
+.timeline-tabs,
+.timeline-tabs button {
+  color: var(--app-body-text) !important;
 }
 
-textarea {
-  background-color: transparent !important;
-  border-color: #2a2a2a !important;
-  color: #d9dadd !important;
+.timeline-tabs .active-indicator {
+  background-color: var(--app-accent) !important;
 }
 
-.text-gray-600, .text-gray-700, .text-gray-800, .text-gray-900 {
-  color: #d9dadd !important;
+.right-side {
+  color: var(--app-body-text) !important;
 }
 
-/* Hide scrollbar */
-::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
+.right-side .border {
+  background-color: var(--app-right-bg) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-body-text) !important;
 }
 
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.right-side a { color: var(--app-accent) !important; }
+.right-side .text-muted { color: var(--app-muted) !important; }
+
+.right-side footer,
+.right-side .sidebar-footer {
+  background-color: var(--app-footer-bg) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-muted) !important;
 }
 
-/* Sidebar fixes */
-.sticky {
-  border: none !important;
-  overflow-y: auto;
+/* Icon-specific colors */
+.composebox svg { color: var(--app-icon-compose) !important; }
+
+.mobile-nav .nav-icon {
+  color: var(--app-icon-nav) !important;
+  transition: color 0.2s ease;
 }
 
-/* Settings page inputs */
-.settings-input {
+.mobile-nav .nav-icon.active {
+  color: var(--app-accent) !important;
 }
 
+.post .verified-icon,
+.post-quote .verified-icon {
+  color: var(--app-icon-verified) !important;
+.post-author-name {
+  color: var(--app-body-text) !important;
+}
+
+.post-content {
+  color: var(--app-body-text) !important;
+}
+
+.post-quote-author {
+  color: var(--app-body-text) !important;
+}
+
+.post-quote-text {
+  color: var(--app-body-text) !important;
+}
+
+}
+
+.post .interaction-icon {
+  color: var(--app-icon-interaction);
+  transition: color 0.2s ease;
+}
+
+.post .interaction-icon.active {
+  color: var(--app-accent);
+}
+
+/* Generic link/icon helpers */
+.post { border-color: var(--app-border) !important; }
+.post a { color: var(--app-accent) !important; }
+
+.accent-color { color: var(--app-accent); }
+.accent-bg { background-color: var(--app-accent); color: #000000; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 0px; background: transparent; }
+* { scrollbar-width: none; -ms-overflow-style: none; }

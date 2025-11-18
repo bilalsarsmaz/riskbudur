@@ -74,7 +74,7 @@ export default function HashtagPage() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-center">
           <div className="w-full max-w-[600px]">
-            <div className="rounded-lg p-8 text-center" style={{backgroundColor: '#0a0a0a', border: '1px solid #2a2a2a'}}>
+            <div className="rounded-lg p-8 text-center" style={{backgroundColor: '#0a0a0a', border: '1px solid #222222'}}>
               <p style={{color: '#d9dadd'}}>{error || "Hashtag bulunamadı"}</p>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function HashtagPage() {
         </div>
 
         <div className="w-full max-w-[600px]">
-          <div className="border border-[#2a2a2a] rounded-t-lg p-4 mb-0 flex items-center" style={{backgroundColor: '#0a0a0a'}}>
+          <div className="border border-[#222222] rounded-t-lg p-4 mb-0 flex items-center" style={{backgroundColor: '#0a0a0a'}}>
             <button
               onClick={() => router.push("/explore")}
               className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -104,7 +104,7 @@ export default function HashtagPage() {
           {posts.length > 0 ? (
             <PostList posts={posts} />
           ) : (
-            <div className="p-8 text-center border-x border-b border-[#2a2a2a]" style={{backgroundColor: '#0a0a0a'}}>
+            <div className="p-8 text-center border-x border-b border-[#222222]" style={{backgroundColor: '#0a0a0a'}}>
               <p style={{color: '#6e767d'}}>Bu etiketle henüz gönderi yok.</p>
             </div>
           )}

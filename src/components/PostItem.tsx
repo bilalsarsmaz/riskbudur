@@ -4,29 +4,26 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Post } from "./PostList";
 import { postApi, deleteApi } from "@/lib/api";
-import { 
-  HeartIcon as HeartIconOutline,
-  ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftIconOutline,
-  ArrowPathIcon as ArrowPathIconOutline,
-  CheckBadgeIcon as CheckBadgeIconOutline,
-  EllipsisHorizontalIcon,
-  UserPlusIcon,
-  UserMinusIcon,
-  NoSymbolIcon,
-  ChartBarSquareIcon,
-  CodeBracketSquareIcon,
-  FlagIcon,
-  BookmarkIcon as BookmarkIconOutline,
-  ArrowUpTrayIcon
-} from "@heroicons/react/24/outline";
-import { 
-  HeartIcon as HeartIconSolid,
-  CheckBadgeIcon,
-  ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftIconSolid,
-  BookmarkIcon as BookmarkIconSolid
-} from "@heroicons/react/24/solid";
 import MinimalCommentModal from "./MinimalCommentModal";
 import QuoteModal from "./QuoteModal";
+
+import {
+  IconHeart,
+  IconHeartFilled,
+  IconMessageCircle,
+  IconMessageCircleFilled,
+  IconRepeat,
+  IconRosetteDiscountCheckFilled,
+  IconDots,
+  IconUserPlus,
+  IconUserMinus,
+  IconBan,
+  IconChartBar,
+  IconCode,
+  IconFlag,
+  IconTargetArrow,
+  IconShare3
+} from "@tabler/icons-react";
 
 interface PostItemProps {
   post: Post;
@@ -40,22 +37,50 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(counts.likes);
   const [commentCount, setCommentCount] = useState(counts.comments);
-  const [quoteCount, setQuoteCount] = useState(0);
+  const [quoteCount, setQuoteCount] = useState(counts.quotes || (post as any).quoteCount || 0);
   const [isLiking, setIsLiking] = useState(false);
-  const [quoted, setQuoted] = useState(false);
+  const [quoted, setQuoted] = useState((post as any).isQuoted || false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState((post as any).isBookmarked || false);
   const [showShareMenu, setShowShareMenu] = useState(false);
-  const [isCommented, setIsCommented] = useState(false);
+  const [isCommented, setIsCommented] = useState((post as any).isCommented || false);
   const [linkedPosts, setLinkedPosts] = useState<any[]>([]);
   
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Post prop'u değiştiğinde state'leri güncelle
+  useEffect(() => {
+    const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
+    const counts = post._count || defaultCounts;
+    
+    setIsLiked(post.isLiked || false);
+    setLikeCount(counts.likes);
+    setCommentCount(counts.comments);
+    setQuoteCount(counts.quotes || (post as any).quoteCount || 0);
+    setQuoted((post as any).isQuoted || false);
+    setIsCommented((post as any).isCommented || false);
+    setIsBookmarked((post as any).isBookmarked || false);
+  }, [post.id, post.isLiked, post._count, (post as any).isQuoted, (post as any).isCommented, (post as any).isBookmarked]);
+
+
+  // Post prop\'u değiştiğinde state\'leri güncelle
+  useEffect(() => {
+    const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
+    const counts = post._count || defaultCounts;
+    
+    setIsLiked(post.isLiked || false);
+    setLikeCount(counts.likes);
+    setCommentCount(counts.comments);
+    setQuoteCount(counts.quotes || (post as any).quoteCount || 0);
+    setQuoted((post as any).isQuoted || false);
+    setIsCommented((post as any).isCommented || false);
+  }, [post.id, post.isLiked, post._count, (post as any).isQuoted, (post as any).isCommented]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -158,12 +183,12 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
 
   const handleCommentClick = () => {
     setIsCommentModalOpen(true);
-    setIsCommented(true);
   };
 
   const handleCommentAdded = () => {
     setCommentCount(prev => prev + 1);
     setIsCommented(true);
+    setIsCommentModalOpen(false);
   };
 
   const handleQuoteClick = () => {
@@ -173,6 +198,7 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
   const handleQuoteAdded = () => {
     setQuoteCount(prev => prev + 1);
     setQuoted(true);
+    setIsQuoteModalOpen(false);
   };
 
   const formatCustomDate = (date: Date) => {
@@ -249,11 +275,9 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
       }
       
       if (isBookmarked) {
-        // TODO: Bookmark silme API çağrısı
-        console.log("Bookmark kaldırıldı:", post.id);
+        await deleteApi(`/bookmarks?postId=${post.id}`);
       } else {
-        // TODO: Bookmark ekleme API çağrısı
-        console.log("Bookmark eklendi:", post.id);
+        await postApi("/bookmarks", { postId: post.id });
       }
       
       setIsBookmarked(!isBookmarked);
@@ -321,7 +345,7 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
     // Hashtag regex: # ile başlayan, harf/rakam/alt çizgi içeren
     const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
     // Link regex: http://, https://, www. veya domain.com formatında (post linkleri hariç)
-    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
+    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;
 
     // Önce tüm eşleşmeleri bul
     const matches: Array<{ type: 'hashtag' | 'link' | 'postlink'; start: number; end: number; text: string }> = [];
@@ -479,28 +503,28 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
               <div className="flex flex-wrap items-center">
                 <div className="flex items-center mr-1">
                   {isAnonymous ? (
-                    <span className="post-author-name font-bold text-gray-900">
+                    <span className="post-author-name font-bold">
                       Anonim Kullanıcı
                     </span>
                   ) : (
                     <Link href={`/${post.author.nickname}`} className="">
-                      <span className="post-author-name font-bold text-gray-900">
+                      <span className="post-author-name font-bold">
                         {post.author.fullName || post.author.nickname}
                       </span>
                     </Link>
                   )}
                   {!isAnonymous && post.author.hasBlueTick && (
-                    <CheckBadgeIcon className="post-badge post-badge-blue w-5 h-5 ml-1 text-blue-500" />
+                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-5 h-5 ml-1 verified-icon" />
                   )}
                   {isPopular && (
-                    <CheckBadgeIconOutline className="post-badge post-badge-orange w-5 h-5 ml-1 text-orange-500" />
+                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-orange w-5 h-5 ml-1 verified-icon" />
                   )}
                 </div>
                 {!isAnonymous && (
-                  <span className="post-author-nickname font-light" style={{color: "#4a4a4a"}}>@{post.author.nickname}</span>
+                  <span className="post-author-nickname font-light" style={{color: "#686D76"}}>@{post.author.nickname}</span>
                 )}
-                <span className="post-separator mx-1 font-light" style={{color: "#4a4a4a"}}>·</span>
-                <span className="post-date text-sm font-light" style={{color: "#4a4a4a"}}>{formattedDate}</span>
+                <span className="post-separator mx-1 font-light" style={{color: "#686D76"}}>·</span>
+                <span className="post-date text-sm font-light" style={{color: "#686D76"}}>{formattedDate}</span>
               </div>
               
               <div className="relative">
@@ -509,7 +533,7 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                   onClick={() => setShowMenu(!showMenu)}
                   className="p-1 hover:bg-gray-700 rounded-full"
                 >
-                  <EllipsisHorizontalIcon className="w-5 h-5" style={{color: "#4a4a4a"}} />
+                  <IconDots className="w-5 h-5" style={{color: "#686D76"}} />
                 </button>
                 
                 {showMenu && (
@@ -529,12 +553,12 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                     >
                       {isFollowing ? (
                         <>
-                          <UserMinusIcon className="w-5 h-5 mr-3" />
+                          <IconUserMinus className="w-5 h-5 mr-3" />
                           @{post.author.nickname} adlı kişinin takibini bırak
                         </>
                       ) : (
                         <>
-                          <UserPlusIcon className="w-5 h-5 mr-3" />
+                          <IconUserPlus className="w-5 h-5 mr-3" />
                           @{post.author.nickname} adlı kişiyi takip et
                         </>
                       )}
@@ -543,28 +567,28 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                       onClick={handleBlock}
                       className="w-full text-left px-4 py-3 hover:bg-gray-800 text-red-500 flex items-center"
                     >
-                      <NoSymbolIcon className="w-5 h-5 mr-3" />
+                      <IconBan className="w-5 h-5 mr-3" />
                       @{post.author.nickname} adlı kişiyi engelle
                     </button>
                     <button
                       onClick={handleViewStats}
                       className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"
                     >
-                      <ChartBarSquareIcon className="w-5 h-5 mr-3" />
+                      <IconChartBar className="w-5 h-5 mr-3" />
                       Gönderi etkileşimlerini görüntüle
                     </button>
                     <button
                       onClick={handlePin}
                       className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"
                     >
-                      <CodeBracketSquareIcon className="w-5 h-5 mr-3" />
+                      <IconCode className="w-5 h-5 mr-3" />
                       Gönderiyi yerleştir
                     </button>
                     <button
                       onClick={handleReport}
                       className="w-full text-left px-4 py-3 hover:bg-gray-800 last:rounded-b-lg text-red-500 flex items-center"
                     >
-                      <FlagIcon className="w-5 h-5 mr-3" />
+                      <IconFlag className="w-5 h-5 mr-3" />
                       Gönderiyi bildir
                     </button>
                   </div>
@@ -573,14 +597,15 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
             </div>
             
             <Link href={`/status/${post.id}`} className="block">
-              <p className="post-content mb-3 text-gray-800">{parseContent(post.content)}</p>
+              <p className="post-content mb-3">{parseContent(post.content)}</p>
               
               {(post.mediaUrl || post.imageUrl) && (
-                <div className="post-media mb-3 rounded-lg overflow-hidden" style={{border: "0.4px solid #2a2a2a"}}>
+                <div className="post-media mb-3 rounded-lg overflow-hidden flex justify-center" style={{border: "0.4px solid #2a2a2a"}}>
                   <img 
                     src={post.imageUrl || post.mediaUrl} 
                     alt="Post görseli" 
-                    className="w-full h-auto object-cover"
+                    className="w-full h-auto"
+                    style={{maxWidth: "518px", maxHeight: "518px", objectFit: "contain", width: "auto", height: "auto"}}
                   />
                 </div>
               )}
@@ -628,41 +653,42 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                       {/* Kullanıcı bilgisi ve tarih */}
                       <div className="post-quote-header flex items-center mb-1">
                         {quotedPostIsAnonymous ? (
-                          <span className="post-quote-author font-medium text-gray-900 text-sm">
+                          <span className="post-quote-author font-medium text-sm">
                             Anonim Kullanıcı
                           </span>
                         ) : (
                           <Link href={`/${(post as any).quotedPost.author.nickname}`}>
-                            <span className="post-quote-author font-medium text-gray-900 text-sm">
+                            <span className="post-quote-author font-medium text-sm">
                               {(post as any).quotedPost.author.fullName || (post as any).quotedPost.author.nickname}
                             </span>
                           </Link>
                         )}
                         {!quotedPostIsAnonymous && (post as any).quotedPost.author.hasBlueTick && (
-                          <CheckBadgeIcon className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-1 text-blue-500" />
+                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-1 verified-icon" />
                         )}
                         {(post as any).quotedPost.isPopular && (
-                          <CheckBadgeIconOutline className="post-quote-badge post-quote-badge-orange w-4 h-4 ml-1 text-orange-500" />
+                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-orange w-4 h-4 ml-1 verified-icon" />
                         )}
-                        <span className="post-quote-separator mx-1 font-light text-xs" style={{color: "#4a4a4a"}}>·</span>
-                        <span className="post-quote-date text-xs font-light" style={{color: "#4a4a4a"}}>{formatCustomDate(new Date((post as any).quotedPost.createdAt))}</span>
+                        <span className="post-quote-separator mx-1 font-light text-xs" style={{color: "#686D76"}}>·</span>
+                        <span className="post-quote-date text-xs font-light" style={{color: "#686D76"}}>{formatCustomDate(new Date((post as any).quotedPost.createdAt))}</span>
                       </div>
                       
                       {/* Post içeriği */}
                       <Link href={`/status/${(post as any).quotedPost.id}`}>
                         {(post as any).quotedPost.content && (
-                          <div className="post-quote-text text-gray-800 text-sm line-clamp-3">
+                          <div className="post-quote-text text-sm line-clamp-3">
                             {parseContent((post as any).quotedPost.content)}
                           </div>
                         )}
                         
                         {/* Alıntılanan postun medyası varsa */}
                         {((post as any).quotedPost.mediaUrl || (post as any).quotedPost.imageUrl) && (
-                          <div className={`post-quote-media rounded-lg overflow-hidden ${(post as any).quotedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #2a2a2a"}}>
+                          <div className={`post-quote-media rounded-lg overflow-hidden flex justify-center ${(post as any).quotedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #2a2a2a"}}>
                             <img 
                               src={(post as any).quotedPost.imageUrl || (post as any).quotedPost.mediaUrl} 
                               alt="Alıntılanan post görseli" 
-                              className="w-full h-auto object-cover"
+                              className="w-full h-auto"
+                              style={{maxWidth: "518px", maxHeight: "518px", objectFit: "contain", width: "auto", height: "auto"}}
                             />
                           </div>
                         )}
@@ -716,38 +742,39 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                       {/* Kullanıcı bilgisi ve tarih */}
                       <div className="post-quote-header flex items-center mb-1">
                         {linkedPostIsAnonymous ? (
-                          <span className="post-quote-author font-medium text-gray-900 text-sm">
+                          <span className="post-quote-author font-medium text-sm">
                             Anonim Kullanıcı
                           </span>
                         ) : (
                           <Link href={`/${linkedPost.author?.nickname || ''}`}>
-                            <span className="post-quote-author font-medium text-gray-900 text-sm">
+                            <span className="post-quote-author font-medium text-sm">
                               {linkedPost.author?.fullName || linkedPost.author?.nickname || 'Bilinmeyen'}
                             </span>
                           </Link>
                         )}
                         {!linkedPostIsAnonymous && linkedPost.author?.hasBlueTick && (
-                          <CheckBadgeIcon className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-1 text-blue-500" />
+                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-1 verified-icon" />
                         )}
-                        <span className="post-quote-separator mx-1 font-light text-xs" style={{color: "#4a4a4a"}}>·</span>
-                        <span className="post-quote-date text-xs font-light" style={{color: "#4a4a4a"}}>{formatCustomDate(new Date(linkedPost.createdAt))}</span>
+                        <span className="post-quote-separator mx-1 font-light text-xs" style={{color: "#686D76"}}>·</span>
+                        <span className="post-quote-date text-xs font-light" style={{color: "#686D76"}}>{formatCustomDate(new Date(linkedPost.createdAt))}</span>
                       </div>
                       
                       {/* Post içeriği */}
                       <Link href={`/status/${linkedPost.id}`}>
                         {linkedPost.content && (
-                          <div className="post-quote-text text-gray-800 text-sm line-clamp-3">
+                          <div className="post-quote-text text-sm line-clamp-3">
                             {parseContent(linkedPost.content)}
                           </div>
                         )}
                         
                         {/* Alıntılanan postun medyası varsa */}
                         {(linkedPost.mediaUrl || linkedPost.imageUrl) && (
-                          <div className={`post-quote-media rounded-lg overflow-hidden ${linkedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #2a2a2a"}}>
+                          <div className={`post-quote-media rounded-lg overflow-hidden flex justify-center ${linkedPost.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #2a2a2a"}}>
                             <img 
                               src={linkedPost.imageUrl || linkedPost.mediaUrl} 
                               alt="Alıntılanan post görseli" 
-                              className="w-full h-auto object-cover"
+                              className="w-full h-auto"
+                              style={{maxWidth: "518px", maxHeight: "518px", objectFit: "contain", width: "auto", height: "auto"}}
                             />
                           </div>
                         )}
@@ -763,42 +790,38 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
               <button 
                 onClick={handleLike}
                 disabled={isLiking}
-                className={`post-action post-action-like flex items-center mr-4 ${isLiked ? 'text-red-500' : ''}`}
-                style={!isLiked ? {color: "#4a4a4a"} : {}}
+                className="post-action post-action-like flex items-center mr-4"
+                style={{color: isLiked ? "#FF0066" : "#686D76"}}
               >
                 {isLiked ? (
-                  <HeartIconSolid className="w-5 h-5 mr-1" />
+                  <IconHeartFilled className="w-5 h-5 mr-1" style={{color: isLiked ? "#FF0066" : "#686D76"}} />
                 ) : (
-                  <HeartIconOutline className="w-5 h-5 mr-1" />
+                  <IconHeart className="w-5 h-5 mr-1" style={{color: isLiked ? "#FF0066" : "#686D76"}} />
                 )}
                 {likeCount > 0 && (
-                  <span className="post-action-count" style={isLiked ? {} : {color: "#4a4a4a"}}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
+                  <span className="post-action-count" style={{color: isLiked ? "#FF0066" : "#686D76"}}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
                 )}
               </button>
               
               <button 
                 onClick={handleCommentClick}
-                className={`post-action post-action-comment flex items-center mr-4 ${isCommented ? 'text-blue-500' : ''}`}
-                style={!isCommented ? {color: "#4a4a4a"} : {}}
+                className="post-action post-action-comment flex items-center mr-4"
+                style={{color: isCommented ? "#1d9bf0" : "#686D76"}}
               >
-                {isCommented ? (
-                  <ChatBubbleOvalLeftIconSolid className="w-5 h-5 mr-1" />
-                ) : (
-                  <ChatBubbleOvalLeftIconOutline className="w-5 h-5 mr-1" />
-                )}
+                <IconMessageCircle className="w-5 h-5 mr-1" style={{color: isCommented ? "#1d9bf0" : "#686D76"}} />
                 {commentCount > 0 && (
-                  <span className="post-action-count" style={isCommented ? {} : {color: "#4a4a4a"}}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
+                  <span className="post-action-count" style={{color: isCommented ? "#1d9bf0" : "#686D76"}}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
                 )}
               </button>
               
               <button 
                 onClick={handleQuoteClick}
-                className={`post-action post-action-quote flex items-center mr-4 ${quoted ? 'text-green-500' : ''}`}
-                style={!quoted ? {color: "#4a4a4a"} : {}}
+                className="post-action post-action-quote flex items-center mr-4"
+                style={{color: quoted ? "#1DCD9F" : "#686D76"}}
               >
-                <ArrowPathIconOutline className="w-5 h-5 mr-1" />
+                <IconRepeat className="w-5 h-5 mr-1" style={{color: quoted ? "#1DCD9F" : "#686D76"}} />
                 {quoteCount > 0 && (
-                  <span className="post-action-count" style={quoted ? {} : {color: "#4a4a4a"}}>{quoteCount}</span>
+                  <span className="post-action-count" style={{color: quoted ? "#1DCD9F" : "#686D76"}}>{quoteCount}</span>
                 )}
               </button>
 
@@ -807,14 +830,10 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                 {/* Bookmark butonu */}
                 <button 
                   onClick={handleBookmark}
-                  className={`post-action post-action-bookmark p-1 rounded-full transition-colors ${isBookmarked ? 'text-orange-500' : ''}`}
-                  style={!isBookmarked ? {color: "#4a4a4a"} : {}}
+                  className="post-action post-action-bookmark p-1 rounded-full transition-colors"
+                  style={{color: isBookmarked ? "#DC5F00" : "#686D76"}}
                 >
-                  {isBookmarked ? (
-                    <BookmarkIconSolid className="w-5 h-5" />
-                  ) : (
-                    <BookmarkIconOutline className="w-5 h-5" />
-                  )}
+                  <IconTargetArrow className="w-5 h-5" style={{color: isBookmarked ? "#DC5F00" : "#686D76"}} />
                 </button>
 
                 {/* Paylaşım butonu */}
@@ -823,9 +842,9 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                     ref={shareButtonRef}
                     onClick={() => setShowShareMenu(!showShareMenu)}
                     className="post-action post-action-share p-1 rounded-full transition-colors"
-                    style={{color: "#4a4a4a"}}
+                    style={{color: "#686D76"}}
                   >
-                    <ArrowUpTrayIcon className="w-5 h-5" />
+                    <IconShare3 className="interaction-icon w-5 h-5" />
                   </button>
                   
                   {showShareMenu && (
@@ -843,7 +862,7 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                         onClick={handleCopyLink}
                         className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-lg flex items-center"
                       >
-                        <svg className="w-5 h-5 mr-3" style={{color: "#4a4a4a"}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 mr-3" style={{color: "#686D76"}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                         Gönderi bağlantısını kopyala

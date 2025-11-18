@@ -30,60 +30,41 @@ export default function MobileHeader() {
   }, [isMenuOpen]);
 
   return (
-    <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-[#2a2a2a] z-50 flex items-center justify-between px-4">
+    <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-black border-b border-[#222222] z-50 flex items-center justify-between px-4">
       <Link href="/home" className="flex items-center">
-        <span className="text-xl font-bold text-blue-500">ultraswall</span>
+        <span className="text-xl font-bold text-[#1DCD9F]">ultraswall</span>
       </Link>
 
       <button
         ref={buttonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+        className="p-2 rounded-full hover:bg-[#111111] transition-colors"
         aria-label="Menü"
       >
-        <Bars3Icon className="w-6 h-6 text-gray-700" />
+        <Bars3Icon className="w-6 h-6 text-gray-200" />
       </button>
 
       {isMenuOpen && (
         <div
           ref={menuRef}
-          className="absolute top-14 right-0 w-48 bg-white border border-[#2a2a2a] rounded-lg shadow-lg py-2"
+          className="absolute top-14 right-0 w-48 bg-black border border-[#222222] rounded-lg shadow-lg py-2"
         >
-          <Link
-            href="/home"
-            className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Ana Sayfa
-          </Link>
-          <Link
-            href="/explore"
-            className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Keşfet
-          </Link>
-          <Link
-            href="/notifications"
-            className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Bildirimler
-          </Link>
-          <Link
-            href="/messages"
-            className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Mesajlar
-          </Link>
-          <Link
-            href="/profile"
-            className="block px-4 py-2 hover:bg-gray-100 text-gray-700"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Profil
-          </Link>
+          {[
+            { href: "/home", label: "Ana Sayfa" },
+            { href: "/explore", label: "Keşfet" },
+            { href: "/notifications", label: "Bildirimler" },
+            { href: "/messages", label: "Mesajlar" },
+            { href: "/profile", label: "Profil" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="block px-4 py-2 hover:bg-[#111111] text-gray-100"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
       )}
     </header>

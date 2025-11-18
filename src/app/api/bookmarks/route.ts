@@ -30,7 +30,7 @@ function serializeBigInt(obj: any): any {
 
 const prisma = new PrismaClient();
 
-// Beğeni ekle
+// Bookmark ekle
 export async function POST(req: Request) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1];
@@ -63,8 +63,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Kullanıcının daha önce beğenip beğenmediğini kontrol et
-    const existingLike = await prisma.like.findUnique({
+    // Kullanıcının daha önce bookmarkp beğenmediğini kontrol et
+    const existingBookmark = await prisma.bookmark.findUnique({
       where: {
         userId_postId: {
           userId: decoded.userId,
@@ -73,15 +73,15 @@ export async function POST(req: Request) {
       },
     });
 
-    if (existingLike) {
+    if (existingBookmark) {
       return NextResponse.json(
-        { message: "Bu postu zaten beğendiniz" },
+        { message: "Bu postu zaten bookmark ettiniz" },
         { status: 400 }
       );
     }
 
-    // Beğeni oluştur
-    const like = await prisma.like.create({
+    // Bookmark oluştur
+    const bookmark = await prisma.bookmark.create({
       data: {
         userId: decoded.userId,
         postId,
@@ -89,11 +89,11 @@ export async function POST(req: Request) {
     });
 
     // BigInt değerlerini string'e çevir
-    const serializedLike = serializeBigInt(like);
+    const serializedBookmark = serializeBigInt(bookmark);
 
-    return NextResponse.json(serializedLike, { status: 201 });
+    return NextResponse.json(serializedBookmark, { status: 201 });
   } catch (error) {
-    console.error("Beğeni ekleme hatası:", error);
+    console.error("Bookmark ekleme hatası:", error);
     return NextResponse.json(
       { message: "Bir hata oluştu" },
       { status: 500 }
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
   }
 }
 
-// Beğeniyi kaldır
+// Bookmarkyi kaldır
 export async function DELETE(req: Request) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1];
@@ -130,8 +130,8 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Beğeniyi bul
-    const like = await prisma.like.findUnique({
+    // Bookmarkyi bul
+    const bookmark = await prisma.bookmark.findUnique({
       where: {
         userId_postId: {
           userId: decoded.userId,
@@ -140,15 +140,15 @@ export async function DELETE(req: Request) {
       },
     });
 
-    if (!like) {
+    if (!bookmark) {
       return NextResponse.json(
-        { message: "Beğeni bulunamadı" },
+        { message: "Bookmark bulunamadı" },
         { status: 404 }
       );
     }
 
-    // Beğeniyi kaldır
-    await prisma.like.delete({
+    // Bookmarkyi kaldır
+    await prisma.bookmark.delete({
       where: {
         userId_postId: {
           userId: decoded.userId,
@@ -158,11 +158,11 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json(
-      { message: "Beğeni başarıyla kaldırıldı" },
+      { message: "Bookmark başarıyla kaldırıldı" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Beğeni kaldırma hatası:", error);
+    console.error("Bookmark kaldırma hatası:", error);
     return NextResponse.json(
       { message: "Bir hata oluştu" },
       { status: 500 }

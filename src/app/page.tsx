@@ -119,7 +119,7 @@ export default function Home() {
             type="email"
             required
             className="appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 rounded-md focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#2a2a2a'}}
+            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#222222'}}
             placeholder="E-posta adresiniz"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -136,7 +136,7 @@ export default function Home() {
             type="password"
             required
             className="appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 rounded-md focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#2a2a2a'}}
+            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#222222'}}
             placeholder="Şifreniz"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -189,7 +189,7 @@ export default function Home() {
             type="text"
             required
             className="appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 rounded-md focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#2a2a2a'}}
+            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#222222'}}
             placeholder="Kullanıcı adınız"
             value={formData.nickname}
             onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
@@ -206,7 +206,7 @@ export default function Home() {
             type="email"
             required
             className="appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 rounded-md focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#2a2a2a'}}
+            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#222222'}}
             placeholder="E-posta adresiniz"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -223,7 +223,7 @@ export default function Home() {
             type="password"
             required
             className="appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 rounded-md focus:outline-none focus:ring-2 focus:border-transparent sm:text-sm"
-            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#2a2a2a'}}
+            style={{backgroundColor: '#1a1a1a', color: '#d9dadd', borderColor: '#222222'}}
             placeholder="Şifreniz"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -283,7 +283,7 @@ export default function Home() {
         <button
           onClick={() => showForm('register')}
           className="block w-full py-3 px-4 text-center font-medium rounded-lg transition duration-200 hover:bg-gray-800"
-          style={{color: '#d9dadd', border: '1px solid #2a2a2a', backgroundColor: '#0a0a0a'}}
+          style={{color: '#d9dadd', border: '1px solid #222222', backgroundColor: '#0a0a0a'}}
         >
           Kayıt Ol
         </button>
@@ -293,7 +293,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{backgroundColor: '#0a0a0a'}}>
-      <div className="max-w-md w-full p-6 rounded-lg" style={{backgroundColor: '#0a0a0a', border: '1px solid #2a2a2a'}}>
+      <div className="max-w-md w-full p-6 rounded-lg" style={{backgroundColor: '#0a0a0a', border: '1px solid #222222'}}>
         {activeForm === 'none' && renderWelcome()}
         {activeForm === 'login' && renderLoginForm()}
         {activeForm === 'register' && renderRegisterForm()}

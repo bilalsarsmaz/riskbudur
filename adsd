@@ -1,0 +1,147 @@
+[1mdiff --git a/src/components/PostItem.tsx b/src/components/PostItem.tsx[m
+[1mindex 5782cf6..9bcf9b2 100644[m
+[1m--- a/src/components/PostItem.tsx[m
+[1m+++ b/src/components/PostItem.tsx[m
+[36m@@ -4,30 +4,27 @@[m [mimport { useState, useEffect, useRef } from "react";[m
+ import Link from "next/link";[m
+ import { Post } from "./PostList";[m
+ import { postApi, deleteApi } from "@/lib/api";[m
+[31m-import { [m
+[31m-  HeartIcon as HeartIconOutline,[m
+[31m-  ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftIconOutline,[m
+[31m-  ArrowPathIcon as ArrowPathIconOutline,[m
+[31m-  CheckBadgeIcon as CheckBadgeIconOutline,[m
+[31m-  EllipsisHorizontalIcon,[m
+[31m-  UserPlusIcon,[m
+[31m-  UserMinusIcon,[m
+[31m-  NoSymbolIcon,[m
+[31m-  ChartBarSquareIcon,[m
+[31m-  CodeBracketSquareIcon,[m
+[31m-  FlagIcon,[m
+[31m-  BookmarkIcon as BookmarkIconOutline,[m
+[31m-  ArrowUpTrayIcon[m
+[31m-} from "@heroicons/react/24/outline";[m
+[31m-import { [m
+[31m-  HeartIcon as HeartIconSolid,[m
+[31m-  CheckBadgeIcon,[m
+[31m-  ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftIconSolid,[m
+[31m-  BookmarkIcon as BookmarkIconSolid[m
+[31m-} from "@heroicons/react/24/solid";[m
+ import MinimalCommentModal from "./MinimalCommentModal";[m
+ import QuoteModal from "./QuoteModal";[m
+ [m
+[32m+[m[32mimport {[m
+[32m+[m[32m  IconHeart,[m
+[32m+[m[32m  IconHeartFilled,[m
+[32m+[m[32m  IconMessageCircle,[m
+[32m+[m[32m  IconMessageCircleFilled,[m
+[32m+[m[32m  IconRepeat,[m
+[32m+[m[32m  IconRosetteDiscountCheckFilled,[m
+[32m+[m[32m  IconDots,[m
+[32m+[m[32m  IconUserPlus,[m
+[32m+[m[32m  IconUserMinus,[m
+[32m+[m[32m  IconBan,[m
+[32m+[m[32m  IconChartBar,[m
+[32m+[m[32m  IconCode,[m
+[32m+[m[32m  IconFlag,[m
+[32m+[m[32m  IconTargetArrow,[m
+[32m+[m[32m  IconShare3[m
+[32m+[m[32m} from "@tabler/icons-react";[m
+[32m+[m
+ interface PostItemProps {[m
+   post: Post;[m
+   isFirst?: boolean;[m
+[36m@@ -321,7 +318,7 @@[m [mexport default function PostItem({ post, isFirst = false }: PostItemProps) {[m
+     // Hashtag regex: # ile başlayan, harf/rakam/alt çizgi içeren[m
+     const hashtagRegex = /#[\p{L}\p{N}_]+/gu;[m
+     // Link regex: http://, https://, www. veya domain.com formatında (post linkleri hariç)[m
+[31m-    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;[m
+[32m+[m[32m    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;[m
+ [m
+     // Önce tüm eşleşmeleri bul[m
+     const matches: Array<{ type: 'hashtag' | 'link' | 'postlink'; start: number; end: number; text: string }> = [];[m
+[36m@@ -490,17 +487,17 @@[m [mexport default function PostItem({ post, isFirst = false }: PostItemProps) {[m
+                     </Link>[m
+                   )}[m
+                   {!isAnonymous && post.author.hasBlueTick && ([m
+[31m-                    <CheckBadgeIcon className="post-badge post-badge-blue w-5 h-5 ml-1 text-blue-500" />[m
+[32m+[m[32m                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-5 h-5 ml-1 verified-icon" />[m
+                   )}[m
+                   {isPopular && ([m
+[31m-                    <CheckBadgeIconOutline className="post-badge post-badge-orange w-5 h-5 ml-1 text-orange-500" />[m
+[32m+[m[32m                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-orange w-5 h-5 ml-1 verified-icon" />[m
+                   )}[m
+                 </div>[m
+                 {!isAnonymous && ([m
+[31m-                  <span className="post-author-nickname font-light" style={{color: "#4a4a4a"}}>@{post.author.nickname}</span>[m
+[32m+[m[32m                  <span className="post-author-nickname font-light" style={{color: "#686D76"}}>@{post.author.nickname}</span>[m
+                 )}[m
+[31m-                <span className="post-separator mx-1 font-light" style={{color: "#4a4a4a"}}>·</span>[m
+[31m-                <span className="post-date text-sm font-light" style={{color: "#4a4a4a"}}>{formattedDate}</span>[m
+[32m+[m[32m                <span className="post-separator mx-1 font-light" style={{color: "#686D76"}}>·</span>[m
+[32m+[m[32m                <span className="post-date text-sm font-light" style={{color: "#686D76"}}>{formattedDate}</span>[m
+               </div>[m
+               [m
+               <div className="relative">[m
+[36m@@ -509,7 +506,7 @@[m [mexport default function PostItem({ post, isFirst = false }: PostItemProps) {[m
+                   onClick={() => setShowMenu(!showMenu)}[m
+                   className="p-1 hover:bg-gray-700 rounded-full"[m
+                 >[m
+[31m-                  <EllipsisHorizontalIcon className="w-5 h-5" style={{color: "#4a4a4a"}} />[m
+[32m+[m[32m                  <IconDots className="w-5 h-5" style={{color: "#686D76"}} />[m
+                 </button>[m
+                 [m
+                 {showMenu && ([m
+[36m@@ -529,12 +526,12 @@[m [mexport default function PostItem({ post, isFirst = false }: PostItemProps) {[m
+                     >[m
+                       {isFollowing ? ([m
+                         <>[m
+[31m-                          <UserMinusIcon className="w-5 h-5 mr-3" />[m
+[32m+[m[32m                          <IconUserMinus className="w-5 h-5 mr-3" />[m
+                           @{post.author.nickname} adlı kişinin takibini bırak[m
+                         </>[m
+                       ) : ([m
+                         <>[m
+[31m-                          <UserPlusIcon className="w-5 h-5 mr-3" />[m
+[32m+[m[32m                          <IconUserPlus className="w-5 h-5 mr-3" />[m
+                           @{post.author.nickname} adlı kişiyi takip et[m
+                         </>[m
+                       )}[m
+[36m@@ -543,28 +540,28 @@[m [mexport default function PostItem({ post, isFirst = false }: PostItemProps) {[m
+                       onClick={handleBlock}[m
+                       className="w-full text-left px-4 py-3 hover:bg-gray-800 text-red-500 flex items-center"[m
+                     >[m
+[31m-                      <NoSymbolIcon className="w-5 h-5 mr-3" />[m
+[32m+[m[32m                      <IconBan className="w-5 h-5 mr-3" />[m
+                       @{post.author.nickname} adlı kişiyi engelle[m
+                     </button>[m
+                     <button[m
+                       onClick={handleViewStats}[m
+                       className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"[m
+                     >[m
+[31m-                      <ChartBarSquareIcon className="w-5 h-5 mr-3" />[m
+[32m+[m[32m                      <IconChartBar className="w-5 h-5 mr-3" />[m
+                       Gönderi etkileşimlerini görüntüle[m
+                     </button>[m
+                     <button[m
+                       onClick={handlePin}[m
+                       className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"[m
+                     >[m
+[31m-                      <CodeBracketSquareIcon className="w-5 h-5 mr-3" />[m
+[32m+[m[32m                      <IconCode className="w-5 h-5 mr-3" />[m
+                       Gönderiyi yerleştir[m
+                     </button>[m
+                     <button[m
+                       onClick={handleReport}[m
+                       className="w-full text-left px-4 py-3 hover:bg-gray-800 last:rounded-b-lg text-red-500 flex items-center"[m
+                     >[m
+[31m-                      <FlagIcon className="w-5 h-5 mr-3" />[m
+[32m+[m[32m                      <IconFlag className="w-5 h-5 mr-3" />[m
+                       Gönderiyi bildir[m
+                     </button>[m
+                   </div>[m
+[36m@@ -639,13 +636,13 @@[m [mexport default function PostItem({ post, isFirst = false }: PostItemProps) {[m
+                           </Link>[m
+                         )}[m
+                         {!quotedPostIsAnonymous && (post as any).quotedPost.author.hasBlueTick && ([m
+[31m-                          <CheckBadgeIcon className="post-

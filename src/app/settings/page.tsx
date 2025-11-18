@@ -121,8 +121,8 @@ export default function SettingsPage() {
 
         <div className="w-full max-w-[1000px] flex">
           {/* Sol Panel - Kategoriler */}
-          <div className="w-[350px] border border-[#2a2a2a] rounded-l-lg overflow-hidden" style={{backgroundColor: '#0a0a0a'}}>
-            <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+          <div className="w-[350px] border border-[#222222] rounded-l-lg overflow-hidden" style={{backgroundColor: '#0a0a0a'}}>
+            <div className="p-4 border-b border-[#222222] flex items-center">
               <Cog8ToothIcon className="w-6 h-6 mr-3" />
               <h1 className="text-xl font-bold">Ayarlar</h1>
             </div>
@@ -177,7 +177,7 @@ export default function SettingsPage() {
 
           {/* İkinci Panel */}
           {activeCategory === "account" && (
-            <div className="w-[650px] border-t border-r border-b border-[#2a2a2a] rounded-r-lg" style={{backgroundColor: '#0a0a0a'}}>
+            <div className="w-[650px] border-t border-r border-b border-[#222222] rounded-r-lg" style={{backgroundColor: '#0a0a0a'}}>
               {/* Ana Menü */}
               {!activeSubMenu && !activeDetailMenu && (
                 <>
@@ -216,7 +216,7 @@ export default function SettingsPage() {
               {/* Hesap Bilgileri Alt Menüsü */}
               {activeSubMenu === "account-info" && !activeDetailMenu && (
                 <>
-                  <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+                  <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
                       className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -251,7 +251,7 @@ export default function SettingsPage() {
                       <div className="text-sm" style={{color: "#6e767d"}}>Mavi Tik başvurusu</div>
                     </button>
 
-                    <div className="border-t border-[#2a2a2a] my-2"></div>
+                    <div className="border-t border-[#222222] my-2"></div>
 
                     <button
                       onClick={() => setActiveDetailMenu("location")}
@@ -291,7 +291,7 @@ export default function SettingsPage() {
               {/* Şifre Değiştir */}
               {activeSubMenu === "password" && !activeDetailMenu && (
                 <>
-                  <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+                  <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
                       className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -309,7 +309,7 @@ export default function SettingsPage() {
                           type="password"
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+                          className="w-full px-4 py-2 rounded-lg border border-[#222222]"
                           style={{backgroundColor: '#1a1a1a'}}
                           required
                         />
@@ -320,7 +320,7 @@ export default function SettingsPage() {
                           type="password"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+                          className="w-full px-4 py-2 rounded-lg border border-[#222222]"
                           style={{backgroundColor: '#1a1a1a'}}
                           required
                         />
@@ -331,7 +331,7 @@ export default function SettingsPage() {
                           type="password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+                          className="w-full px-4 py-2 rounded-lg border border-[#222222]"
                           style={{backgroundColor: '#1a1a1a'}}
                           required
                         />
@@ -352,7 +352,7 @@ export default function SettingsPage() {
               {/* Hesabı Devre Dışı Bırak */}
               {activeSubMenu === "deactivate" && !activeDetailMenu && (
                 <>
-                  <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+                  <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
                       className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -383,7 +383,7 @@ export default function SettingsPage() {
               {/* Detay Sayfaları */}
               {activeDetailMenu === "username" && (
                 <>
-                  <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+                  <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
                       className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -401,7 +401,7 @@ export default function SettingsPage() {
                           type="text"
                           value={nickname}
                           onChange={(e) => setNickname(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+                          className="w-full px-4 py-2 rounded-lg border border-[#222222]"
                           style={{backgroundColor: '#1a1a1a'}}
                           required
                         />
@@ -421,7 +421,7 @@ export default function SettingsPage() {
 
               {activeDetailMenu === "email" && (
                 <>
-                  <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+                  <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
                       className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -439,7 +439,7 @@ export default function SettingsPage() {
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-[#2a2a2a]"
+                          className="w-full px-4 py-2 rounded-lg border border-[#222222]"
                           style={{backgroundColor: '#1a1a1a'}}
                           required
                         />
@@ -459,7 +459,7 @@ export default function SettingsPage() {
 
               {activeDetailMenu === "verified" && (
                 <>
-                  <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+                  <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
                       className="p-2 hover:bg-gray-800 rounded-full mr-4"
@@ -479,7 +479,7 @@ export default function SettingsPage() {
 
               {(activeDetailMenu === "location" || activeDetailMenu === "gender" || activeDetailMenu === "birthdate") && (
                 <>
-                  <div className="p-4 border-b border-[#2a2a2a] flex items-center">
+                  <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
                       className="p-2 hover:bg-gray-800 rounded-full mr-4"

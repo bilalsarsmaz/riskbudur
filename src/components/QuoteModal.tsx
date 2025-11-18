@@ -92,7 +92,7 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
         </div>
         <hr className="border-gray-200" />
         <div className="p-4 pb-0">
-          <div className="post-quote mb-3 rounded-lg overflow-hidden" style={{border: "0.4px solid #2a2a2a"}}>
+          <div className="post-quote mb-3 rounded-lg overflow-hidden" style={{border: "0.4px solid #222222"}}>
             <div className="p-3">
               <div className="flex items-start">
                 <div className="post-quote-avatar">
@@ -156,7 +156,7 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                     )}
                     
                     {(post.mediaUrl || post.imageUrl) && (
-                      <div className={`post-quote-media rounded-lg overflow-hidden ${post.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #2a2a2a"}}>
+                      <div className={`post-quote-media rounded-lg overflow-hidden ${post.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #222222"}}>
                         <img 
                           src={post.imageUrl || post.mediaUrl} 
                           alt="Alıntılanan post görseli" 
