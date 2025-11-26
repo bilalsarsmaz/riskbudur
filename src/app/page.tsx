@@ -282,7 +282,7 @@ export default function Home() {
 
         <button
           onClick={() => showForm('register')}
-          className="block w-full py-3 px-4 text-center font-medium rounded-lg transition duration-200 hover:bg-gray-800"
+          className="block w-full py-3 px-4 text-center font-medium rounded-lg transition duration-200 hover:bg-[#151515]"
           style={{color: '#d9dadd', border: '1px solid #222222', backgroundColor: '#0a0a0a'}}
         >
           Kayıt Ol

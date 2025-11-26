@@ -38,7 +38,7 @@ export default function MobileHeader() {
       <button
         ref={buttonRef}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="p-2 rounded-full hover:bg-[#111111] transition-colors"
+        className="p-2 rounded-full hover:bg-[#151515] transition-colors"
         aria-label="Menü"
       >
         <Bars3Icon className="w-6 h-6 text-gray-200" />
@@ -47,7 +47,7 @@ export default function MobileHeader() {
       {isMenuOpen && (
         <div
           ref={menuRef}
-          className="absolute top-14 right-0 w-48 bg-black border border-[#222222] rounded-lg shadow-lg py-2"
+          className="absolute top-14 right-0 w-48 bg-black border z-50 border-[#222222] rounded-lg shadow-lg py-2"
         >
           {[
             { href: "/home", label: "Ana Sayfa" },
@@ -59,7 +59,7 @@ export default function MobileHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="block px-4 py-2 hover:bg-[#111111] text-gray-100"
+              className="block px-4 py-2 hover:bg-[#151515] text-gray-100"
               onClick={() => setIsMenuOpen(false)}
             >
               {item.label}

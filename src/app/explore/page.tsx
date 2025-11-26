@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { fetchApi } from "@/lib/api";
-import { HashtagIcon } from "@heroicons/react/24/outline";
 
 interface Hashtag {
   id: string;
@@ -19,9 +20,15 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/");
+      return;
+    }
+
     const fetchTrending = async () => {
       try {
-        const data = await fetchApi("/hashtags/trending");
+        const data = await fetchApi("/hashtags/trending?limit=15");
         setHashtags(data.hashtags || []);
       } catch (err) {
         console.error("Trending hashtag hatası:", err);
@@ -31,82 +38,136 @@ export default function ExplorePage() {
     };
 
     fetchTrending();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
       <>
-        <header className="left-nav fixed left-0 top-0 h-screen overflow-y-auto z-10 w-[68px] sm:w-[88px] lg:w-[595px]">
-          <div className="absolute left-0 sm:left-0 lg:left-[320px] w-full sm:w-full lg:w-[275px] h-full p-0 m-0 border-0">
-            <LeftSidebar />
-          </div>
-        </header>
-        <div className="ml-[68px] sm:ml-[88px] lg:ml-[595px]">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex justify-center">
-              <div className="w-full max-w-[600px] flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+        <MobileHeader />
+        <div className="hidden lg:flex justify-center w-full">
+          <div className="flex w-full max-w-[1310px]">
+            <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
+              <div className="h-full p-0 m-0 border-0">
+                <LeftSidebar />
               </div>
-            </div>
+            </header>
+            <main className="content flex flex-1 min-h-screen">
+              <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                </div>
+              </section>
+              <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+                <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+                  <RightSidebar hideHashtags={true} />
+                </div>
+              </aside>
+            </main>
           </div>
         </div>
+        <div className="lg:hidden flex flex-col min-h-screen">
+          <main className="content flex-1 pt-14 pb-16">
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+            </div>
+          </main>
+        </div>
+        <MobileBottomNav />
       </>
     );
   }
 
   return (
     <>
-      <header className="left-nav fixed left-0 top-0 h-screen overflow-y-auto z-10 w-[68px] sm:w-[88px] lg:w-[595px]">
-        <div className="absolute left-0 sm:left-0 lg:left-[320px] w-full sm:w-full lg:w-[275px] h-full p-0 m-0 border-0">
-          <LeftSidebar />
-        </div>
-      </header>
+      {/* Mobil Header */}
+      <MobileHeader />
 
-      <div className="ml-[68px] sm:ml-[88px] lg:ml-[595px]">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-center">
-            <div className="w-full max-w-[600px]">
-              <div className="border border-[#222222] rounded-t-lg p-4 mb-0" style={{backgroundColor: '#0a0a0a'}}>
-                <h1 className="text-2xl font-bold" style={{color: '#d9dadd'}}>Keşfet</h1>
+      {/* Desktop Layout Wrapper - ekran ortasında */}
+      <div className="hidden lg:flex justify-center w-full">
+        <div className="flex w-full max-w-[1310px]">
+          {/* Sol Sidebar */}
+          <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
+            <div className="h-full p-0 m-0 border-0">
+              <LeftSidebar />
+            </div>
+          </header>
+
+          {/* Ana içerik */}
+          <main className="content flex flex-1 min-h-screen">
+            {/* Timeline - Hashtag Listesi */}
+            <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
+              {/* Başlık */}
+              <div className="sticky top-0 z-10 border-b border-[#222222] p-4">
+                <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>Keşfet</h1>
                 <p className="text-sm mt-1" style={{color: '#6e767d'}}>Gündemdeki etiketler</p>
               </div>
 
-              <div style={{backgroundColor: '#0a0a0a'}}>
-                {hashtags.map((hashtag, index) => (
+              {/* Hashtag Listesi */}
+              <div className="p-4">
+                {hashtags.map((hashtag) => (
                   <div
                     key={hashtag.id}
                     onClick={() => router.push(`/hashtag/${hashtag.name}`)}
-                    className="p-4 border-x border-b border-[#222222] hover:bg-gray-800 cursor-pointer transition-colors"
+                    className="flex flex-col items-start py-2 hover:bg-[#151515] rounded-lg cursor-pointer px-2"
                   >
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <HashtagIcon className="w-6 h-6" style={{color: 'oklch(0.71 0.24 43.55)'}} />
-                      </div>
-                      <div className="ml-3 flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm" style={{color: '#6e767d'}}>
-                            {index + 1} · Gündemde
-                          </span>
-                        </div>
-                        <h3 className="font-bold text-lg mt-1" style={{color: '#d9dadd'}}>
-                          #{hashtag.name}
-                        </h3>
-                        <p className="text-sm mt-1" style={{color: '#6e767d'}}>
-                          {hashtag.count} gönderi
-                        </p>
-                      </div>
-                    </div>
+                    <span className="text-[#1DCD9F]">#{hashtag.name}</span>
+                    <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} gönderi</span>
                   </div>
                 ))}
-              </div>
-            </div>
 
-            <div className="hidden lg:block w-[300px] shrink-0 ml-[10px]">
-              <RightSidebar hideHashtags={true} />
-            </div>
-          </div>
+                {hashtags.length === 0 && (
+                  <div className="py-8 text-center" style={{color: '#6e767d'}}>
+                    Henüz gündemde etiket yok.
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Sağ Sidebar - Popüler Postlar + Footer */}
+            <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+              <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <RightSidebar hideHashtags={true} />
+              </div>
+            </aside>
+          </main>
         </div>
       </div>
+
+      {/* Mobil Layout */}
+      <div className="lg:hidden flex flex-col min-h-screen">
+        <main className="content flex-1 pt-14 pb-16">
+          <section className="timeline w-full flex flex-col items-stretch">
+            {/* Başlık */}
+            <div className="sticky top-14 z-10 border-b border-[#222222] p-4">
+              <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>Keşfet</h1>
+                <p className="text-sm mt-1" style={{color: '#6e767d'}}>Gündemdeki etiketler</p>
+            </div>
+
+            {/* Hashtag Listesi */}
+            <div className="p-4">
+              {hashtags.map((hashtag) => (
+                <div
+                  key={hashtag.id}
+                  onClick={() => router.push(`/hashtag/${hashtag.name}`)}
+                  className="flex flex-col items-start py-2 hover:bg-[#151515] rounded-lg cursor-pointer px-2"
+                >
+                  <span className="text-[#1DCD9F]">#{hashtag.name}</span>
+                  <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} gönderi</span>
+                </div>
+              ))}
+
+              {hashtags.length === 0 && (
+                <div className="py-8 text-center" style={{color: '#6e767d'}}>
+                  Henüz gündemde etiket yok.
+                </div>
+              )}
+            </div>
+          </section>
+        </main>
+      </div>
+
+      {/* Mobil Bottom Nav */}
+      <MobileBottomNav />
     </>
   );
 }

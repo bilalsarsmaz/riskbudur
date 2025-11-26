@@ -76,7 +76,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                 <Link 
                   key={hashtag.id}
                   href={`/hashtag/${hashtag.name}`}
-                  className="flex flex-col items-start py-2 hover:bg-gray-800 rounded-lg"
+                  className="flex flex-col items-start py-2 hover:bg-[#151515] rounded-lg"
                 >
                   <span className="text-[#1DCD9F]">#{hashtag.name}</span>
                   <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} gönderi</span>
@@ -86,7 +86,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
               {/* Daha fazla göster */}
               <Link 
                 href="/explore"
-                className="flex items-center gap-1 pt-3 text-[#1DCD9F] hover:underline"
+                className="flex items-center gap-1 pt-3 text-[#1DCD9F]"
                 style={{fontSize: '13px'}}
               >
                 <span>Daha fazla göster</span>

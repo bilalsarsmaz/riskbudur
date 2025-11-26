@@ -1,25 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import PostList from "@/components/PostList";
 import { fetchApi } from "@/lib/api";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 interface Post {
   id: string;
   content: string;
   createdAt: string;
   mediaUrl?: string;
+  imageUrl?: string;
   isAnonymous: boolean;
   author: {
     id: string;
     nickname: string;
-    fullName: string;
+    fullName?: string;
     hasBlueTick: boolean;
     profileImage?: string;
   };
@@ -27,16 +27,15 @@ interface Post {
     likes: number;
     comments: number;
   };
+  isLiked?: boolean;
+  isBookmarked?: boolean;
 }
 
-export default function HashtagPage() {
-  const params = useParams();
+export default function BookmarksPage() {
   const router = useRouter();
-  const tag = params.tag as string;
   const [posts, setPosts] = useState<Post[]>([]);
-  const [hashtagInfo, setHashtagInfo] = useState<{ name: string; count: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -45,73 +44,46 @@ export default function HashtagPage() {
       return;
     }
 
-    const fetchHashtagPosts = async () => {
+    // Token'dan userId çıkar
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.userId) {
+        setCurrentUserId(payload.userId);
+      }
+    } catch (e) {
+      console.error("Token parse hatası:", e);
+    }
+
+    const fetchBookmarks = async () => {
       try {
-        setLoading(true);
-        const data = await fetchApi(`/hashtags/${tag}`);
-        setHashtagInfo(data.hashtag);
+        const data = await fetchApi("/bookmarks");
         setPosts(data.posts || []);
-        setError(null);
       } catch (err) {
-        console.error("Hashtag postları yüklenirken hata:", err);
-        setError("Postlar yüklenirken bir hata oluştu.");
+        console.error("Bookmarks yüklenirken hata:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (tag) {
-      fetchHashtagPosts();
-    }
-  }, [tag, router]);
+    fetchBookmarks();
+  }, [router]);
 
-  // Loading state
+  const handlePostDeleted = (postId: string) => {
+    setPosts(posts.filter(p => p.id !== postId));
+  };
+
+  // Loading content
   const LoadingContent = () => (
     <div className="flex items-center justify-center py-20">
       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
     </div>
   );
 
-  // Error state
-  const ErrorContent = () => (
-    <div className="p-8 text-center">
-      <p style={{color: '#d9dadd'}}>{error || "Hashtag bulunamadı"}</p>
-    </div>
-  );
-
-  // Header component
-  const PageHeader = ({ sticky = false }: { sticky?: boolean }) => (
-    <div className={`${sticky ? 'sticky top-0' : ''} z-10 border-b border-[#222222] p-4 flex items-center`}>
-      <button
-        onClick={() => router.push("/explore")}
-        className="p-2 hover:bg-[#151515] rounded-full mr-4"
-      >
-        <ArrowLeftIcon className="w-5 h-5" />
-      </button>
-      <div>
-        <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>#{hashtagInfo?.name || tag}</h1>
-        {hashtagInfo && (
-          <p className="text-sm" style={{color: '#6e767d'}}>{hashtagInfo.count} gönderi</p>
-        )}
-      </div>
-    </div>
-  );
-
-  // Mobile Header for hashtag page
-  const MobilePageHeader = () => (
-    <div className="sticky top-14 z-10 border-b border-[#222222] p-4 flex items-center">
-      <button
-        onClick={() => router.push("/explore")}
-        className="p-2 hover:bg-[#151515] rounded-full mr-4"
-      >
-        <ArrowLeftIcon className="w-5 h-5" />
-      </button>
-      <div>
-        <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>#{hashtagInfo?.name || tag}</h1>
-        {hashtagInfo && (
-          <p className="text-sm" style={{color: '#6e767d'}}>{hashtagInfo.count} gönderi</p>
-        )}
-      </div>
+  // Page header
+  const PageHeader = ({ sticky = false, top = "top-0" }: { sticky?: boolean; top?: string }) => (
+    <div className={`${sticky ? `sticky ${top}` : ''} z-40 border-b border-[#222222] p-4 bg-black`}>
+      <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>Yer İşaretleri</h1>
+      <p className="text-sm mt-1" style={{color: '#6e767d'}}>Kaydettiğin gönderiler</p>
     </div>
   );
 
@@ -132,19 +104,21 @@ export default function HashtagPage() {
 
           {/* Ana içerik */}
           <main className="content flex flex-1 min-h-screen">
-            {/* Timeline - Post Listesi */}
+            {/* Timeline - Bookmark Listesi */}
             <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
               <PageHeader sticky={true} />
 
               {loading ? (
                 <LoadingContent />
-              ) : error || !hashtagInfo ? (
-                <ErrorContent />
               ) : posts.length > 0 ? (
-                <PostList posts={posts} />
+                <PostList 
+                  posts={posts} 
+                  currentUserId={currentUserId || undefined} 
+                  onPostDeleted={handlePostDeleted} 
+                />
               ) : (
                 <div className="p-8 text-center">
-                  <p style={{color: '#6e767d'}}>Bu etiketle henüz gönderi yok.</p>
+                  <p style={{color: '#6e767d'}}>Henüz kaydettiğin gönderi yok.</p>
                 </div>
               )}
             </section>
@@ -163,17 +137,19 @@ export default function HashtagPage() {
       <div className="lg:hidden flex flex-col min-h-screen">
         <main className="content flex-1 pt-14 pb-16">
           <section className="timeline w-full flex flex-col items-stretch">
-            <MobilePageHeader />
+            <PageHeader sticky={true} top="top-14" />
 
             {loading ? (
               <LoadingContent />
-            ) : error || !hashtagInfo ? (
-              <ErrorContent />
             ) : posts.length > 0 ? (
-              <PostList posts={posts} />
+              <PostList 
+                posts={posts} 
+                currentUserId={currentUserId || undefined} 
+                onPostDeleted={handlePostDeleted} 
+              />
             ) : (
               <div className="p-8 text-center">
-                <p style={{color: '#6e767d'}}>Bu etiketle henüz gönderi yok.</p>
+                <p style={{color: '#6e767d'}}>Henüz kaydettiğin gönderi yok.</p>
               </div>
             )}
           </section>

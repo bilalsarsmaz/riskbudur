@@ -239,7 +239,7 @@ export default function PopularPostsSlider() {
             
             <div className="flex items-center justify-between mt-1 mb-1 px-1 text-[10px]">
               <span className="text-gray-500">{formatDate(post.createdAt)}</span>
-              <Link href={`/status/${post.id}`} className="flex items-center text-blue-500 hover:underline">
+              <Link href={`/status/${post.id}`} className="flex items-center text-blue-500">
                 <span>Post Detayı</span>
                 <ArrowRightIcon className="w-2.5 h-2.5 ml-0.5" />
               </Link>

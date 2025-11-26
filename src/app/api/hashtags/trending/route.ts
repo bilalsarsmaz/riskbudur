@@ -3,10 +3,13 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit') || '5');
+    
     const hashtags = await prisma.hashtag.findMany({
-      take: 5,
+      take: limit,
       orderBy: {
         posts: {
           _count: 'desc'

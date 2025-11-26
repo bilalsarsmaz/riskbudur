@@ -34,7 +34,7 @@ export default function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center justify-center flex-1 h-full hover:bg-[#111111] transition-colors"
+              className="flex flex-col items-center justify-center flex-1 h-full hover:bg-[#151515] transition-colors"
               aria-label={item.label}
             >
               <IconComponent className={`nav-icon ${isActive ? "active" : ""}`} size={24} stroke={1.8} />

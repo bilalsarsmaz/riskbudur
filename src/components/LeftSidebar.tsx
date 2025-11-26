@@ -160,7 +160,7 @@ export default function LeftSidebar() {
               <li key={item.id}>
                 <Link 
                   href={item.href} 
-                  className="flex items-center justify-center lg:justify-start p-2 hover:bg-gray-800 rounded-lg"
+                  className="flex items-center justify-center lg:justify-start p-2 hover:bg-[#151515] rounded-lg"
                   style={{ color: '#d9dadd' }}
                 >
                   <Icon 
@@ -182,7 +182,7 @@ export default function LeftSidebar() {
       
       <div className="mt-auto relative">
         <div 
-          className="flex items-center justify-center lg:justify-start p-2 rounded-lg hover:bg-gray-800 cursor-pointer"
+          className="flex items-center justify-center lg:justify-start p-2 rounded-lg hover:bg-[#151515] cursor-pointer"
           onClick={handleUserMenuToggle}
         >
           {userInfo.profileImage ? (
@@ -215,7 +215,7 @@ export default function LeftSidebar() {
           <div className="absolute bottom-full left-0 mb-2 w-full lg:w-auto min-w-[200px] rounded-lg shadow-lg overflow-hidden z-10" style={{ backgroundColor: '#000000', border: '1px solid #222222' }}>
             <div className="p-2">
               <button 
-                className="flex items-center w-full p-2 hover:bg-gray-800 rounded-lg"
+                className="flex items-center w-full p-2 hover:bg-[#151515] rounded-lg"
                 style={{ color: '#d9dadd' }}
                 onClick={() => {
                   router.push("/settings");
@@ -226,7 +226,7 @@ export default function LeftSidebar() {
                 Ayarlar
               </button>
               <button 
-                className="flex items-center w-full p-2 hover:bg-gray-800 rounded-lg"
+                className="flex items-center w-full p-2 hover:bg-[#151515] rounded-lg"
                 style={{ color: '#d9dadd' }}
                 onClick={handleLogout}
               >

@@ -264,7 +264,7 @@ export default function PostDetailPage() {
           <Link 
             key={`hashtag-${index}`}
             href={`/hashtag/${encodeURIComponent(hashtag.toLowerCase())}`}
-            className="text-blue-500 hover:underline"
+            className="text-blue-500"
             onClick={(e) => e.stopPropagation()}
           >
             {match.text}
@@ -285,7 +285,7 @@ export default function PostDetailPage() {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
+            className="text-blue-500"
             onClick={(e) => e.stopPropagation()}
           >
             {match.text}
@@ -357,7 +357,7 @@ export default function PostDetailPage() {
           <div className="border border-[#222222] rounded-t-lg p-4 mb-0 flex items-center" style={{backgroundColor: '#0a0a0a'}}>
             <button
               onClick={() => router.push("/home")}
-              className="p-2 hover:bg-gray-800 rounded-full mr-4"
+              className="p-2 hover:bg-[#151515] rounded-full mr-4"
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
@@ -408,7 +408,7 @@ export default function PostDetailPage() {
                     </span>
                   ) : (
                     <span
-                      className="font-bold text-base cursor-pointer hover:underline"
+                      className="font-bold text-base cursor-pointer"
                       onClick={() => handleProfileClick(post.author.nickname)}
                     >
                       {post.author.fullName || post.author.nickname}
@@ -420,7 +420,7 @@ export default function PostDetailPage() {
                 </div>
                 {!isAnonymous && (
                   <span
-                    className="text-sm cursor-pointer hover:underline"
+                    className="text-sm cursor-pointer"
                     style={{color: "#6e767d"}}
                     onClick={() => handleProfileClick(post.author.nickname)}
                   >
@@ -631,7 +631,7 @@ export default function PostDetailPage() {
               <div className="flex items-center justify-between">
                 <div
                   onClick={() => setIsCommentBoxFocused(true)}
-                  className="flex items-center flex-1 cursor-pointer hover:bg-gray-900 p-2 rounded-lg"
+                  className="flex items-center flex-1 cursor-pointer hover:bg-[#151515] p-2 rounded-lg"
                 >
                   {currentUser?.profileImage ? (
                     <img
@@ -695,7 +695,7 @@ export default function PostDetailPage() {
                       <div className="flex-1">
                         <div className="flex items-center mb-1">
                           <span
-                            className="font-medium cursor-pointer hover:underline"
+                            className="font-medium cursor-pointer"
                             onClick={() => handleProfileClick(comment.author.nickname)}
                           >
                             {comment.author.nickname}

@@ -130,7 +130,7 @@ export default function SettingsPage() {
             <div>
               <button
                 onClick={() => setActiveCategory(activeCategory === "account" ? null : "account")}
-                className={`w-full px-4 py-4 text-left hover:bg-gray-800 flex items-center justify-between relative ${
+                className={`w-full px-4 py-4 text-left hover:bg-[#151515] flex items-center justify-between relative ${
                   activeCategory === "account" ? "bg-gray-900" : ""
                 }`}
               >
@@ -188,7 +188,7 @@ export default function SettingsPage() {
                   <div>
                     <button
                       onClick={() => setActiveSubMenu("account-info")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Hesap bilgileri</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>Hesabına ait bilgileri keşfet.</div>
@@ -196,7 +196,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setActiveSubMenu("password")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Şifreni değiştir</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>Eğer güçlü değilse, şifreni değiştir.</div>
@@ -204,7 +204,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setActiveSubMenu("deactivate")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium text-red-500">Hesabını devre dışı bırak</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>Hesabını nasıl devre dışı bırakacağını öğren.</div>
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                   <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
-                      className="p-2 hover:bg-gray-800 rounded-full mr-4"
+                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                   <div>
                     <button
                       onClick={() => setActiveDetailMenu("username")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Kullanıcı Adı</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>@{user?.nickname}</div>
@@ -237,7 +237,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setActiveDetailMenu("email")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Email</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>{user?.email}</div>
@@ -245,7 +245,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setActiveDetailMenu("verified")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Onaylanmış hesap</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>Mavi Tik başvurusu</div>
@@ -255,7 +255,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setActiveDetailMenu("location")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Konum</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>Konumunuzu ekleyin</div>
@@ -263,7 +263,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setActiveDetailMenu("gender")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Cinsiyet</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>Cinsiyetinizi belirtin</div>
@@ -271,7 +271,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setActiveDetailMenu("birthdate")}
-                      className="w-full px-4 py-4 text-left hover:bg-gray-800"
+                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
                     >
                       <div className="font-medium">Doğum Tarihi</div>
                       <div className="text-sm" style={{color: "#6e767d"}}>Doğum tarihinizi girin</div>
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                   <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
-                      className="p-2 hover:bg-gray-800 rounded-full mr-4"
+                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
@@ -355,7 +355,7 @@ export default function SettingsPage() {
                   <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
-                      className="p-2 hover:bg-gray-800 rounded-full mr-4"
+                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
@@ -386,7 +386,7 @@ export default function SettingsPage() {
                   <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
-                      className="p-2 hover:bg-gray-800 rounded-full mr-4"
+                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
@@ -424,7 +424,7 @@ export default function SettingsPage() {
                   <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
-                      className="p-2 hover:bg-gray-800 rounded-full mr-4"
+                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
@@ -462,7 +462,7 @@ export default function SettingsPage() {
                   <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
-                      className="p-2 hover:bg-gray-800 rounded-full mr-4"
+                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
@@ -482,7 +482,7 @@ export default function SettingsPage() {
                   <div className="p-4 border-b border-[#222222] flex items-center">
                     <button
                       onClick={handleBackButton}
-                      className="p-2 hover:bg-gray-800 rounded-full mr-4"
+                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
                     >
                       <ArrowLeftIcon className="w-5 h-5" />
                     </button>
