@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export async function GET() {
   try {
     const hashtags = await prisma.hashtag.findMany({
-      take: 15,
+      take: 5,
       orderBy: {
         posts: {
           _count: 'desc'

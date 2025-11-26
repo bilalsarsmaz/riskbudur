@@ -22,17 +22,24 @@ import {
   IconCode,
   IconFlag,
   IconTargetArrow,
-  IconShare3
+  IconShare3,
+  IconPlayerPlay,
+  IconTrash
 } from "@tabler/icons-react";
 
 interface PostItemProps {
   post: Post;
   isFirst?: boolean;
+  currentUserId?: string;
+  onPostDeleted?: (postId: string) => void;
 }
 
-export default function PostItem({ post, isFirst = false }: PostItemProps) {
+export default function PostItem({ post, isFirst = false, currentUserId, onPostDeleted }: PostItemProps) {
   const defaultCounts = { likes: 0, comments: 0 };
   const counts = post._count || defaultCounts;
+  
+  // Kendi postu mu kontrolü
+  const isOwnPost = currentUserId && post.author?.id === currentUserId;
   
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(counts.likes);
@@ -48,6 +55,7 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isCommented, setIsCommented] = useState((post as any).isCommented || false);
   const [linkedPosts, setLinkedPosts] = useState<any[]>([]);
+  const [youtubeEmbedOpen, setYoutubeEmbedOpen] = useState(false);
   
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -265,6 +273,21 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
     setShowMenu(false);
   };
 
+  const handleDelete = async () => {
+    if (confirm("Bu gönderiyi silmek istediğinize emin misiniz?")) {
+      try {
+        await deleteApi(`/posts/${post.id}`);
+        if (onPostDeleted) {
+          onPostDeleted(post.id);
+        }
+      } catch (error) {
+        console.error("Silme hatası:", error);
+        alert("Gönderi silinirken bir hata oluştu");
+      }
+    }
+    setShowMenu(false);
+  };
+
   const handleBookmark = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -450,7 +473,7 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
 
     // Kalan metni ekle
     if (lastIndex < content.length) {
-      const remaining = content.substring(lastIndex).trim();
+      const remaining = content.substring(lastIndex);
       if (remaining) {
         parts.push(remaining);
       }
@@ -547,50 +570,80 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                       zIndex: 9999
                     }}
                   >
-                    <button
-                      onClick={handleFollowToggle}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-800 first:rounded-t-lg flex items-center"
-                    >
-                      {isFollowing ? (
-                        <>
-                          <IconUserMinus className="w-5 h-5 mr-3" />
-                          @{post.author.nickname} adlı kişinin takibini bırak
-                        </>
-                      ) : (
-                        <>
-                          <IconUserPlus className="w-5 h-5 mr-3" />
-                          @{post.author.nickname} adlı kişiyi takip et
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={handleBlock}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-800 text-red-500 flex items-center"
-                    >
-                      <IconBan className="w-5 h-5 mr-3" />
-                      @{post.author.nickname} adlı kişiyi engelle
-                    </button>
-                    <button
-                      onClick={handleViewStats}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"
-                    >
-                      <IconChartBar className="w-5 h-5 mr-3" />
-                      Gönderi etkileşimlerini görüntüle
-                    </button>
-                    <button
-                      onClick={handlePin}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"
-                    >
-                      <IconCode className="w-5 h-5 mr-3" />
-                      Gönderiyi yerleştir
-                    </button>
-                    <button
-                      onClick={handleReport}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-800 last:rounded-b-lg text-red-500 flex items-center"
-                    >
-                      <IconFlag className="w-5 h-5 mr-3" />
-                      Gönderiyi bildir
-                    </button>
+                    {isOwnPost ? (
+                      <>
+                        {/* Kendi postum - Sil, Etkileşimler, Yerleştir */}
+                        <button
+                          onClick={handleDelete}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 first:rounded-t-lg text-red-500 flex items-center"
+                        >
+                          <IconTrash className="w-5 h-5 mr-3" />
+                          Gönderiyi sil
+                        </button>
+                        <button
+                          onClick={handleViewStats}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"
+                        >
+                          <IconChartBar className="w-5 h-5 mr-3" />
+                          Gönderi etkileşimlerini görüntüle
+                        </button>
+                        <button
+                          onClick={handlePin}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 last:rounded-b-lg flex items-center"
+                        >
+                          <IconCode className="w-5 h-5 mr-3" />
+                          Gönderiyi yerleştir
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {/* Başkasının postu - Takip, Engelle, Etkileşimler, Yerleştir, Bildir */}
+                        <button
+                          onClick={handleFollowToggle}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 first:rounded-t-lg flex items-center"
+                        >
+                          {isFollowing ? (
+                            <>
+                              <IconUserMinus className="w-5 h-5 mr-3" />
+                              @{post.author.nickname} adlı kişiyi takipten çıkar
+                            </>
+                          ) : (
+                            <>
+                              <IconUserPlus className="w-5 h-5 mr-3" />
+                              @{post.author.nickname} adlı kişiyi takip et
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleBlock}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 text-red-500 flex items-center"
+                        >
+                          <IconBan className="w-5 h-5 mr-3" />
+                          @{post.author.nickname} adlı kişiyi engelle
+                        </button>
+                        <button
+                          onClick={handleViewStats}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"
+                        >
+                          <IconChartBar className="w-5 h-5 mr-3" />
+                          Gönderi etkileşimlerini görüntüle
+                        </button>
+                        <button
+                          onClick={handlePin}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 flex items-center"
+                        >
+                          <IconCode className="w-5 h-5 mr-3" />
+                          Gönderiyi yerleştir
+                        </button>
+                        <button
+                          onClick={handleReport}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-800 last:rounded-b-lg text-red-500 flex items-center"
+                        >
+                          <IconFlag className="w-5 h-5 mr-3" />
+                          Gönderiyi bildir
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -610,6 +663,85 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                 </div>
               )}
             </Link>
+            
+            {/* YouTube/Link Preview - X.com Style */}
+            {(post as any).linkPreview && (
+              <div className="mb-3">
+                {(post as any).linkPreview.type === 'youtube' && (post as any).linkPreview.videoId ? (
+                  youtubeEmbedOpen ? (
+                    // YouTube Embed Player - Tam genişlik
+                    <div className="relative w-full rounded-xl overflow-hidden border border-[#333]" style={{paddingBottom: '56.25%'}}>
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${(post as any).linkPreview.videoId}?autoplay=1`}
+                        title={(post as any).linkPreview.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    // X.com Style - Yatay Kart
+                    <div 
+                      className="flex rounded-xl overflow-hidden border border-[#333] cursor-pointer hover:bg-[#111] transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setYoutubeEmbedOpen(true);
+                      }}
+                    >
+                      {/* Sol - Thumbnail */}
+                      <div className="relative flex-shrink-0" style={{width: "130px", height: "130px", minWidth: "130px"}}>
+                        <img 
+                          src={(post as any).linkPreview.thumbnail}
+                          alt={(post as any).linkPreview.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-black bg-opacity-80 rounded-full p-2">
+                            <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                          </div>
+                        </div>
+                      </div>
+                      {/* Sağ - Bilgiler */}
+                      <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                        <div className="text-xs text-gray-500 mb-1">{(post as any).linkPreview.siteName || 'youtube.com'}</div>
+                        <div className="text-sm font-medium text-white line-clamp-2 mb-1">{(post as any).linkPreview.title}</div>
+                        {(post as any).linkPreview.description && (
+                          <div className="text-xs text-gray-400 line-clamp-2">{(post as any).linkPreview.description}</div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  // Genel Link Preview - X.com Style Yatay Kart
+                  <a 
+                    href={(post as any).linkPreview.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex rounded-xl overflow-hidden border border-[#333] hover:bg-[#111] transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {(post as any).linkPreview.thumbnail && (
+                      <div className="relative flex-shrink-0" style={{width: "130px", height: "130px", minWidth: "130px"}}>
+                        <img 
+                          src={(post as any).linkPreview.thumbnail} 
+                          alt={(post as any).linkPreview.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                      <div className="text-xs text-gray-500 mb-1">{(post as any).linkPreview.siteName}</div>
+                      <div className="text-sm font-medium text-white line-clamp-2 mb-1">{(post as any).linkPreview.title}</div>
+                      {(post as any).linkPreview.description && (
+                        <div className="text-xs text-gray-400 line-clamp-2">{(post as any).linkPreview.description}</div>
+                      )}
+                    </div>
+                  </a>
+                )}
+              </div>
+            )}
             
             {/* Alıntılanan post */}
             {(post as any).quotedPost && (() => {
@@ -690,6 +822,32 @@ export default function PostItem({ post, isFirst = false }: PostItemProps) {
                               className="w-full h-auto"
                               style={{maxWidth: "518px", maxHeight: "518px", objectFit: "contain", width: "auto", height: "auto"}}
                             />
+                          </div>
+                        )}
+                        
+                        {/* Alıntılanan postun YouTube/Link Preview */}
+                        {(post as any).quotedPost.linkPreview && (
+                          <div className={`mt-2 flex rounded-xl overflow-hidden border border-[#333] ${(post as any).quotedPost.content ? 'mt-2' : ''}`}>
+                            {(post as any).quotedPost.linkPreview.thumbnail && (
+                              <div className="relative flex-shrink-0" style={{width: '100px', height: '100px'}}>
+                                <img 
+                                  src={(post as any).quotedPost.linkPreview.thumbnail}
+                                  alt={(post as any).quotedPost.linkPreview.title}
+                                  className="w-full h-full object-cover"
+                                />
+                                {(post as any).quotedPost.linkPreview.type === 'youtube' && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="bg-black bg-opacity-80 rounded-full p-1">
+                                      <IconPlayerPlay className="h-4 w-4 text-white" fill="white" />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            <div className="flex flex-col justify-center p-2 flex-1 min-w-0">
+                              <div className="text-xs text-gray-500">{(post as any).quotedPost.linkPreview.siteName}</div>
+                              <div className="text-xs font-medium text-white line-clamp-2">{(post as any).quotedPost.linkPreview.title}</div>
+                            </div>
                           </div>
                         )}
                       </Link>

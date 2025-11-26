@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Post } from "./PostList";
 import { postApi } from "@/lib/api";
-import { IconPhoto, IconGif, IconMoodSmile } from "@tabler/icons-react";
+import { IconPhoto, IconGif, IconMoodSmile, IconX, IconPlayerPlay } from "@tabler/icons-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import GifPicker, { TenorImage } from 'gif-picker-react';
 
@@ -17,6 +17,16 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [linkPreview, setLinkPreview] = useState<{
+    url: string;
+    title: string;
+    description: string;
+    thumbnail: string;
+    siteName: string;
+    type: string;
+    videoId?: string;
+  } | null>(null);
+  const [linkPreviewLoading, setLinkPreviewLoading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [isTextareaActive, setIsTextareaActive] = useState(false);
@@ -63,10 +73,69 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
     };
   }, [content]);
 
+  // URL algılama ve link preview
+  useEffect(() => {
+    const detectAndFetchLinkPreview = async () => {
+      // URL pattern
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urls = content.match(urlRegex);
+      
+      if (!urls || urls.length === 0) {
+        // linkPreview zaten varsa dokunma
+        return;
+      }
+      
+      const url = urls[0]; // İlk URL'yi al
+      
+      // Zaten aynı URL için preview varsa tekrar çekme
+      if (linkPreview && linkPreview.url === url) {
+        return;
+      }
+      
+      // Görsel zaten seçilmişse link preview gösterme
+      if (previewUrl && !previewUrl.startsWith('http')) {
+        return;
+      }
+      
+      setLinkPreviewLoading(true);
+      
+      try {
+        const response = await fetch('/api/link-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.title) {
+            setLinkPreview(data);
+            // YouTube linki ise content'ten kaldır
+            if (data.type === 'youtube') {
+              setContent(prev => prev.replace(url, '').trim());
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Link preview error:', error);
+      } finally {
+        setLinkPreviewLoading(false);
+      }
+    };
+    
+    // Debounce - kullanıcı yazmayı bitirene kadar bekle
+    const timeoutId = setTimeout(detectAndFetchLinkPreview, 500);
+    return () => clearTimeout(timeoutId);
+  }, [content, linkPreview, previewUrl]);
+
+  const removeLinkPreview = () => {
+    setLinkPreview(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!content.trim()) {
+    if (!content.trim() && !linkPreview) {
       setError("Post içeriği boş olamaz");
       return;
     }
@@ -93,12 +162,18 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
         postData.imageUrl = previewUrl;
       }
       
+      // Link preview varsa ekle
+      if (linkPreview) {
+        postData.linkPreview = linkPreview;
+      }
+      
       // API'ye gönder
       const data = await postApi<Post>("/posts", postData);
       
       // Post başarıyla oluşturuldu
       setContent("");
       setPreviewUrl(null);
+      setLinkPreview(null);
       setIsTextareaActive(false);
       onPostCreated(data);
       
@@ -205,6 +280,76 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
               >
                 ✕
               </button>
+            </div>
+          )}
+          
+          {/* Link Preview */}
+          {linkPreviewLoading && (
+            <div className="mt-2 p-3 border border-[#333] rounded-lg">
+              <div className="flex items-center text-gray-400 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#1DCD9F] mr-2"></div>
+                Link önizlemesi yükleniyor...
+              </div>
+            </div>
+          )}
+          
+          {linkPreview && !linkPreviewLoading && !previewUrl && (
+            <div className="mt-2 relative border border-[#333] rounded-lg overflow-hidden">
+              <button
+                type="button"
+                className="absolute top-2 right-2 bg-black bg-opacity-70 text-white rounded-full p-1 z-10 hover:bg-opacity-90"
+                onClick={removeLinkPreview}
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+              
+              {linkPreview.type === 'youtube' && linkPreview.thumbnail && (
+                <div className="flex">
+                  <div className="relative flex-shrink-0" style={{width: '130px', height: '130px'}}>
+                    <img 
+                      src={linkPreview.thumbnail} 
+                      alt={linkPreview.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        if (img.src.includes('maxresdefault')) {
+                          img.src = img.src.replace('maxresdefault', 'hqdefault');
+                        }
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-black bg-opacity-80 rounded-full p-2">
+                        <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                    <div className="text-xs text-gray-500 mb-1">{linkPreview.siteName}</div>
+                    <div className="text-sm font-medium text-white line-clamp-2 mb-1">{linkPreview.title}</div>
+                    {linkPreview.description && (
+                      <div className="text-xs text-gray-400 line-clamp-2">{linkPreview.description}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {linkPreview.type !== 'youtube' && linkPreview.thumbnail && (
+                <img 
+                  src={linkPreview.thumbnail} 
+                  alt={linkPreview.title}
+                  className="w-full h-32 object-cover"
+                />
+              )}
+              
+              {linkPreview.type !== 'youtube' && (
+                <div className="p-3 bg-[#181818]">
+                  <div className="text-xs text-gray-500 mb-1">{linkPreview.siteName}</div>
+                  <div className="text-sm font-medium text-white line-clamp-2">{linkPreview.title}</div>
+                  {linkPreview.description && (
+                    <div className="text-xs text-gray-400 mt-1 line-clamp-2">{linkPreview.description}</div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

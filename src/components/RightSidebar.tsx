@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { IconChevronRight } from "@tabler/icons-react";
 import PopularPostsSlider from "./PopularPostsSlider";
 import { fetchApi } from "@/lib/api";
 
@@ -75,12 +76,22 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                 <Link 
                   key={hashtag.id}
                   href={`/hashtag/${hashtag.name}`}
-                  className="flex items-center justify-between p-2 hover:bg-gray-800 rounded-lg"
+                  className="flex flex-col items-start py-2 hover:bg-gray-800 rounded-lg"
                 >
                   <span className="text-[#1DCD9F]">#{hashtag.name}</span>
-                  <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} post</span>
+                  <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} gönderi</span>
                 </Link>
               ))}
+              
+              {/* Daha fazla göster */}
+              <Link 
+                href="/explore"
+                className="flex items-center gap-1 pt-3 text-[#1DCD9F] hover:underline"
+                style={{fontSize: '13px'}}
+              >
+                <span>Daha fazla göster</span>
+                <IconChevronRight className="h-4 w-4" />
+              </Link>
             </div>
           )}
         </div>

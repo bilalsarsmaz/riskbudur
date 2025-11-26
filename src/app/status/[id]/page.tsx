@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeftIcon, CheckBadgeIcon as CheckBadgeIconOutline } from "@heroicons/react/24/outline";
+import { IconPlayerPlay } from "@tabler/icons-react";
 import { CheckBadgeIcon } from "@heroicons/react/24/solid";
 import {
   HeartIcon as HeartIconOutline,
@@ -444,6 +445,35 @@ export default function PostDetailPage() {
                   alt="Post media"
                   className="w-full h-auto"
                 />
+              </div>
+            )}
+
+            {/* YouTube/Link Preview */}
+            {(post as any).linkPreview && (
+              <div className="mb-4 flex rounded-xl overflow-hidden border border-[#333]">
+                {(post as any).linkPreview.thumbnail && (
+                  <div className="relative flex-shrink-0" style={{width: '130px', height: '130px'}}>
+                    <img 
+                      src={(post as any).linkPreview.thumbnail}
+                      alt={(post as any).linkPreview.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {(post as any).linkPreview.type === 'youtube' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black bg-opacity-80 rounded-full p-2">
+                          <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                  <div className="text-xs text-gray-500 mb-1">{(post as any).linkPreview.siteName}</div>
+                  <div className="text-sm font-medium text-white line-clamp-2 mb-1">{(post as any).linkPreview.title}</div>
+                  {(post as any).linkPreview.description && (
+                    <div className="text-xs text-gray-400 line-clamp-2">{(post as any).linkPreview.description}</div>
+                  )}
+                </div>
               </div>
             )}
 

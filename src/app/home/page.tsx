@@ -22,6 +22,7 @@ export default function HomePage() {
   const [page, setPage] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTimeline, setActiveTimeline] = useState<TimelineType>("all");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
@@ -32,6 +33,16 @@ export default function HomePage() {
       return;
     }
     setIsAuthenticated(true);
+    
+    // Token'dan userId çıkar
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.userId) {
+        setCurrentUserId(payload.userId);
+      }
+    } catch (e) {
+      console.error("Token parse hatası:", e);
+    }
   }, [router]);
 
   const loadPosts = useCallback(
@@ -114,18 +125,20 @@ export default function HomePage() {
       {/* Mobil Header - sadece mobilde görünür */}
       <MobileHeader />
 
-      {/* Desktop Header - sadece desktop'ta görünür */}
-      <header className="left-nav hidden lg:block fixed left-0 top-0 h-screen overflow-y-auto z-10 w-[68px] sm:w-[88px] lg:w-[595px]">
-        <div className="absolute left-0 sm:left-0 lg:left-[320px] w-full sm:w-full lg:w-[275px] h-full p-0 m-0 border-0">
-          <LeftSidebar />
-        </div>
-      </header>
+      {/* Desktop Layout Wrapper - ekran ortasında */}
+      <div className="hidden lg:flex justify-center w-full">
+        <div className="flex w-full max-w-[1310px]">
+          {/* Sol Sidebar */}
+          <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
+            <div className="h-full p-0 m-0 border-0">
+              <LeftSidebar />
+            </div>
+          </header>
 
-      {/* Ana içerik */}
-      <div className="lg:ml-[68px] sm:ml-[88px] lg:ml-[595px] flex justify-center">
-        <main className="content flex w-full max-w-[1310px] min-h-screen">
+          {/* Ana içerik */}
+          <main className="content flex flex-1 min-h-screen">
           {/* Timeline */}
-          <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-center lg:border-l lg:border-r border-[#222222] pt-14 pb-16 lg:pt-0 lg:pb-0">
+          <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222] pt-14 pb-16 lg:pt-0 lg:pb-0">
             {/* Timeline Tabs */}
             <TimelineTabs activeTab={activeTimeline} onTabChange={setActiveTimeline} />
             
@@ -138,7 +151,7 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                <PostList posts={posts} />
+                <PostList posts={posts} currentUserId={currentUserId || undefined} onPostDeleted={(postId) => setPosts(posts.filter(p => p.id !== postId))} />
 
                 {hasMore && (
                   <div ref={observerTarget} className="flex justify-center py-4">
@@ -159,11 +172,45 @@ export default function HomePage() {
           </section>
 
           {/* Sağ taraf – çok geniş ekranlarda */}
-          <aside className="right-side hidden 2xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+          <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
             <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
               <RightSidebar />
             </div>
           </aside>
+        </main>
+        </div>
+      </div>
+
+      {/* Mobil Layout - lg altında görünür */}
+      <div className="lg:hidden flex flex-col min-h-screen">
+        <main className="content flex-1">
+          <section className="timeline w-full flex flex-col items-stretch pt-14 pb-16">
+            <TimelineTabs activeTab={activeTimeline} onTabChange={setActiveTimeline} />
+            <ComposeBox onPostCreated={(newPost: Post) => setPosts([newPost, ...posts])} />
+            {loading && posts.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                <p className="mt-2 text-gray-500">Postlar yükleniyor...</p>
+              </div>
+            ) : (
+              <>
+                <PostList posts={posts} currentUserId={currentUserId || undefined} onPostDeleted={(postId) => setPosts(posts.filter(p => p.id !== postId))} />
+                {hasMore && (
+                  <div ref={observerTarget} className="flex justify-center py-4">
+                    {loading && (
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!hasMore && posts.length > 0 && (
+                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm postlar yüklendi</div>
+                )}
+              </>
+            )}
+          </section>
         </main>
       </div>
 

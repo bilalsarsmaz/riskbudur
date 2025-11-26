@@ -45,6 +45,7 @@ model Post {
   content     String
   mediaUrl    String?
   imageUrl    String?
+  linkPreview Json?
   authorId    String
   isAnonymous Boolean   @default(false)
   author      User      @relation(fields: [authorId], references: [id])

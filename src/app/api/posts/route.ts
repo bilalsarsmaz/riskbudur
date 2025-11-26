@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+// Hashtag'leri çıkar
+function extractHashtags(content: string): string[] {
+  const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
+  const matches = content.match(hashtagRegex);
+  if (!matches) return [];
+  return [...new Set(matches.map(tag => tag.slice(1).toLowerCase()))];
+}
+
 
 const prisma = new PrismaClient();
 
@@ -162,6 +170,7 @@ export async function GET(req: NextRequest) {
         createdAt: post.createdAt,
         imageUrl: post.imageUrl,
         mediaUrl: post.mediaUrl,
+        linkPreview: post.linkPreview,
         isAnonymous: post.isAnonymous,
         author: post.author,
         isLiked: userId ? likedPostIds.includes(post.id.toString()) : false,
@@ -185,6 +194,7 @@ export async function GET(req: NextRequest) {
             createdAt: quote.quotedPost.createdAt,
             imageUrl: quote.quotedPost.imageUrl,
             mediaUrl: quote.quotedPost.mediaUrl,
+            linkPreview: quote.quotedPost.linkPreview,
             isAnonymous: quote.quotedPost.isAnonymous,
             author: quote.quotedPost.author,
           },
@@ -216,7 +226,7 @@ export async function POST(req: NextRequest) {
     const userId = decoded.userId;
 
     const body = await req.json();
-    const { content, imageUrl, mediaUrl, isAnonymous } = body;
+    const { content, imageUrl, mediaUrl, isAnonymous, linkPreview } = body;
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
@@ -224,6 +234,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Hashtag'leri çıkar
+    const hashtagNames = extractHashtags(content);
 
     // Post oluştur
     const post = await prisma.post.create({
@@ -233,6 +246,13 @@ export async function POST(req: NextRequest) {
         imageUrl: imageUrl || null,
         mediaUrl: mediaUrl || null,
         isAnonymous: isAnonymous || false,
+        linkPreview: linkPreview || null,
+        hashtags: {
+          connectOrCreate: hashtagNames.map(name => ({
+            where: { name },
+            create: { name },
+          })),
+        },
       },
       include: {
         author: {
@@ -261,6 +281,7 @@ export async function POST(req: NextRequest) {
       createdAt: post.createdAt,
       imageUrl: post.imageUrl,
       mediaUrl: post.mediaUrl,
+      linkPreview: post.linkPreview,
       isAnonymous: post.isAnonymous,
       author: post.author,
       isLiked: false,

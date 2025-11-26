@@ -26,9 +26,11 @@ export interface Post {
 
 interface PostListProps {
   posts: Post[];
+  currentUserId?: string;
+  onPostDeleted?: (postId: string) => void;
 }
 
-export default function PostList({ posts }: PostListProps) {
+export default function PostList({ posts, currentUserId, onPostDeleted }: PostListProps) {
   if (posts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -39,9 +41,9 @@ export default function PostList({ posts }: PostListProps) {
   }
 
   return (
-    <div className="rounded-b-lg bg-white">
+    <div className="w-full">
       {posts.map((post, index) => (
-        <PostItem key={post.id} post={post} isFirst={index === 0} />
+        <PostItem key={post.id} post={post} isFirst={index === 0} currentUserId={currentUserId} onPostDeleted={onPostDeleted} />
       ))}
     </div>
   );

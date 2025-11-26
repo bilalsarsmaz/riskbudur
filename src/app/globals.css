@@ -134,6 +134,8 @@ header.left-nav,
 .post .verified-icon,
 .post-quote .verified-icon {
   color: var(--app-icon-verified) !important;
+}
+
 .post-author-name {
   color: var(--app-body-text) !important;
 }
@@ -148,8 +150,6 @@ header.left-nav,
 
 .post-quote-text {
   color: var(--app-body-text) !important;
-}
-
 }
 
 .post .interaction-icon {
@@ -171,3 +171,49 @@ header.left-nav,
 /* Scrollbar */
 ::-webkit-scrollbar { width: 0px; background: transparent; }
 * { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ===== Mobile Full Width Fix ===== */
+@media (max-width: 1023px) {
+  .timeline {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  .timeline .post,
+  .timeline .composebox {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .post .flex.justify-between {
+    width: 100% !important;
+  }
+  
+  /* Mobilde görseller tam genişlik */
+  .post-media,
+  .post-quote-media,
+  .linked-post-media {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .post-media img,
+  .post-quote-media img,
+  .linked-post-media img {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Quote container mobilde tam genişlik */
+  .post-quote {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+/* ===== End Mobile Full Width Fix ===== */
