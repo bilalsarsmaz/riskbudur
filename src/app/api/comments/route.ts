@@ -4,7 +4,7 @@ import { verifyToken } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// Yeni yorum ekle
+// Yeni yanit (reply) ekle - artik Post olarak kaydediliyor
 export async function POST(req: Request) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1];
@@ -18,53 +18,116 @@ export async function POST(req: Request) {
     const decoded = await verifyToken(token);
     if (!decoded) {
       return NextResponse.json(
-        { message: "Geçersiz token" },
+        { message: "Gecersiz token" },
         { status: 401 }
       );
     }
 
     const { content, postId, isAnonymous } = await req.json();
 
-    // Post'un var olup olmadığını kontrol et
-    const post = await prisma.post.findUnique({
+    // Parent post'un var olup olmadigini kontrol et
+    const parentPost = await prisma.post.findUnique({
       where: { id: BigInt(postId) },
+      select: {
+        id: true,
+        authorId: true,
+        threadRootId: true,
+        parentPostId: true,
+        author: {
+          select: {
+            id: true,
+            nickname: true,
+          }
+        }
+      }
     });
 
-    if (!post) {
+    if (!parentPost) {
       return NextResponse.json(
-        { message: "Post bulunamadı" },
+        { message: "Post bulunamadi" },
         { status: 404 }
       );
     }
 
-    // Yorumu oluştur
-    const comment = await prisma.comment.create({
+    // Thread root ID hesapla
+    // Eger parent post'un threadRootId'si varsa onu kullan
+    // Yoksa parent post'un parentPostId'si yoksa (root post ise) parent post'un ID'sini kullan
+    // Yoksa parent post'un parentPostId'sini threadRoot olarak kullan
+    let threadRootId: bigint;
+    
+    if (parentPost.threadRootId) {
+      // Parent zaten bir thread'in parcasi
+      threadRootId = parentPost.threadRootId;
+    } else if (!parentPost.parentPostId) {
+      // Parent bir root post, bu post thread'in root'u olacak
+      threadRootId = parentPost.id;
+    } else {
+      // Parent baska bir posta yanit, onun parent'ini thread root olarak kullan
+      threadRootId = parentPost.parentPostId;
+    }
+
+    // Yaniti Post olarak olustur (parentPostId ve threadRootId ile)
+    const reply = await prisma.post.create({
       data: {
         content,
         isAnonymous: isAnonymous || false,
         authorId: decoded.userId,
-        postId: BigInt(postId),
+        parentPostId: BigInt(postId),
+        threadRootId: threadRootId,
       },
       include: {
         author: {
           select: {
             id: true,
             nickname: true,
+            fullName: true,
             hasBlueTick: true,
+            profileImage: true,
           },
         },
+        parentPost: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                nickname: true,
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            likes: true,
+            replies: true,
+          }
+        }
       },
     });
 
-    const formattedComment = {
-      ...comment,
-      postId: comment.postId.toString()
+    const formattedReply = {
+      id: reply.id.toString(),
+      content: reply.content,
+      createdAt: reply.createdAt,
+      isAnonymous: reply.isAnonymous,
+      author: reply.author,
+      parentPostId: reply.parentPostId?.toString(),
+      threadRootId: reply.threadRootId?.toString(),
+      parentPost: reply.parentPost ? {
+        id: reply.parentPost.id.toString(),
+        author: reply.parentPost.author
+      } : null,
+      _count: {
+        likes: reply._count.likes,
+        comments: reply._count.replies,
+      },
+      isLiked: false,
     };
-    return NextResponse.json(formattedComment, { status: 201 });
+
+    return NextResponse.json(formattedReply, { status: 201 });
   } catch (error) {
-    console.error("Yorum ekleme hatası:", error);
+    console.error("Yanit ekleme hatasi:", error);
     return NextResponse.json(
-      { message: "Bir hata oluştu" },
+      { message: "Bir hata olustu" },
       { status: 500 }
     );
   }

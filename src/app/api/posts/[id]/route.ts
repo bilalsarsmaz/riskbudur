@@ -10,6 +10,7 @@ export async function GET(
   try {
     const { id } = context.params;
 
+    // Ana postu getir
     const post = await prisma.post.findUnique({
       where: { id: BigInt(id) },
       include: {
@@ -23,19 +24,16 @@ export async function GET(
             fullName: true,
           },
         },
-        comments: {
-          orderBy: { createdAt: "desc" },
+        parentPost: {
           include: {
             author: {
               select: {
                 id: true,
                 nickname: true,
-                hasBlueTick: true,
-                profileImage: true,
                 fullName: true,
-              },
-            },
-          },
+              }
+            }
+          }
         },
         likes: {
           select: {
@@ -45,7 +43,7 @@ export async function GET(
         _count: {
           select: {
             likes: true,
-            comments: true,
+            replies: true,
           },
         },
       },
@@ -53,18 +51,110 @@ export async function GET(
 
     if (!post) {
       return NextResponse.json(
-        { message: "Post bulunamadı" },
+        { message: "Post bulunamadi" },
         { status: 404 }
       );
     }
 
-    // Bu post'un alıntı yaptığı postu bul (Quote tablosundan)
+    // Direkt olarak parentPostId ile yanitlari cek
+    const directReplies = await prisma.post.findMany({
+      where: {
+        parentPostId: BigInt(id)
+      },
+      orderBy: { createdAt: "asc" },
+      include: {
+        author: {
+          select: {
+            id: true,
+            nickname: true,
+            hasBlueTick: true,
+            profileImage: true,
+            fullName: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            replies: true,
+          }
+        }
+      },
+    });
+
+    // Her yanit icin alt yanitlari da cek (recursive)
+    const fetchNestedReplies = async (parentId: bigint): Promise<any[]> => {
+      const replies = await prisma.post.findMany({
+        where: { parentPostId: parentId },
+        orderBy: { createdAt: "asc" },
+        include: {
+          author: {
+            select: {
+              id: true,
+              nickname: true,
+              hasBlueTick: true,
+              profileImage: true,
+              fullName: true,
+            },
+          },
+          _count: {
+            select: {
+              likes: true,
+              replies: true,
+            }
+          }
+        },
+      });
+
+      const result = [];
+      for (const reply of replies) {
+        const nestedReplies = await fetchNestedReplies(reply.id);
+        result.push({
+          id: reply.id.toString(),
+          content: reply.content,
+          createdAt: reply.createdAt,
+          isAnonymous: reply.isAnonymous,
+          mediaUrl: reply.mediaUrl,
+          imageUrl: reply.imageUrl,
+          linkPreview: reply.linkPreview,
+          author: reply.author,
+          _count: {
+            likes: reply._count.likes,
+            comments: reply._count.replies,
+          },
+        });
+        result.push(...nestedReplies);
+      }
+      return result;
+    };
+
+    // Tum yanitlari topla (direkt + nested)
+    let allReplies: any[] = [];
+    for (const reply of directReplies) {
+      allReplies.push({
+        id: reply.id.toString(),
+        content: reply.content,
+        createdAt: reply.createdAt,
+        isAnonymous: reply.isAnonymous,
+        mediaUrl: reply.mediaUrl,
+        imageUrl: reply.imageUrl,
+        linkPreview: reply.linkPreview,
+        author: reply.author,
+        _count: {
+          likes: reply._count.likes,
+          comments: reply._count.replies,
+        },
+      });
+      const nestedReplies = await fetchNestedReplies(reply.id);
+      allReplies.push(...nestedReplies);
+    }
+
+    // Bu post'un alinti yaptigi postu bul
     const quote = await prisma.quote.findFirst({
       where: {
         authorId: post.authorId,
         content: post.content,
         createdAt: {
-          gte: new Date(post.createdAt.getTime() - 1000), // 1 saniye tolerans
+          gte: new Date(post.createdAt.getTime() - 1000),
           lte: new Date(post.createdAt.getTime() + 1000),
         },
       },
@@ -85,33 +175,42 @@ export async function GET(
       },
     });
 
-    // BigInt alanlarını string'e çevir
-    const formattedComments = post.comments.map((comment) => ({
-      ...comment,
-      id: comment.id.toString(),
-      postId: comment.postId.toString(),
-    }));
-
     const formattedPost = {
-      ...post,
       id: post.id.toString(),
-      comments: formattedComments,
+      content: post.content,
+      createdAt: post.createdAt,
+      isAnonymous: post.isAnonymous,
+      mediaUrl: post.mediaUrl,
+      imageUrl: post.imageUrl,
+      linkPreview: post.linkPreview,
+      author: post.author,
+      comments: allReplies,
+      parentPost: post.parentPost ? {
+        id: post.parentPost.id.toString(),
+        content: post.parentPost.content,
+        author: post.parentPost.author,
+      } : null,
       quotedPost: quote && quote.quotedPost ? {
         id: quote.quotedPost.id.toString(),
         content: quote.quotedPost.content,
         createdAt: quote.quotedPost.createdAt,
         imageUrl: quote.quotedPost.imageUrl,
         mediaUrl: quote.quotedPost.mediaUrl,
+        linkPreview: quote.quotedPost.linkPreview,
         isAnonymous: quote.quotedPost.isAnonymous,
         author: quote.quotedPost.author,
       } : null,
+      _count: {
+        likes: post._count.likes,
+        comments: post._count.replies,
+      },
     };
 
     return NextResponse.json(formattedPost);
   } catch (error) {
-    console.error("Post getirme hatası:", error);
+    console.error("Post getirme hatasi:", error);
     return NextResponse.json(
-      { message: "Post getirilirken bir hata oluştu" },
+      { message: "Post getirilirken bir hata olustu" },
       { status: 500 }
     );
   }
@@ -125,7 +224,6 @@ export async function DELETE(
   try {
     const { id } = context.params;
     
-    // Token kontrolü
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -136,7 +234,6 @@ export async function DELETE(
     
     const token = authHeader.replace("Bearer ", "");
     
-    // Token'dan userId çıkar
     let userId: string;
     try {
       const jwt = await import("jsonwebtoken");
@@ -144,12 +241,11 @@ export async function DELETE(
       userId = decoded.userId;
     } catch (e) {
       return NextResponse.json(
-        { message: "Geçersiz token" },
+        { message: "Gecersiz token" },
         { status: 401 }
       );
     }
     
-    // Post'u bul
     const post = await prisma.post.findUnique({
       where: { id: BigInt(id) },
       select: { authorId: true }
@@ -157,35 +253,34 @@ export async function DELETE(
     
     if (!post) {
       return NextResponse.json(
-        { message: "Post bulunamadı" },
+        { message: "Post bulunamadi" },
         { status: 404 }
       );
     }
     
-    // Sadece post sahibi silebilir
     if (post.authorId !== userId) {
       return NextResponse.json(
-        { message: "Bu gönderiyi silme yetkiniz yok" },
+        { message: "Bu gonderiyi silme yetkiniz yok" },
         { status: 403 }
       );
     }
     
-    // İlişkili verileri sil (likes, comments, quotes, bookmarks)
+    // Iliskili verileri sil
     await prisma.like.deleteMany({ where: { postId: BigInt(id) } });
     await prisma.comment.deleteMany({ where: { postId: BigInt(id) } });
     await prisma.quote.deleteMany({ where: { quotedPostId: BigInt(id) } });
     await prisma.bookmark.deleteMany({ where: { postId: BigInt(id) } });
+    await prisma.post.deleteMany({ where: { parentPostId: BigInt(id) } });
     
-    // Post'u sil
     await prisma.post.delete({
       where: { id: BigInt(id) }
     });
     
-    return NextResponse.json({ message: "Gönderi silindi" });
+    return NextResponse.json({ message: "Gonderi silindi" });
   } catch (error) {
-    console.error("Post silme hatası:", error);
+    console.error("Post silme hatasi:", error);
     return NextResponse.json(
-      { message: "Post silinirken bir hata oluştu" },
+      { message: "Post silinirken bir hata olustu" },
       { status: 500 }
     );
   }

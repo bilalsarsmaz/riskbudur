@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
-// Hashtag'leri çıkar
+
+// Hashtag'leri cikar
 function extractHashtags(content: string): string[] {
   const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
   const matches = content.match(hashtagRegex);
   if (!matches) return [];
   return [...new Set(matches.map(tag => tag.slice(1).toLowerCase()))];
 }
-
 
 const prisma = new PrismaClient();
 
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
         userId = decoded.userId;
       } catch (error) {
-        // Token geçersiz, devam et
+        // Token gecersiz, devam et
       }
     }
 
@@ -30,7 +30,12 @@ export async function GET(req: NextRequest) {
     const skip = parseInt(searchParams.get("skip") || "0");
     const take = parseInt(searchParams.get("take") || "20");
 
+    // ONEMLI: Sadece root post'lari getir (parentPostId = null)
+    // Yanitlar timeline'da gosterilmez, sadece post detayinda gosterilir
     const posts = await prisma.post.findMany({
+      where: {
+        parentPostId: null, // Sadece root post'lar
+      },
       skip,
       take,
       orderBy: { createdAt: "desc" },
@@ -49,13 +54,26 @@ export async function GET(req: NextRequest) {
             likes: true,
             comments: true,
             quotes: true,
+            replies: true, // Thread yanitlari
           },
         },
-
+        // Thread'in ilk birkaç yanitini getir (preview icin)
+        replies: {
+          take: 1,
+          orderBy: { createdAt: "asc" },
+          include: {
+            author: {
+              select: {
+                id: true,
+                nickname: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    // Kullanıcının beğendiği postları ayrı sorgu ile al
+    // Kullanicinin begendigi postlari ayri sorgu ile al
     let likedPostIds: string[] = [];
     let commentedPostIds: string[] = [];
     let quotedPostIds: string[] = [];
@@ -67,7 +85,7 @@ export async function GET(req: NextRequest) {
           where: {
             userId: userId,
             postId: {
-              in: posts.map(p => p.id.toString()),
+              in: posts.map(p => p.id),
             },
           },
           select: {
@@ -77,7 +95,6 @@ export async function GET(req: NextRequest) {
         likedPostIds = userLikes.map(like => like.postId.toString());
       } catch (likeError) {
         console.error("Likes fetch error:", likeError);
-        // Likes hatası olsa bile devam et
       }
       
       try {
@@ -85,7 +102,7 @@ export async function GET(req: NextRequest) {
           where: {
             authorId: userId,
             postId: {
-              in: posts.map(p => p.id.toString()),
+              in: posts.map(p => p.id),
             },
           },
           select: {
@@ -95,7 +112,6 @@ export async function GET(req: NextRequest) {
         commentedPostIds = userComments.map(comment => comment.postId.toString());
       } catch (commentError) {
         console.error("Comments fetch error:", commentError);
-        // Comments hatası olsa bile devam et
       }
       
       try {
@@ -103,7 +119,7 @@ export async function GET(req: NextRequest) {
           where: {
             authorId: userId,
             quotedPostId: {
-              in: posts.map(p => p.id.toString()),
+              in: posts.map(p => p.id),
             },
           },
           select: {
@@ -113,7 +129,6 @@ export async function GET(req: NextRequest) {
         quotedPostIds = userQuotes.map(quote => quote.quotedPostId.toString());
       } catch (quoteError) {
         console.error("Quotes fetch error:", quoteError);
-        // Quotes hatası olsa bile devam et
       }
       
       try {
@@ -121,7 +136,7 @@ export async function GET(req: NextRequest) {
           where: {
             userId: userId,
             postId: {
-              in: posts.map(p => p.id.toString()),
+              in: posts.map(p => p.id),
             },
           },
           select: {
@@ -131,19 +146,18 @@ export async function GET(req: NextRequest) {
         bookmarkedPostIds = userBookmarks.map(bookmark => bookmark.postId.toString());
       } catch (bookmarkError) {
         console.error("Bookmarks fetch error:", bookmarkError);
-        // Bookmarks hatası olsa bile devam et
       }
     }
 
-    // Her post için alıntı bilgisini çek
+    // Her post icin alinti bilgisini cek
     const formattedPosts = await Promise.all(posts.map(async (post) => {
-      // Bu post'un alıntı yaptığı postu bul (Quote tablosundan)
+      // Bu post'un alinti yaptigi postu bul (Quote tablosundan)
       const quote = await prisma.quote.findFirst({
         where: {
           authorId: post.authorId,
           content: post.content,
           createdAt: {
-            gte: new Date(post.createdAt.getTime() - 1000), // 1 saniye tolerans
+            gte: new Date(post.createdAt.getTime() - 1000),
             lte: new Date(post.createdAt.getTime() + 1000),
           },
         },
@@ -164,6 +178,16 @@ export async function GET(req: NextRequest) {
         },
       });
 
+      // Thread bilgisi: Ayni yazarin kendi postuna verdigi yanitlar
+      const threadRepliesCount = await prisma.post.count({
+        where: {
+          threadRootId: post.id,
+          authorId: post.authorId, // Sadece ayni yazarin yanitlari
+        },
+      });
+
+      const isThread = threadRepliesCount > 0;
+
       const basePost = {
         id: post.id.toString(),
         content: post.content,
@@ -178,13 +202,16 @@ export async function GET(req: NextRequest) {
         isQuoted: userId ? quotedPostIds.includes(post.id.toString()) : false,
         isBookmarked: userId ? bookmarkedPostIds.includes(post.id.toString()) : false,
         _count: {
-          ...post._count,
+          likes: post._count.likes,
+          comments: post._count.comments + post._count.replies, // Toplam yanit
           quotes: post._count?.quotes || 0,
         },
         isPopular: (post._count?.likes || 0) > 30 || (post._count?.comments || 0) > 10,
+        isThread: isThread,
+        threadRepliesCount: threadRepliesCount,
       };
 
-      // Eğer alıntı varsa, alıntılanan postu ekle
+      // Eger alinti varsa, alintilanan postu ekle
       if (quote && quote.quotedPost) {
         return {
           ...basePost,
@@ -207,11 +234,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(formattedPosts);
   } catch (error) {
     console.error("Posts fetch error:", error);
-    return NextResponse.json({ error: "Posts yüklenirken hata oluştu" }, { status: 500 });
+    return NextResponse.json({ error: "Posts yuklenirken hata olustu" }, { status: 500 });
   }
 }
 
-// Post oluştur
+// Post olustur
 export async function POST(req: NextRequest) {
   try {
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -226,19 +253,38 @@ export async function POST(req: NextRequest) {
     const userId = decoded.userId;
 
     const body = await req.json();
-    const { content, imageUrl, mediaUrl, isAnonymous, linkPreview } = body;
+    const { content, imageUrl, mediaUrl, isAnonymous, linkPreview, parentPostId } = body;
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
-        { message: "Post içeriği boş olamaz" },
+        { message: "Post icerigi bos olamaz" },
         { status: 400 }
       );
     }
 
-    // Hashtag'leri çıkar
+    // Hashtag'leri cikar
     const hashtagNames = extractHashtags(content);
 
-    // Post oluştur
+    // Thread root ID hesapla
+    let threadRootId: bigint | null = null;
+    let actualParentPostId: bigint | null = null;
+
+    if (parentPostId) {
+      actualParentPostId = BigInt(parentPostId);
+      
+      // Parent post'u bul
+      const parentPost = await prisma.post.findUnique({
+        where: { id: actualParentPostId },
+        select: { threadRootId: true, authorId: true },
+      });
+
+      if (parentPost) {
+        // Eger parent post'un threadRootId'si varsa onu kullan, yoksa parent post'un kendi ID'sini kullan
+        threadRootId = parentPost.threadRootId || actualParentPostId;
+      }
+    }
+
+    // Post olustur
     const post = await prisma.post.create({
       data: {
         content: content.trim(),
@@ -247,6 +293,8 @@ export async function POST(req: NextRequest) {
         mediaUrl: mediaUrl || null,
         isAnonymous: isAnonymous || false,
         linkPreview: linkPreview || null,
+        parentPostId: actualParentPostId,
+        threadRootId: threadRootId,
         hashtags: {
           connectOrCreate: hashtagNames.map(name => ({
             where: { name },
@@ -269,12 +317,13 @@ export async function POST(req: NextRequest) {
             likes: true,
             comments: true,
             quotes: true,
+            replies: true,
           },
         },
       },
     });
 
-    // BigInt serialization için
+    // BigInt serialization icin
     const formattedPost = {
       id: post.id.toString(),
       content: post.content,
@@ -283,6 +332,8 @@ export async function POST(req: NextRequest) {
       mediaUrl: post.mediaUrl,
       linkPreview: post.linkPreview,
       isAnonymous: post.isAnonymous,
+      parentPostId: post.parentPostId?.toString() || null,
+      threadRootId: post.threadRootId?.toString() || null,
       author: post.author,
       isLiked: false,
       isCommented: false,
@@ -290,17 +341,18 @@ export async function POST(req: NextRequest) {
       isBookmarked: false,
       _count: {
         likes: post._count.likes,
-        comments: post._count.comments,
+        comments: post._count.comments + post._count.replies,
         quotes: post._count.quotes || 0,
       },
       isPopular: false,
+      isThread: false,
     };
 
     return NextResponse.json(formattedPost, { status: 201 });
   } catch (error) {
-    console.error("Post oluşturma hatası:", error);
+    console.error("Post olusturma hatasi:", error);
     return NextResponse.json(
-      { message: "Post oluşturulurken hata oluştu" },
+      { message: "Post olusturulurken hata olustu" },
       { status: 500 }
     );
   }

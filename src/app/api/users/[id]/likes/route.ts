@@ -10,7 +10,7 @@ export async function GET(
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "20");
     const skip = (page - 1) * limit;
 
     const user = await prisma.user.findUnique({
@@ -19,18 +19,14 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json(
-        { message: "Kullanici bulunamadi" },
+        { message: "Kullanıcı bulunamadı" },
         { status: 404 }
       );
     }
 
-    // ONEMLI: Sadece root postlari getir (parentPostId = null)
-    // Yanitlar ayri "Yanitlar" sekmesinde gosterilecek
-    const posts = await prisma.post.findMany({
+    const likes = await prisma.like.findMany({
       where: {
-        authorId: user.id,
-        isAnonymous: false,
-        parentPostId: null, // Sadece root postlar
+        userId: user.id,
       },
       skip,
       take: limit,
@@ -38,29 +34,32 @@ export async function GET(
         createdAt: "desc",
       },
       include: {
-        author: {
-          select: {
-            id: true,
-            nickname: true,
-            hasBlueTick: true,
-            profileImage: true,
-            fullName: true,
-          },
-        },
-        _count: {
-          select: {
-            likes: true,
-            comments: true,
-            quotes: true,
-            replies: true,
+        post: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                nickname: true,
+                hasBlueTick: true,
+                profileImage: true,
+                fullName: true,
+              },
+            },
+            _count: {
+              select: {
+                likes: true,
+                comments: true,
+                quotes: true,
+              },
+            },
           },
         },
       },
     });
 
-    // Her post icin alinti ve thread bilgisini cek
-    const formattedPosts = await Promise.all(posts.map(async (post) => {
-      // Bu post'un alinti yaptigi postu bul (Quote tablosundan)
+    const formattedPosts = await Promise.all(likes.map(async (like) => {
+      const post = like.post;
+      
       const quote = await prisma.quote.findFirst({
         where: {
           authorId: post.authorId,
@@ -87,16 +86,6 @@ export async function GET(
         },
       });
 
-      // Thread bilgisi: Ayni yazarin kendi postuna verdigi yanitlar
-      const threadRepliesCount = await prisma.post.count({
-        where: {
-          threadRootId: post.id,
-          authorId: post.authorId,
-        },
-      });
-
-      const isThread = threadRepliesCount > 0;
-
       const basePost = {
         id: post.id.toString(),
         content: post.content,
@@ -105,6 +94,7 @@ export async function GET(
         imageUrl: post.imageUrl,
         linkPreview: post.linkPreview,
         isAnonymous: post.isAnonymous,
+        isLiked: true,
         author: {
           id: post.author.id,
           nickname: post.author.nickname,
@@ -114,14 +104,11 @@ export async function GET(
         },
         _count: {
           likes: post._count.likes,
-          comments: post._count.comments + post._count.replies,
+          comments: post._count.comments,
           quotes: post._count.quotes || 0,
-        },
-        isThread: isThread,
-        threadRepliesCount: threadRepliesCount,
+        }
       };
 
-      // Eger alinti varsa, alintilanan postu ekle
       if (quote && quote.quotedPost) {
         return {
           ...basePost,
@@ -141,11 +128,9 @@ export async function GET(
       return basePost;
     }));
 
-    const total = await prisma.post.count({
+    const total = await prisma.like.count({
       where: {
-        authorId: user.id,
-        isAnonymous: false,
-        parentPostId: null,
+        userId: user.id,
       },
     });
 
@@ -159,9 +144,9 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Kullanici postlari getirme hatasi:", error);
+    console.error("Kullanıcı beğenileri getirme hatası:", error);
     return NextResponse.json(
-      { message: "Bir hata olustu" },
+      { message: "Bir hata oluştu" },
       { status: 500 }
     );
   }

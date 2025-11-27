@@ -41,21 +41,31 @@ model User {
 }
 
 model Post {
-  id          BigInt    @id @default(autoincrement())
-  content     String
-  mediaUrl    String?
-  imageUrl    String?
-  linkPreview Json?
-  authorId    String
-  isAnonymous Boolean   @default(false)
-  author      User      @relation(fields: [authorId], references: [id])
-  likes       Like[]
-  bookmarks   Bookmark[]
-  comments    Comment[]
-  quotes      Quote[]
-  hashtags    Hashtag[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            BigInt    @id @default(autoincrement())
+  content       String
+  mediaUrl      String?
+  imageUrl      String?
+  linkPreview   Json?
+  authorId      String
+  parentPostId  BigInt?
+  threadRootId  BigInt?
+  isAnonymous   Boolean   @default(false)
+  author        User      @relation(fields: [authorId], references: [id])
+  parentPost    Post?     @relation("PostReplies", fields: [parentPostId], references: [id])
+  replies       Post[]    @relation("PostReplies")
+  threadRoot    Post?     @relation("ThreadPosts", fields: [threadRootId], references: [id])
+  threadPosts   Post[]    @relation("ThreadPosts")
+  likes         Like[]
+
+  @@index([parentPostId])
+  @@index([threadRootId])
+  @@index([authorId, createdAt])
+  bookmarks     Bookmark[]
+  comments      Comment[]
+  quotes        Quote[]
+  hashtags      Hashtag[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Like {
