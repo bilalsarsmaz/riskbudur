@@ -11,6 +11,7 @@ import EditProfileModal from "@/components/EditProfileModal";
 import { CheckBadgeIcon, LinkIcon, CalendarIcon } from "@heroicons/react/24/solid";
 import { fetchApi } from "@/lib/api";
 import PostList from "@/components/PostList";
+import ReplyThreadPreview from "@/components/ReplyThreadPreview";
 
 interface Profile {
   username: string;
@@ -53,13 +54,14 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [mediaPosts, setMediaPosts] = useState<Post[]>([]);
+  const [likedPosts, setLikedPosts] = useState<Post[]>([]);
+  const [replyPosts, setReplyPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [validUsernames, setValidUsernames] = useState<string[]>([]);
 
-  // @mention parse fonksiyonu
   const parseBioWithMentions = (bio: string): React.ReactNode[] => {
     const mentionRegex = /@([a-zA-Z0-9_]+)/g;
     const parts: React.ReactNode[] = [];
@@ -95,7 +97,7 @@ export default function UserProfilePage() {
         const data = await fetchApi("/users/me");
         setCurrentUser(data);
       } catch (err) {
-        console.error("Mevcut kullanıcı alınamadı:", err);
+        console.error("Mevcut kullanici alinamadi:", err);
       }
     };
 
@@ -106,7 +108,6 @@ export default function UserProfilePage() {
         setProfile(data);
         setError(null);
         
-        // Bio'daki @username'leri kontrol et
         if (data.bio) {
           const mentionRegex = /@([a-zA-Z0-9_]+)/g;
           const mentions: string[] = [];
@@ -115,7 +116,6 @@ export default function UserProfilePage() {
             mentions.push(match[1]);
           }
           
-          // Her mention için kullanıcı var mı kontrol et
           const validUsers: string[] = [];
           for (const mention of mentions) {
             try {
@@ -123,15 +123,13 @@ export default function UserProfilePage() {
               if (checkData.exists) {
                 validUsers.push(mention.toLowerCase());
               }
-            } catch (e) {
-              // Kullanıcı bulunamadı
-            }
+            } catch (e) {}
           }
           setValidUsernames(validUsers);
         }
       } catch (err) {
-        setError("Profil yüklenirken bir hata oluştu.");
-        console.error("Profil yükleme hatası:", err);
+        setError("Profil yuklenirken bir hata olustu.");
+        console.error("Profil yukleme hatasi:", err);
       } finally {
         setLoading(false);
       }
@@ -142,7 +140,7 @@ export default function UserProfilePage() {
         const data = await fetchApi(`/users/${username}/posts`);
         setPosts(data.posts || []);
       } catch (err) {
-        console.error("Postlar yüklenirken hata oluştu:", err);
+        console.error("Postlar yuklenirken hata olustu:", err);
       }
     };
 
@@ -151,7 +149,25 @@ export default function UserProfilePage() {
         const data = await fetchApi(`/users/${username}/media`);
         setMediaPosts(data.posts || []);
       } catch (err) {
-        console.error("Medya postları yüklenirken hata oluştu:", err);
+        console.error("Medya postlari yuklenirken hata olustu:", err);
+      }
+    };
+
+    const fetchUserLikedPosts = async () => {
+      try {
+        const data = await fetchApi(`/users/${username}/likes`);
+        setLikedPosts(data.posts || []);
+      } catch (err) {
+        console.error("Begenilen postlar yuklenirken hata olustu:", err);
+      }
+    };
+
+    const fetchUserReplies = async () => {
+      try {
+        const data = await fetchApi(`/users/${username}/replies`);
+        setReplyPosts(data.posts || []);
+      } catch (err) {
+        console.error("Yanıtlar yuklenirken hata olustu:", err);
       }
     };
 
@@ -159,6 +175,8 @@ export default function UserProfilePage() {
     fetchProfile();
     fetchUserPosts();
     fetchUserMediaPosts();
+    fetchUserLikedPosts();
+    fetchUserReplies();
   }, [username]);
 
   const isOwnProfile = currentUser?.nickname === username;
@@ -167,14 +185,12 @@ export default function UserProfilePage() {
     window.location.reload();
   };
 
-  // Loading durumu
   const LoadingContent = () => (
     <div className="flex items-center justify-center py-20">
       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1DCD9F]"></div>
     </div>
   );
 
-  // Profil içeriği
   const ProfileContent = () => (
     <>
       <div className="border-b border-[#222222] overflow-hidden">
@@ -210,7 +226,7 @@ export default function UserProfilePage() {
               onClick={() => isOwnProfile ? setIsEditModalOpen(true) : null}
               className="px-4 py-2 rounded-full font-medium border border-[#222222] hover:bg-[#151515]"
             >
-              {isOwnProfile ? "Profili Düzenle" : "Takip Et"}
+              {isOwnProfile ? "Profili Duzenle" : "Takip Et"}
             </button>
           </div>
 
@@ -240,7 +256,7 @@ export default function UserProfilePage() {
               )}
               <div className="flex items-center" style={{color: "#6e767d"}}>
                 <CalendarIcon className="w-4 h-4 mr-1" />
-                Katılma tarihi: {profile!.joinDate}
+                Katilma tarihi: {profile!.joinDate}
               </div>
             </div>
 
@@ -249,7 +265,7 @@ export default function UserProfilePage() {
                 <strong>{profile!.following}</strong> <span style={{color: "#6e767d"}}>Takip Edilen</span>
               </span>
               <span>
-                <strong>{profile!.followers}</strong> <span style={{color: "#6e767d"}}>Takipçi</span>
+                <strong>{profile!.followers}</strong> <span style={{color: "#6e767d"}}>Takipci</span>
               </span>
             </div>
           </div>
@@ -259,9 +275,7 @@ export default function UserProfilePage() {
           <button
             onClick={() => setActiveTab("posts")}
             className={`flex-1 py-4 text-center font-medium ${
-              activeTab === "posts"
-                ? "border-b-2 border-[#1DCD9F]"
-                : ""
+              activeTab === "posts" ? "border-b-2 border-[#1DCD9F]" : ""
             }`}
           >
             Gönderiler
@@ -269,9 +283,7 @@ export default function UserProfilePage() {
           <button
             onClick={() => setActiveTab("replies")}
             className={`flex-1 py-4 text-center font-medium ${
-              activeTab === "replies"
-                ? "border-b-2 border-[#1DCD9F]"
-                : ""
+              activeTab === "replies" ? "border-b-2 border-[#1DCD9F]" : ""
             }`}
           >
             Yanıtlar
@@ -279,12 +291,18 @@ export default function UserProfilePage() {
           <button
             onClick={() => setActiveTab("media")}
             className={`flex-1 py-4 text-center font-medium ${
-              activeTab === "media"
-                ? "border-b-2 border-[#1DCD9F]"
-                : ""
+              activeTab === "media" ? "border-b-2 border-[#1DCD9F]" : ""
             }`}
           >
             Medya
+          </button>
+          <button
+            onClick={() => setActiveTab("likes")}
+            className={`flex-1 py-4 text-center font-medium ${
+              activeTab === "likes" ? "border-b-2 border-[#1DCD9F]" : ""
+            }`}
+          >
+            Beğeniler
           </button>
         </div>
       </div>
@@ -295,15 +313,60 @@ export default function UserProfilePage() {
             <PostList posts={posts} />
           ) : (
             <div className="p-4">
-              <p style={{color: "#6e767d"}}>Henüz gönderi yok.</p>
+              <p style={{color: "#6e767d"}}>Henuz gonderi yok.</p>
             </div>
           )
         )}
 
         {activeTab === "replies" && (
-          <div className="p-4">
-            <p style={{color: "#6e767d"}}>Henüz yanıt yok.</p>
-          </div>
+          replyPosts.length > 0 ? (
+            <div>
+              {(() => {
+                // Yanıtlari threadRoot.id'ye gore grupla
+                const threadGroups: { [key: string]: any[] } = {};
+                const noThreadReplies: any[] = [];
+                
+                replyPosts.forEach((reply: any) => {
+                  if (reply.threadRoot) {
+                    const rootId = reply.threadRoot.id;
+                    if (!threadGroups[rootId]) {
+                      threadGroups[rootId] = [];
+                    }
+                    threadGroups[rootId].push(reply);
+                  } else {
+                    noThreadReplies.push(reply);
+                  }
+                });
+                
+                // Her thread icin sadece son yaniti goster
+                const groupedPreviews = Object.values(threadGroups).sort((a: any[], b: any[]) => new Date(b[0].createdAt).getTime() - new Date(a[0].createdAt).getTime()).map((replies: any[]) => {
+                  // En son yaniti al (zaten desc sirali)
+                  const latestReply = replies[0];
+                  const totalRepliesInThread = replies.length;
+                  
+                  return (
+                    <ReplyThreadPreview
+                      key={latestReply.threadRoot.id}
+                      threadRoot={latestReply.threadRoot}
+                      userReply={latestReply}
+                      middlePostsCount={latestReply.middlePostsCount || 0}
+                    />
+                  );
+                });
+                
+                return (
+                  <>
+                    {groupedPreviews}
+                    {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} />}
+                  </>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="p-4">
+              <p style={{color: "#6e767d"}}>Henuz yanit yok.</p>
+            </div>
+          )
         )}
 
         {activeTab === "media" && (
@@ -311,7 +374,17 @@ export default function UserProfilePage() {
             <PostList posts={mediaPosts} />
           ) : (
             <div className="p-4">
-              <p style={{color: "#6e767d"}}>Henüz medya paylaşımı yok.</p>
+              <p style={{color: "#6e767d"}}>Henuz medya paylasimi yok.</p>
+            </div>
+          )
+        )}
+
+        {activeTab === "likes" && (
+          likedPosts.length > 0 ? (
+            <PostList posts={likedPosts} />
+          ) : (
+            <div className="p-4">
+              <p style={{color: "#6e767d"}}>Henuz begenilen gonderi yok.</p>
             </div>
           )
         )}
@@ -366,7 +439,7 @@ export default function UserProfilePage() {
             <main className="content flex flex-1 min-h-screen">
               <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
                 <div className="p-8 text-center">
-                  <p className="text-red-500">{error || "Profil bulunamadı"}</p>
+                  <p className="text-red-500">{error || "Profil bulunamadi"}</p>
                 </div>
               </section>
               <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
@@ -380,7 +453,7 @@ export default function UserProfilePage() {
         <div className="lg:hidden flex flex-col min-h-screen">
           <main className="content flex-1 pt-14 pb-16">
             <div className="p-8 text-center">
-              <p className="text-red-500">{error || "Profil bulunamadı"}</p>
+              <p className="text-red-500">{error || "Profil bulunamadi"}</p>
             </div>
           </main>
         </div>
@@ -393,7 +466,6 @@ export default function UserProfilePage() {
     <>
       <MobileHeader />
       
-      {/* Desktop Layout */}
       <div className="hidden lg:flex justify-center w-full">
         <div className="flex w-full max-w-[1310px]">
           <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
@@ -416,7 +488,6 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      {/* Mobile Layout */}
       <div className="lg:hidden flex flex-col min-h-screen">
         <main className="content flex-1 pt-14 pb-16">
           <section className="timeline w-full flex flex-col items-stretch">

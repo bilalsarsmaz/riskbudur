@@ -28,14 +28,17 @@ import {
 } from "@tabler/icons-react";
 
 interface PostItemProps {
-  replyToUsername?: string;
   post: Post;
   isFirst?: boolean;
   currentUserId?: string;
   onPostDeleted?: (postId: string) => void;
+  showThreadLine?: boolean;
+  isLastInThread?: boolean;
+  isFirstInThread?: boolean;
+  isThread?: boolean;
 }
 
-export default function PostItem({ post, isFirst = false, currentUserId, onPostDeleted, replyToUsername }: PostItemProps) {
+export default function PostItem({ post, isFirst = false, currentUserId, onPostDeleted, showThreadLine = false, isLastInThread = false, isFirstInThread = false, isThread = false }: PostItemProps) {
   const defaultCounts = { likes: 0, comments: 0 };
   const counts = post._count || defaultCounts;
   
@@ -486,6 +489,50 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
   return (
     <>
       <div className="post p-4 relative border-b border-[#2a2a2a]" style={{zIndex: showMenu ? 9999 : 'auto'}}>
+        {/* Thread cizgisi - post'un yuksekligine gore */}
+        {showThreadLine && (
+          <>
+            {/* Ilk post (root) - sadece profil fotosunun altindan asagiya */}
+            {isFirstInThread && !isLastInThread && (
+              <div 
+                className="absolute bg-[#1DCD9F]" 
+                style={{ 
+                  left: '35px', 
+                  top: '56px',
+                  bottom: '0',
+                  width: '2px',
+                  zIndex: 0,
+                }} 
+              />
+            )}
+            {/* Ara postlar - tam cizgi (ustten alta) */}
+            {!isFirstInThread && !isLastInThread && (
+              <div 
+                className="absolute bg-[#1DCD9F]" 
+                style={{ 
+                  left: '35px', 
+                  top: '0',
+                  bottom: '0',
+                  width: '2px',
+                  zIndex: 0,
+                }} 
+              />
+            )}
+            {/* Son post - sadece profil fotosunun ustune kadar */}
+            {isLastInThread && !isFirstInThread && (
+              <div 
+                className="absolute bg-[#1DCD9F]" 
+                style={{ 
+                  left: '35px', 
+                  top: '0',
+                  height: '36px',
+                  width: '2px',
+                  zIndex: 0,
+                }} 
+              />
+            )}
+          </>
+        )}
         <div className="post-container flex items-start relative z-10">
           <div className="post-avatar relative">
             {isAnonymous ? (
@@ -549,6 +596,12 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
                 )}
                 <span className="post-separator mx-1 font-light" style={{color: "#686D76"}}>·</span>
                 <span className="post-date text-sm font-light" style={{color: "#686D76"}}>{formattedDate}</span>
+                {/* Thread badge - tarihin hemen yaninda */}
+                {isThread && (
+                  <span className="ml-2 text-[10px] bg-black text-[#1DCD9F] border border-[#1DCD9F] px-1 py-0 rounded-full font-medium">
+                    Thread
+                  </span>
+                )}
               </div>
               
               <div className="relative">
@@ -650,14 +703,6 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
               </div>
             </div>
             
-            {replyToUsername && (
-              <div className="flex items-center mb-2" style={{color: "#686D76"}}>
-                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                </svg>
-                <span className="text-sm">Yanıtlanan: <Link href={`/${replyToUsername}`} className="text-[#1DCD9F]">@{replyToUsername}</Link></span>
-              </div>
-            )}
             <Link href={`/status/${post.id}`} className="block">
               <p className="post-content mb-3">{parseContent(post.content)}</p>
               

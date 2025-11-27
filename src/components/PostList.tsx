@@ -22,6 +22,7 @@ export interface Post {
   author: Author;
   _count: PostCount;
   isLiked?: boolean;
+  isThread?: boolean;
 }
 
 interface PostListProps {
@@ -43,8 +44,15 @@ export default function PostList({ posts, currentUserId, onPostDeleted }: PostLi
   return (
     <div className="w-full">
       {posts.map((post, index) => (
-        <PostItem key={post.id} post={post} isFirst={index === 0} currentUserId={currentUserId} onPostDeleted={onPostDeleted} />
+        <PostItem 
+          key={post.id} 
+          post={post} 
+          isFirst={index === 0} 
+          currentUserId={currentUserId} 
+          onPostDeleted={onPostDeleted}
+          isThread={post.isThread || false}
+        />
       ))}
     </div>
   );
-} 
+}
