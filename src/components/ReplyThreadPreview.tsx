@@ -32,10 +32,11 @@ interface ReplyThreadPreviewProps {
   threadRoot: PostData;
   userReply: PostData;
   middlePostsCount: number;
+  threadRepliesCount?: number;
 }
 
-export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsCount }: ReplyThreadPreviewProps) {
-  const isThread = middlePostsCount > 0;
+export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsCount, threadRepliesCount = 0 }: ReplyThreadPreviewProps) {
+  const isThread = threadRepliesCount >= 4;
   
   if (!isThread) {
     return (
@@ -46,7 +47,8 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
             isThread={false} 
             showThreadLine={true} 
             isFirstInThread={true}
-            isLastInThread={false} 
+            isLastInThread={false}
+            showThreadFooter={false} 
           />
         </div>
         
@@ -54,7 +56,9 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
           post={userReply as any} 
           showThreadLine={true} 
           isFirstInThread={false} 
-          isLastInThread={true} 
+          isLastInThread={true}
+          showThreadFooter={false}
+          showThreadFooter={false} 
         />
       </div>
     );
@@ -68,7 +72,8 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
           isThread={true} 
           showThreadLine={true} 
           isFirstInThread={true}
-          isLastInThread={false} 
+          isLastInThread={false}
+          showThreadFooter={false} 
         />
       </div>
       
@@ -117,7 +122,9 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
           post={userReply as any} 
           showThreadLine={true} 
           isFirstInThread={false} 
-          isLastInThread={true} 
+          isLastInThread={true}
+          showThreadFooter={false}
+          showThreadFooter={false} 
         />
       </div>
       
@@ -125,7 +132,7 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
       <hr className="border-[#2a2a2a] mx-4" />
       
       {/* Sadece yazi ve icona tiklaninca yonlendirme */}
-      <div className="px-4 py-3 border-b border-[#2a2a2a]">
+      <div className="px-4 py-3 border-b border-[#2a2a2a] flex justify-center">
         <Link 
           href={`/status/${threadRoot.id}`}
           className="inline-flex items-center gap-2 text-[#1DCD9F] hover:opacity-80"

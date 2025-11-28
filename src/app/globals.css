@@ -66,8 +66,6 @@ header.left-nav,
 .left-nav a { color: var(--app-body-text) !important; }
 .left-nav a:hover { background-color: var(--app-header-hover) !important; }
 .left-nav svg { color: var(--app-icon-menu) !important; }
-.left-nav .active,
-.left-nav .font-bold,
 .left-nav .text-accent { color: var(--app-accent) !important; }
 .left-nav .active svg,
 .left-nav .font-bold svg { color: var(--app-accent) !important; }

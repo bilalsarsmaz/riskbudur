@@ -141,6 +141,7 @@ export default function PostDetailPage() {
             isFirstInThread={true}
             isLastInThread={!hasReplies}
             isThread={isThread}
+            showThreadFooter={false}
           />
         </div>
 
@@ -200,6 +201,7 @@ export default function PostDetailPage() {
                     isFirstInThread={isFirst}
                     isLastInThread={isLast}
                     isThread={false}
+                    showThreadFooter={false}
                   />
                 </div>
               );

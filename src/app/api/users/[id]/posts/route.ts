@@ -87,15 +87,14 @@ export async function GET(
         },
       });
 
-      // Thread bilgisi: Ayni yazarin kendi postuna verdigi yanitlar
+      // Thread bilgisi: Herhangi bir yazarin yanitlari (thread olusturmak icin)
       const threadRepliesCount = await prisma.post.count({
         where: {
           threadRootId: post.id,
-          authorId: post.authorId,
+          // Herhangi bir yazarin yanitlari (thread olusturmak icin)
         },
       });
-
-      const isThread = threadRepliesCount > 0;
+      const isThread = threadRepliesCount >= 4;
 
       const basePost = {
         id: post.id.toString(),

@@ -194,9 +194,9 @@ export default function EditProfileModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30 px-4">
       <div
-        className="w-full max-w-[600px] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col bg-black border border-[#333]"
+        className="w-full mx-4 max-w-[600px] max-h-[85vh] lg:max-h-[90vh] rounded-2xl overflow-hidden flex flex-col bg-black border border-[#333]"
         
       >
         {/* Header */}

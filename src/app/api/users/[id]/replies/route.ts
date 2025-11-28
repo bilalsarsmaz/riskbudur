@@ -120,8 +120,16 @@ export async function GET(
       
       // Root ile yanit arasindaki post sayisi
       let middlePostsCount = 0;
+      // Thread root'un toplam yanıt sayısı
+      let threadRepliesCount = 0;
       if (threadRoot && reply.parentPostId) {
         middlePostsCount = await countPostsBetween(BigInt(threadRoot.id), reply.id);
+        // Thread root'un toplam yanıt sayısını hesapla
+        threadRepliesCount = await prisma.post.count({
+          where: {
+            threadRootId: BigInt(threadRoot.id),
+          },
+        });
       }
 
       const baseReply = {
@@ -135,6 +143,7 @@ export async function GET(
         author: reply.author,
         threadRoot: threadRoot,
         middlePostsCount: middlePostsCount,
+        threadRepliesCount: threadRepliesCount,
         _count: {
           likes: reply._count.likes,
           comments: reply._count.replies,

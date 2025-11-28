@@ -22,6 +22,7 @@ import {
   IconCode,
   IconFlag,
   IconTargetArrow,
+  IconTimelineEventText,
   IconShare3,
   IconPlayerPlay,
   IconTrash
@@ -36,9 +37,10 @@ interface PostItemProps {
   isLastInThread?: boolean;
   isFirstInThread?: boolean;
   isThread?: boolean;
+  showThreadFooter?: boolean;
 }
 
-export default function PostItem({ post, isFirst = false, currentUserId, onPostDeleted, showThreadLine = false, isLastInThread = false, isFirstInThread = false, isThread = false }: PostItemProps) {
+export default function PostItem({ post, isFirst = false, currentUserId, onPostDeleted, showThreadLine = false, isLastInThread = false, isFirstInThread = false, isThread = false, showThreadFooter = true }: PostItemProps) {
   const defaultCounts = { likes: 0, comments: 0 };
   const counts = post._count || defaultCounts;
   
@@ -488,9 +490,9 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
 
   return (
     <>
-      <div className="post p-4 relative border-b border-[#2a2a2a]" style={{zIndex: showMenu ? 9999 : 'auto'}}>
+      <div className={`post p-4 relative ${isThread ? "" : "border-b border-[#2a2a2a]"}`} style={{zIndex: showMenu ? 9999 : 'auto'}}>
         {/* Thread cizgisi - post'un yuksekligine gore */}
-        {showThreadLine && (
+        {(showThreadLine && !isThread) && (
           <>
             {/* Ilk post (root) - sadece profil fotosunun altindan asagiya */}
             {isFirstInThread && !isLastInThread && (
@@ -1087,6 +1089,21 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
           </div>
         </div>
       </div>
+
+      {isThread && showThreadFooter && (
+        <>
+          <hr className="border-[#2a2a2a] mx-4" />
+          <div className="px-4 py-3 border-b border-[#2a2a2a] flex justify-center">
+            <Link 
+              href={`/status/${post.id}`}
+              className="inline-flex items-center gap-2 text-[#1DCD9F] hover:opacity-80"
+            >
+              <span className="text-xs">Tümünü gör</span>
+              <IconTimelineEventText size={14} />
+            </Link>
+          </div>
+        </>
+      )}
 
       <MinimalCommentModal 
         post={{

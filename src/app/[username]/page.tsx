@@ -241,7 +241,7 @@ export default function UserProfilePage() {
             
             {profile!.bio && <p className="mt-2" style={{color: '#d9dadd'}}>{parseBioWithMentions(profile!.bio)}</p>}
             
-            <div className="flex items-center gap-4 mt-2">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 mt-2">
               {profile!.website && (
                 <a
                   href={profile!.website}
@@ -350,6 +350,7 @@ export default function UserProfilePage() {
                       threadRoot={latestReply.threadRoot}
                       userReply={latestReply}
                       middlePostsCount={latestReply.middlePostsCount || 0}
+                      threadRepliesCount={latestReply.threadRepliesCount || 0}
                     />
                   );
                 });

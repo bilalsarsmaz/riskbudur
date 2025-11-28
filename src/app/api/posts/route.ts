@@ -182,11 +182,12 @@ export async function GET(req: NextRequest) {
       const threadRepliesCount = await prisma.post.count({
         where: {
           threadRootId: post.id,
-          authorId: post.authorId, // Sadece ayni yazarin yanitlari
+          // Herhangi bir yazarin yanitlari (thread olusturmak icin)
         },
       });
 
-      const isThread = threadRepliesCount > 0;
+      const isThread = threadRepliesCount >= 4;
+      console.log(`Post ${post.id}: threadRepliesCount=${threadRepliesCount}, isThread=${isThread}`);
 
       const basePost = {
         id: post.id.toString(),

@@ -144,9 +144,7 @@ export default function LeftSidebar() {
     <div className="px-2 sm:px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]" style={{ backgroundColor: '#000000' }}>
       <div className="mb-4 px-2 hidden lg:block">
         <Link href="/home" className="inline-block">
-          <div className="text-2xl font-bold font-montserrat" style={{ color: '#1DCD9F' }}>
-            ultraswall
-          </div>
+          <img src="/logo3.png" alt="ultraswall" className="h-10 w-50" style={{ width: "200px", height: "40px", objectFit: "contain" }} />
         </Link>
       </div>
       
@@ -165,9 +163,9 @@ export default function LeftSidebar() {
                 >
                   <Icon 
                     className="h-6 w-6 lg:mr-3"
-                    style={{ color: '#d9dadd' }}
+                    style={{ color: isActive ? '#d9dadd' : '#d9dadd' }}
                   />
-                  <span className={`hidden lg:inline ${isActive ? 'font-bold' : ''}`}>{item.label}</span>
+                  <span className={`hidden lg:inline ${isActive ? 'font-bold text-[#d9dadd]' : 'text-[#d9dadd]'}`}>{item.label}</span>
                   {item.count && (
                     <span className="hidden lg:flex ml-auto text-white rounded-full w-5 h-5 items-center justify-center text-xs" style={{ backgroundColor: '#1DCD9F' }}>
                       {item.count}

@@ -51,6 +51,7 @@ export default function PostList({ posts, currentUserId, onPostDeleted }: PostLi
           currentUserId={currentUserId} 
           onPostDeleted={onPostDeleted}
           isThread={post.isThread || false}
+          showThreadFooter={true}
         />
       ))}
     </div>

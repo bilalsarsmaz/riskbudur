@@ -260,7 +260,7 @@ export default function Home() {
   const renderWelcome = () => (
     <>
       <div className="flex items-start justify-center" style={{marginBottom: '22px'}}>
-        <img src="/logo.png" alt="Logo" className="h-24 w-auto" style={{marginRight: '0'}} />
+        <img src="/logo3.png" alt="Logo" style={{ width: "200px", height: "40px", objectFit: "contain" }} style={{marginRight: '0'}} />
         <div className="flex flex-col justify-center" style={{marginTop: '17px'}}>
           <h1 className="text-5xl font-extrabold font-montserrat leading-none" style={{color: '#d9dadd'}}>
             ultraswall
