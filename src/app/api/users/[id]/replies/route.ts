@@ -49,7 +49,7 @@ async function countPostsBetween(rootId: bigint, replyId: bigint): Promise<numbe
       createdAt: {
         lt: (await prisma.post.findUnique({ where: { id: replyId } }))?.createdAt,
       }
-    },
+    }
   });
   return posts.length;
 }
@@ -61,8 +61,13 @@ export async function GET(
   try {
     const username = context.params.id;
 
-    const user = await prisma.user.findUnique({
-      where: { nickname: username },
+    const user = await prisma.user.findFirst({
+      where: { 
+        nickname: { 
+          equals: username,
+          mode: "insensitive"
+        }
+      },
       select: { id: true }
     });
 

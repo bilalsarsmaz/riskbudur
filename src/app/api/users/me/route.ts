@@ -35,7 +35,6 @@ export async function GET(req: Request) {
         id: true,
         email: true,
         nickname: true,
-        role: true,
         hasBlueTick: true,
         createdAt: true,
         updatedAt: true,
@@ -85,9 +84,39 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { nickname, fullName, bio, website, email, currentPassword, newPassword } = await req.json();
+    const { nickname: rawNickname, fullName, bio, website, email, currentPassword, newPassword } = await req.json();
+
 
     // Kullanıcıyı bul
+
+    // Nickname validasyonu: sadece İngilizce karakterler, sayılar ve alt çizgi, max 15 karakter, admin/ultraswall içeremez
+    if (nickname) {
+      // Maksimum 15 karakter kontrolü
+      if (nickname.length > 15) {
+        return NextResponse.json(
+          { error: "Kullanıcı adı en fazla 15 karakter olabilir" },
+          { status: 400 }
+        );
+      }
+      
+      // Sadece İngilizce karakterler, sayılar ve alt çizgi kontrolü
+      if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
+        return NextResponse.json(
+          { error: "Kullanıcı adı sadece İngilizce karakterler, rakamlar ve alt çizgi içerebilir" },
+          { status: 400 }
+        );
+      }
+      
+      // admin veya ultraswall içeremez kontrolü
+      const lowerNickname = nickname.toLowerCase();
+      if (lowerNickname.includes("admin") || lowerNickname.includes("ultraswall")) {
+        return NextResponse.json(
+          { error: "Kullanıcı adı 'admin' veya 'ultraswall' içeremez" },
+          { status: 400 }
+        );
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
     });
@@ -114,8 +143,12 @@ export async function PUT(req: Request) {
 
     // Kullanıcı adı değişikliği istenmişse ve bu kullanıcı adı başkası tarafından kullanılıyorsa
     if (nickname && nickname !== user.nickname) {
-      const existingUser = await prisma.user.findUnique({
-        where: { nickname },
+      const existingUser = await prisma.user.findFirst({
+        where: { 
+          nickname: { 
+            mode: "insensitive"
+          }
+        }
       });
 
       if (existingUser) {
@@ -155,7 +188,6 @@ export async function PUT(req: Request) {
         id: true,
         email: true,
         nickname: true,
-        fullName: true,
         bio: true,
         website: true,
         profileImage: true,

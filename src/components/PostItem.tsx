@@ -587,10 +587,10 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
                     </Link>
                   )}
                   {!isAnonymous && post.author.hasBlueTick && (
-                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-5 h-5 ml-1 verified-icon" />
+                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-5 h-5 ml-0.5 verified-icon" />
                   )}
                   {isPopular && (
-                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-orange w-5 h-5 ml-1 verified-icon" />
+                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-orange w-5 h-5 ml-0.5 verified-icon" />
                   )}
                 </div>
                 {!isAnonymous && (
@@ -852,10 +852,10 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
                           </Link>
                         )}
                         {!quotedPostIsAnonymous && (post as any).quotedPost.author.hasBlueTick && (
-                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-1 verified-icon" />
+                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-0.5 verified-icon" />
                         )}
                         {(post as any).quotedPost.isPopular && (
-                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-orange w-4 h-4 ml-1 verified-icon" />
+                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-orange w-4 h-4 ml-0.5 verified-icon" />
                         )}
                         <span className="post-quote-separator mx-1 font-light text-xs" style={{color: "#686D76"}}>·</span>
                         <span className="post-quote-date text-xs font-light" style={{color: "#686D76"}}>{formatCustomDate(new Date((post as any).quotedPost.createdAt))}</span>
@@ -967,7 +967,7 @@ export default function PostItem({ post, isFirst = false, currentUserId, onPostD
                           </Link>
                         )}
                         {!linkedPostIsAnonymous && linkedPost.author?.hasBlueTick && (
-                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-1 verified-icon" />
+                          <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-0.5 verified-icon" />
                         )}
                         <span className="post-quote-separator mx-1 font-light text-xs" style={{color: "#686D76"}}>·</span>
                         <span className="post-quote-date text-xs font-light" style={{color: "#686D76"}}>{formatCustomDate(new Date(linkedPost.createdAt))}</span>

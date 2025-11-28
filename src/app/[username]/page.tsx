@@ -8,7 +8,9 @@ import RightSidebar from "@/components/RightSidebar";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import EditProfileModal from "@/components/EditProfileModal";
-import { CheckBadgeIcon, LinkIcon, CalendarIcon } from "@heroicons/react/24/solid";
+import { LinkIcon, CalendarIcon } from "@heroicons/react/24/solid";
+import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
+                <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-5 h-5 ml-1 verified-icon" />
 import { fetchApi } from "@/lib/api";
 import PostList from "@/components/PostList";
 import ReplyThreadPreview from "@/components/ReplyThreadPreview";
@@ -181,8 +183,14 @@ export default function UserProfilePage() {
 
   const isOwnProfile = currentUser?.nickname === username;
 
-  const handleProfileUpdated = () => {
-    window.location.reload();
+  const handleProfileUpdated = async () => {
+    try {
+      const data = await fetchApi(`/users/${username}`);
+      setProfile(data);
+    } catch (err) {
+      console.error("Profil bilgileri yenilenemedi:", err);
+      window.location.reload();
+    }
   };
 
   const LoadingContent = () => (
@@ -226,7 +234,7 @@ export default function UserProfilePage() {
               onClick={() => isOwnProfile ? setIsEditModalOpen(true) : null}
               className="px-4 py-2 rounded-full font-medium border border-[#222222] hover:bg-[#151515]"
             >
-              {isOwnProfile ? "Profili Duzenle" : "Takip Et"}
+              {isOwnProfile ? "Profili Düzenle" : "Takip Et"}
             </button>
           </div>
 
@@ -234,7 +242,7 @@ export default function UserProfilePage() {
             <div className="flex items-center mb-1">
               <h1 className="text-2xl font-bold">{profile!.fullName}</h1>
               {profile!.hasBlueTick && (
-                <CheckBadgeIcon className="w-6 h-6 text-blue-500 ml-2" />
+                <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-6 h-6 ml-0.5 verified-icon" />
               )}
             </div>
             <p className="text-gray-500">@{profile!.username}</p>

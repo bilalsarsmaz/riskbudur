@@ -13,8 +13,22 @@ export async function GET(
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
-    const user = await prisma.user.findUnique({
-      where: { nickname: params.id },
+    const username = params.id;
+
+
+    const user = await prisma.user.findFirst({
+      where: {
+        nickname: {
+          equals: username,
+
+
+          mode: "insensitive"
+
+
+        }
+
+
+      }
     });
 
     if (!user) {

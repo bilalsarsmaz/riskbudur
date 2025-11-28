@@ -15,7 +15,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, nickname } = await req.json();
+    const { email, password, nickname: rawNickname } = await req.json();
+
 
     console.log("Kayıt denemesi:", { email, nickname });
 
@@ -32,8 +33,12 @@ export async function POST(req: Request) {
     }
 
     // Nickname kontrolü
-    const existingNickname = await prisma.user.findUnique({
-      where: { nickname },
+    const existingNickname = await prisma.user.findFirst({
+      where: { 
+        nickname: { 
+          mode: "insensitive"
+        }
+      }
     });
 
     if (existingNickname) {
@@ -73,7 +78,7 @@ export async function POST(req: Request) {
         id: user.id,
         email: user.email,
         nickname: user.nickname,
-        role: user.role,
+
         hasBlueTick: user.hasBlueTick,
         fullName: user.fullName,
         profileImage: user.profileImage,

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { XMarkIcon, CameraIcon } from "@heroicons/react/24/outline";
 import { postApi } from "@/lib/api";
+import ImageCropModal from "./ImageCropModal";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -82,6 +83,9 @@ export default function EditProfileModal({
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(currentProfile.profileImage);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(currentProfile.coverImage);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string>("");
+  const [cropType, setCropType] = useState<"profile" | "cover">("profile");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -93,30 +97,45 @@ export default function EditProfileModal({
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setMessage("Fotoğraf hazırlanıyor...");
-      try {
-        const compressed = await compressImage(file);
-        setProfileImage(compressed);
-        setProfileImagePreview(URL.createObjectURL(compressed));
-        setMessage("");
-      } catch (err) {
-        setMessage("Fotoğraf işlenemedi.");
-      }
+      const imageUrl = URL.createObjectURL(file);
+      setCropImageSrc(imageUrl);
+      setCropType("profile");
+      setIsCropModalOpen(true);
     }
   };
 
   const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setMessage("Fotoğraf hazırlanıyor...");
-      try {
-        const compressed = await compressImage(file);
+      const imageUrl = URL.createObjectURL(file);
+      setCropImageSrc(imageUrl);
+      setCropType("cover");
+      setIsCropModalOpen(true);
+    }
+  };
+
+  const handleCropComplete = async (croppedImageUrl: string) => {
+    setMessage("Fotoğraf hazırlanıyor...");
+    try {
+      // Cropped image URL'den File'a dönüştür
+      const response = await fetch(croppedImageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "cropped-image.jpg", { type: "image/jpeg" });
+      
+      // Compress et
+      const compressed = await compressImage(file);
+      
+      if (cropType === "profile") {
+        setProfileImage(compressed);
+        setProfileImagePreview(croppedImageUrl);
+      } else {
         setCoverImage(compressed);
-        setCoverImagePreview(URL.createObjectURL(compressed));
-        setMessage("");
-      } catch (err) {
-        setMessage("Fotoğraf işlenemedi.");
+        setCoverImagePreview(croppedImageUrl);
       }
+      
+      setMessage("");
+    } catch (err) {
+      setMessage("Fotoğraf işlenemedi.");
     }
   };
 
@@ -139,9 +158,11 @@ export default function EditProfileModal({
           const formData = new FormData();
           formData.append("image", profileImage);
           const profileResult = await postApi("/users/me/profile-image", formData);
+          console.log("Profile image upload result:", profileResult);
           
           if (profileResult && typeof profileResult === 'object' && 'imageUrl' in profileResult) {
             profileImageUrl = profileResult.imageUrl as string;
+            setProfileImagePreview(profileImageUrl);
           }
         } catch (imgErr) {
           throw new Error("Profil fotoğrafı yüklenemedi: " + (imgErr instanceof Error ? imgErr.message : String(imgErr)));
@@ -153,9 +174,11 @@ export default function EditProfileModal({
           const formData = new FormData();
           formData.append("image", coverImage);
           const coverResult = await postApi("/users/me/cover-image", formData);
+          console.log("Cover image upload result:", coverResult);
           
           if (coverResult && typeof coverResult === 'object' && 'imageUrl' in coverResult) {
             coverImageUrl = coverResult.imageUrl as string;
+            setCoverImagePreview(coverImageUrl);
           }
         } catch (imgErr) {
           throw new Error("Kapak fotoğrafı yüklenemedi: " + (imgErr instanceof Error ? imgErr.message : String(imgErr)));
@@ -194,6 +217,7 @@ export default function EditProfileModal({
   };
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30 px-4">
       <div
         className="w-full mx-4 max-w-[600px] max-h-[85vh] lg:max-h-[90vh] rounded-2xl overflow-hidden flex flex-col bg-black border border-[#333]"
@@ -239,7 +263,7 @@ export default function EditProfileModal({
                 <button
                   type="button"
                   onClick={() => coverInputRef.current?.click()}
-                  className="p-3 bg-black bg-opacity-60 rounded-full hover:bg-opacity-80 transition-colors"
+                  className="p-3 bg-[#00000069] hover:bg-opacity-60 rounded-full transition-all"
                 >
                   <CameraIcon className="w-5 h-5 text-white" />
                 </button>
@@ -247,7 +271,7 @@ export default function EditProfileModal({
                   <button
                     type="button"
                     onClick={removeCoverImage}
-                    className="p-3 bg-black bg-opacity-60 rounded-full hover:bg-opacity-80 transition-colors"
+                    className="p-3 bg-[#00000069] hover:bg-opacity-60 rounded-full transition-all"
                   >
                     <XMarkIcon className="w-5 h-5 text-white" />
                   </button>
@@ -281,7 +305,7 @@ export default function EditProfileModal({
                 <button
                   type="button"
                   onClick={() => profileInputRef.current?.click()}
-                  className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full hover:bg-opacity-60 transition-colors"
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] flex items-center justify-center bg-[#00000069] hover:bg-opacity-40 rounded-full transition-all"
                 >
                   <CameraIcon className="w-6 h-6 text-white" />
                 </button>
@@ -359,5 +383,20 @@ export default function EditProfileModal({
         </div>
       </div>
     </div>
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        isOpen={isCropModalOpen}
+        imageSrc={cropImageSrc}
+        onClose={() => {
+          setIsCropModalOpen(false);
+          URL.revokeObjectURL(cropImageSrc);
+          setCropImageSrc("");
+        }}
+        onCropComplete={handleCropComplete}
+        aspect={cropType === "profile" ? 1 : 16/9}
+        cropShape={cropType === "profile" ? "round" : "rect"}
+      />
+    </>
   );
 }

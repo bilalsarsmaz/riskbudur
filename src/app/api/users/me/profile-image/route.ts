@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profiles');
     await mkdir(uploadDir, { recursive: true });
 
-    const fileName = `${decoded.userId}-${Date.now()}${path.extname(image.name)}`;
+    const userId = typeof decoded.userId === "bigint" ? decoded.userId.toString() : String(decoded.userId);
+    const fileName = `${userId}-${Date.now()}${path.extname(image.name)}`;
     const filePath = path.join(uploadDir, fileName);
 
     await writeFile(filePath, buffer);

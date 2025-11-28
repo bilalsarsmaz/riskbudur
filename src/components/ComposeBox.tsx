@@ -87,6 +87,13 @@ export default function ComposeBox({ onPostCreated }: ComposeBoxProps) {
       
       const url = urls[0]; // İlk URL'yi al
       
+
+      // ultraswall.com/status linkleri için önizleme yapma, sadece alıntı olarak göster
+      if (url.includes('ultraswall.com/status')) {
+        setLinkPreview(null);
+        return;
+      }
+
       // Zaten aynı URL için preview varsa tekrar çekme
       if (linkPreview && linkPreview.url === url) {
         return;

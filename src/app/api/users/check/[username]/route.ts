@@ -10,8 +10,22 @@ export async function GET(
   try {
     const { username } = context.params;
 
-    const user = await prisma.user.findUnique({
-      where: { nickname: username },
+    const lowerUsername = username;
+
+
+    const user = await prisma.user.findFirst({
+      where: {
+        nickname: {
+          equals: lowerUsername,
+
+
+          mode: "insensitive"
+
+
+        }
+
+
+      },
       select: { id: true, nickname: true }
     });
 

@@ -130,8 +130,19 @@ header.left-nav,
 }
 
 .post .verified-icon,
-.post-quote .verified-icon {
+.post-quote .verified-icon,
+[class*="page"] .verified-icon,
+.profile-header .verified-icon {
   color: var(--app-icon-verified) !important;
+  fill: var(--app-icon-verified) !important;
+}
+
+/* Profil sayfası onay rozeti - daha spesifik selector */
+[class*="page"] .flex.items-center .verified-icon,
+[class*="page"] h1 + .verified-icon,
+div.flex.items-center .verified-icon {
+  color: var(--app-icon-verified) !important;
+  fill: var(--app-icon-verified) !important;
 }
 
 .post-author-name {
