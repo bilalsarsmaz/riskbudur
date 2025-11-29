@@ -18,6 +18,7 @@ interface ReplyPost extends Post {
 
 interface PostWithReplies extends Post {
   comments: ReplyPost[];
+  threadRepliesCount?: number;
   parentPost?: {
     id: string;
     content: string;
@@ -117,7 +118,8 @@ export default function PostDetailPage() {
     // Tum yanitlari duz liste yap
     const allReplies = post.comments ? flattenReplies(post.comments) : [];
     const hasReplies = allReplies.length > 0;
-    const isThread = allReplies.length >= 2;
+    // DOĞRU: threadRepliesCount >= 4 (root hariç 4 yanıt)
+    const isThread = (post.threadRepliesCount || 0) >= 4;
 
     return (
       <>

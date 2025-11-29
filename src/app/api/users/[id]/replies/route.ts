@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Thread root'unu bul (recursive)
 async function findThreadRoot(postId: bigint): Promise<any> {
   const post = await prisma.post.findUnique({
     where: { id: postId },
@@ -22,7 +21,6 @@ async function findThreadRoot(postId: bigint): Promise<any> {
   
   if (!post) return null;
   
-  // Eger parentPostId yoksa bu root'tur
   if (!post.parentPostId) {
     return {
       id: post.id.toString(),
@@ -34,11 +32,9 @@ async function findThreadRoot(postId: bigint): Promise<any> {
     };
   }
   
-  // Yoksa parent'a git
   return findThreadRoot(post.parentPostId);
 }
 
-// Iki post arasindaki post sayisini bul
 async function countPostsBetween(rootId: bigint, replyId: bigint): Promise<number> {
   const posts = await prisma.post.findMany({
     where: {
@@ -59,6 +55,10 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
+    const { searchParams } = new URL(req.url);
+    const skip = parseInt(searchParams.get("skip") || "0");
+    const take = parseInt(searchParams.get("take") || "20");
+
     const username = context.params.id;
 
     const user = await prisma.user.findFirst({
@@ -78,12 +78,13 @@ export async function GET(
       );
     }
 
-    // Kullanicinin yanitlarini getir
     const replies = await prisma.post.findMany({
       where: { 
         authorId: user.id,
         parentPostId: { not: null }
       },
+      skip,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         author: {
@@ -120,16 +121,12 @@ export async function GET(
     });
 
     const formattedReplies = await Promise.all(replies.map(async (reply) => {
-      // Thread root'unu bul
       const threadRoot = await findThreadRoot(reply.parentPostId!);
       
-      // Root ile yanit arasindaki post sayisi
       let middlePostsCount = 0;
-      // Thread root'un toplam yanıt sayısı
       let threadRepliesCount = 0;
       if (threadRoot && reply.parentPostId) {
         middlePostsCount = await countPostsBetween(BigInt(threadRoot.id), reply.id);
-        // Thread root'un toplam yanıt sayısını hesapla
         threadRepliesCount = await prisma.post.count({
           where: {
             threadRootId: BigInt(threadRoot.id),

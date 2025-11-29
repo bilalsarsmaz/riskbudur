@@ -23,8 +23,9 @@ export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTimeline, setActiveTimeline] = useState<TimelineType>("all");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const observerTarget = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
+  const pageRef = useRef(0);
+  const hasMoreRef = useRef(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -34,7 +35,6 @@ export default function HomePage() {
     }
     setIsAuthenticated(true);
     
-    // Token'dan userId çıkar
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.userId) {
@@ -47,7 +47,9 @@ export default function HomePage() {
 
   const loadPosts = useCallback(
     async (pageNum: number, reset: boolean = false) => {
-      if (loadingRef.current) return;
+      if (loadingRef.current) {
+        return;
+      }
 
       loadingRef.current = true;
       setLoading(true);
@@ -58,9 +60,17 @@ export default function HomePage() {
 
         if (newPosts.length === 0) {
           setHasMore(false);
+          hasMoreRef.current = false;
         } else {
-          setPosts((prev) => (reset || pageNum === 0 ? newPosts : [...prev, ...newPosts]));
+          setPosts((prev) => {
+            if (reset || pageNum === 0) {
+              return newPosts;
+            }
+            return [...prev, ...newPosts];
+          });
           setPage(pageNum);
+          pageRef.current = pageNum;
+          hasMoreRef.current = true;
         }
       } catch (error) {
         console.error("Postlar yüklenirken hata oluştu:", error);
@@ -71,6 +81,7 @@ export default function HomePage() {
           return;
         }
         setHasMore(false);
+        hasMoreRef.current = false;
       } finally {
         setLoading(false);
         loadingRef.current = false;
@@ -85,29 +96,33 @@ export default function HomePage() {
     }
   }, [isAuthenticated, loadPosts]);
 
+  // Scroll event listener ile infinite scroll
   useEffect(() => {
     if (!isAuthenticated || !hasMore) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading && !loadingRef.current) {
-          loadPosts(page + 1);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollHeight = document.documentElement.scrollHeight;
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const clientHeight = document.documentElement.clientHeight;
+          
+          // Sayfanın sonuna 500px kala yükle
+          if (scrollHeight - scrollTop - clientHeight < 500) {
+            if (hasMoreRef.current && !loadingRef.current) {
+              loadPosts(pageRef.current + 1);
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
-  }, [hasMore, loading, page, loadPosts, isAuthenticated]);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isAuthenticated, hasMore, loadPosts]);
 
   if (!isAuthenticated) {
     return (
@@ -122,24 +137,18 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Mobil Header - sadece mobilde görünür */}
       <MobileHeader />
 
-      {/* Desktop Layout Wrapper - ekran ortasında */}
       <div className="hidden lg:flex justify-center w-full">
         <div className="flex w-full max-w-[1310px]">
-          {/* Sol Sidebar */}
           <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
             <div className="h-full p-0 m-0 border-0">
               <LeftSidebar />
             </div>
           </header>
 
-          {/* Ana içerik */}
           <main className="content flex flex-1 min-h-screen">
-          {/* Timeline */}
           <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222] pt-14 pb-16 lg:pt-0 lg:pb-0">
-            {/* Timeline Tabs */}
             <TimelineTabs activeTab={activeTimeline} onTabChange={setActiveTimeline} />
             
             <ComposeBox onPostCreated={(newPost: Post) => setPosts([newPost, ...posts])} />
@@ -153,14 +162,12 @@ export default function HomePage() {
               <>
                 <PostList posts={posts} currentUserId={currentUserId || undefined} onPostDeleted={(postId) => setPosts(posts.filter(p => p.id !== postId))} />
 
-                {hasMore && (
-                  <div ref={observerTarget} className="flex justify-center py-4">
-                    {loading && (
-                      <div className="text-center">
-                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-                        <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
-                      </div>
-                    )}
+                {hasMore && loading && (
+                  <div className="flex justify-center py-4">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                      <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+                    </div>
                   </div>
                 )}
 
@@ -171,7 +178,6 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* Sağ taraf – çok geniş ekranlarda */}
           <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
             <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
               <RightSidebar />
@@ -181,7 +187,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Mobil Layout - lg altında görünür */}
       <div className="lg:hidden flex flex-col min-h-screen">
         <main className="content flex-1">
           <section className="timeline w-full flex flex-col items-stretch pt-14 pb-16">
@@ -195,14 +200,12 @@ export default function HomePage() {
             ) : (
               <>
                 <PostList posts={posts} currentUserId={currentUserId || undefined} onPostDeleted={(postId) => setPosts(posts.filter(p => p.id !== postId))} />
-                {hasMore && (
-                  <div ref={observerTarget} className="flex justify-center py-4">
-                    {loading && (
-                      <div className="text-center">
-                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-                        <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
-                      </div>
-                    )}
+                {hasMore && loading && (
+                  <div className="flex justify-center py-4">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                      <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+                    </div>
                   </div>
                 )}
                 {!hasMore && posts.length > 0 && (
@@ -214,7 +217,6 @@ export default function HomePage() {
         </main>
       </div>
 
-      {/* Mobil Bottom Nav - sadece mobilde görünür */}
       <MobileBottomNav />
     </>
   );

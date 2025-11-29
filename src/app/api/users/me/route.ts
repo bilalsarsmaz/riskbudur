@@ -85,6 +85,7 @@ export async function PUT(req: Request) {
     }
 
     const { nickname: rawNickname, fullName, bio, website, email, currentPassword, newPassword } = await req.json();
+    const nickname = rawNickname ? rawNickname.trim() : undefined;
 
 
     // Kullanıcıyı bul

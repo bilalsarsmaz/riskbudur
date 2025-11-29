@@ -43,7 +43,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(users.map(user => ({
-      id: Number(user.id),
+      id: user.id,
       nickname: user.nickname,
       fullName: user.fullName,
       email: user.email,

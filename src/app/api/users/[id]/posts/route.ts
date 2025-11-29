@@ -9,25 +9,17 @@ export async function GET(
 ) {
   try {
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const skip = (page - 1) * limit;
+    const skip = parseInt(searchParams.get("skip") || "0");
+    const take = parseInt(searchParams.get("take") || "20");
 
     const username = params.id;
-
 
     const user = await prisma.user.findFirst({
       where: {
         nickname: {
           equals: username,
-
-
           mode: "insensitive"
-
-
         }
-
-
       }
     });
 
@@ -38,16 +30,14 @@ export async function GET(
       );
     }
 
-    // ONEMLI: Sadece root postlari getir (parentPostId = null)
-    // Yanitlar ayri "Yanitlar" sekmesinde gosterilecek
     const posts = await prisma.post.findMany({
       where: {
         authorId: user.id,
         isAnonymous: false,
-        parentPostId: null, // Sadece root postlar
+        parentPostId: null,
       },
       skip,
-      take: limit,
+      take,
       orderBy: {
         createdAt: "desc",
       },
@@ -72,9 +62,7 @@ export async function GET(
       },
     });
 
-    // Her post icin alinti ve thread bilgisini cek
     const formattedPosts = await Promise.all(posts.map(async (post) => {
-      // Bu post'un alinti yaptigi postu bul (Quote tablosundan)
       const quote = await prisma.quote.findFirst({
         where: {
           authorId: post.authorId,
@@ -101,11 +89,9 @@ export async function GET(
         },
       });
 
-      // Thread bilgisi: Herhangi bir yazarin yanitlari (thread olusturmak icin)
       const threadRepliesCount = await prisma.post.count({
         where: {
           threadRootId: post.id,
-          // Herhangi bir yazarin yanitlari (thread olusturmak icin)
         },
       });
       const isThread = threadRepliesCount >= 4;
@@ -134,7 +120,6 @@ export async function GET(
         threadRepliesCount: threadRepliesCount,
       };
 
-      // Eger alinti varsa, alintilanan postu ekle
       if (quote && quote.quotedPost) {
         return {
           ...basePost,
@@ -154,22 +139,8 @@ export async function GET(
       return basePost;
     }));
 
-    const total = await prisma.post.count({
-      where: {
-        authorId: user.id,
-        isAnonymous: false,
-        parentPostId: null,
-      },
-    });
-
     return NextResponse.json({
       posts: formattedPosts,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     console.error("Kullanici postlari getirme hatasi:", error);

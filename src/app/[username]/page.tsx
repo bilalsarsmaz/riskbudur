@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import LeftSidebar from "@/components/LeftSidebar";
@@ -10,7 +10,6 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import EditProfileModal from "@/components/EditProfileModal";
 import { LinkIcon, CalendarIcon } from "@heroicons/react/24/solid";
 import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
-                <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-5 h-5 ml-1 verified-icon" />
 import { fetchApi } from "@/lib/api";
 import PostList from "@/components/PostList";
 import ReplyThreadPreview from "@/components/ReplyThreadPreview";
@@ -64,6 +63,34 @@ export default function UserProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [validUsernames, setValidUsernames] = useState<string[]>([]);
 
+  // Pagination state'leri
+  const [postsPage, setPostsPage] = useState(0);
+  const [postsHasMore, setPostsHasMore] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [mediaPage, setMediaPage] = useState(0);
+  const [mediaHasMore, setMediaHasMore] = useState(true);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [likesPage, setLikesPage] = useState(0);
+  const [likesHasMore, setLikesHasMore] = useState(true);
+  const [likesLoading, setLikesLoading] = useState(false);
+  const [repliesPage, setRepliesPage] = useState(0);
+  const [repliesHasMore, setRepliesHasMore] = useState(true);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+
+  // Ref'ler
+  const postsPageRef = useRef(0);
+  const mediaPageRef = useRef(0);
+  const likesPageRef = useRef(0);
+  const repliesPageRef = useRef(0);
+  const postsHasMoreRef = useRef(true);
+  const mediaHasMoreRef = useRef(true);
+  const likesHasMoreRef = useRef(true);
+  const repliesHasMoreRef = useRef(true);
+  const postsLoadingRef = useRef(false);
+  const mediaLoadingRef = useRef(false);
+  const likesLoadingRef = useRef(false);
+  const repliesLoadingRef = useRef(false);
+
   const parseBioWithMentions = (bio: string): React.ReactNode[] => {
     const mentionRegex = /@([a-zA-Z0-9_]+)/g;
     const parts: React.ReactNode[] = [];
@@ -92,6 +119,115 @@ export default function UserProfilePage() {
     }
     return parts;
   };
+
+  // Load more functions
+  const loadMorePosts = useCallback(async () => {
+    if (postsLoadingRef.current || !postsHasMoreRef.current) return;
+    postsLoadingRef.current = true;
+    setPostsLoading(true);
+
+    try {
+      const data = await fetchApi(`/users/${username}/posts?skip=${(postsPageRef.current + 1) * 20}&take=20`);
+      const newPosts = data.posts || [];
+      
+      if (newPosts.length === 0) {
+        setPostsHasMore(false);
+        postsHasMoreRef.current = false;
+      } else {
+        setPosts((prev) => [...prev, ...newPosts]);
+        setPostsPage(postsPageRef.current + 1);
+        postsPageRef.current += 1;
+      }
+    } catch (err) {
+      console.error("Postlar yuklenirken hata olustu:", err);
+      setPostsHasMore(false);
+      postsHasMoreRef.current = false;
+    } finally {
+      setPostsLoading(false);
+      postsLoadingRef.current = false;
+    }
+  }, [username]);
+
+  const loadMoreMedia = useCallback(async () => {
+    if (mediaLoadingRef.current || !mediaHasMoreRef.current) return;
+    mediaLoadingRef.current = true;
+    setMediaLoading(true);
+
+    try {
+      const data = await fetchApi(`/users/${username}/media?skip=${(mediaPageRef.current + 1) * 20}&take=20`);
+      const newPosts = data.posts || [];
+      
+      if (newPosts.length === 0) {
+        setMediaHasMore(false);
+        mediaHasMoreRef.current = false;
+      } else {
+        setMediaPosts((prev) => [...prev, ...newPosts]);
+        setMediaPage(mediaPageRef.current + 1);
+        mediaPageRef.current += 1;
+      }
+    } catch (err) {
+      console.error("Medya postlari yuklenirken hata olustu:", err);
+      setMediaHasMore(false);
+      mediaHasMoreRef.current = false;
+    } finally {
+      setMediaLoading(false);
+      mediaLoadingRef.current = false;
+    }
+  }, [username]);
+
+  const loadMoreLikes = useCallback(async () => {
+    if (likesLoadingRef.current || !likesHasMoreRef.current) return;
+    likesLoadingRef.current = true;
+    setLikesLoading(true);
+
+    try {
+      const data = await fetchApi(`/users/${username}/likes?skip=${(likesPageRef.current + 1) * 20}&take=20`);
+      const newPosts = data.posts || [];
+      
+      if (newPosts.length === 0) {
+        setLikesHasMore(false);
+        likesHasMoreRef.current = false;
+      } else {
+        setLikedPosts((prev) => [...prev, ...newPosts]);
+        setLikesPage(likesPageRef.current + 1);
+        likesPageRef.current += 1;
+      }
+    } catch (err) {
+      console.error("Begenilen postlar yuklenirken hata olustu:", err);
+      setLikesHasMore(false);
+      likesHasMoreRef.current = false;
+    } finally {
+      setLikesLoading(false);
+      likesLoadingRef.current = false;
+    }
+  }, [username]);
+
+  const loadMoreReplies = useCallback(async () => {
+    if (repliesLoadingRef.current || !repliesHasMoreRef.current) return;
+    repliesLoadingRef.current = true;
+    setRepliesLoading(true);
+
+    try {
+      const data = await fetchApi(`/users/${username}/replies?skip=${(repliesPageRef.current + 1) * 20}&take=20`);
+      const newPosts = data.posts || [];
+      
+      if (newPosts.length === 0) {
+        setRepliesHasMore(false);
+        repliesHasMoreRef.current = false;
+      } else {
+        setReplyPosts((prev) => [...prev, ...newPosts]);
+        setRepliesPage(repliesPageRef.current + 1);
+        repliesPageRef.current += 1;
+      }
+    } catch (err) {
+      console.error("Yanıtlar yuklenirken hata olustu:", err);
+      setRepliesHasMore(false);
+      repliesHasMoreRef.current = false;
+    } finally {
+      setRepliesLoading(false);
+      repliesLoadingRef.current = false;
+    }
+  }, [username]);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -139,8 +275,11 @@ export default function UserProfilePage() {
 
     const fetchUserPosts = async () => {
       try {
-        const data = await fetchApi(`/users/${username}/posts`);
+        const data = await fetchApi(`/users/${username}/posts?skip=0&take=20`);
         setPosts(data.posts || []);
+        postsPageRef.current = 0;
+        postsHasMoreRef.current = (data.posts || []).length === 20;
+        setPostsHasMore((data.posts || []).length === 20);
       } catch (err) {
         console.error("Postlar yuklenirken hata olustu:", err);
       }
@@ -148,8 +287,11 @@ export default function UserProfilePage() {
 
     const fetchUserMediaPosts = async () => {
       try {
-        const data = await fetchApi(`/users/${username}/media`);
+        const data = await fetchApi(`/users/${username}/media?skip=0&take=20`);
         setMediaPosts(data.posts || []);
+        mediaPageRef.current = 0;
+        mediaHasMoreRef.current = (data.posts || []).length === 20;
+        setMediaHasMore((data.posts || []).length === 20);
       } catch (err) {
         console.error("Medya postlari yuklenirken hata olustu:", err);
       }
@@ -157,8 +299,11 @@ export default function UserProfilePage() {
 
     const fetchUserLikedPosts = async () => {
       try {
-        const data = await fetchApi(`/users/${username}/likes`);
+        const data = await fetchApi(`/users/${username}/likes?skip=0&take=20`);
         setLikedPosts(data.posts || []);
+        likesPageRef.current = 0;
+        likesHasMoreRef.current = (data.posts || []).length === 20;
+        setLikesHasMore((data.posts || []).length === 20);
       } catch (err) {
         console.error("Begenilen postlar yuklenirken hata olustu:", err);
       }
@@ -166,8 +311,11 @@ export default function UserProfilePage() {
 
     const fetchUserReplies = async () => {
       try {
-        const data = await fetchApi(`/users/${username}/replies`);
+        const data = await fetchApi(`/users/${username}/replies?skip=0&take=20`);
         setReplyPosts(data.posts || []);
+        repliesPageRef.current = 0;
+        repliesHasMoreRef.current = (data.posts || []).length === 20;
+        setRepliesHasMore((data.posts || []).length === 20);
       } catch (err) {
         console.error("Yanıtlar yuklenirken hata olustu:", err);
       }
@@ -180,6 +328,39 @@ export default function UserProfilePage() {
     fetchUserLikedPosts();
     fetchUserReplies();
   }, [username]);
+
+  // Scroll event listener
+  useEffect(() => {
+    if (!profile) return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollHeight = document.documentElement.scrollHeight;
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const clientHeight = document.documentElement.clientHeight;
+          
+          if (scrollHeight - scrollTop - clientHeight < 500) {
+            if (activeTab === "posts" && postsHasMoreRef.current && !postsLoadingRef.current) {
+              loadMorePosts();
+            } else if (activeTab === "media" && mediaHasMoreRef.current && !mediaLoadingRef.current) {
+              loadMoreMedia();
+            } else if (activeTab === "likes" && likesHasMoreRef.current && !likesLoadingRef.current) {
+              loadMoreLikes();
+            } else if (activeTab === "replies" && repliesHasMoreRef.current && !repliesLoadingRef.current) {
+              loadMoreReplies();
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [profile, activeTab, loadMorePosts, loadMoreMedia, loadMoreLikes, loadMoreReplies]);
 
   const isOwnProfile = currentUser?.nickname === username;
 
@@ -317,85 +498,140 @@ export default function UserProfilePage() {
 
       <div className="overflow-hidden">
         {activeTab === "posts" && (
-          posts.length > 0 ? (
-            <PostList posts={posts} />
-          ) : (
-            <div className="p-4">
-              <p style={{color: "#6e767d"}}>Henuz gonderi yok.</p>
-            </div>
-          )
+          <>
+            {posts.length > 0 ? (
+              <>
+                <PostList posts={posts} />
+                {postsHasMore && postsLoading && (
+                  <div className="flex justify-center py-4">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                      <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+                    </div>
+                  </div>
+                )}
+                {!postsHasMore && posts.length > 0 && (
+                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm postlar yüklendi</div>
+                )}
+              </>
+            ) : (
+              <div className="p-4">
+                <p style={{color: "#6e767d"}}>Henuz gonderi yok.</p>
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === "replies" && (
-          replyPosts.length > 0 ? (
-            <div>
-              {(() => {
-                // Yanıtlari threadRoot.id'ye gore grupla
-                const threadGroups: { [key: string]: any[] } = {};
-                const noThreadReplies: any[] = [];
-                
-                replyPosts.forEach((reply: any) => {
-                  if (reply.threadRoot) {
-                    const rootId = reply.threadRoot.id;
-                    if (!threadGroups[rootId]) {
-                      threadGroups[rootId] = [];
-                    }
-                    threadGroups[rootId].push(reply);
-                  } else {
-                    noThreadReplies.push(reply);
-                  }
-                });
-                
-                // Her thread icin sadece son yaniti goster
-                const groupedPreviews = Object.values(threadGroups).sort((a: any[], b: any[]) => new Date(b[0].createdAt).getTime() - new Date(a[0].createdAt).getTime()).map((replies: any[]) => {
-                  // En son yaniti al (zaten desc sirali)
-                  const latestReply = replies[0];
-                  const totalRepliesInThread = replies.length;
-                  
-                  return (
-                    <ReplyThreadPreview
-                      key={latestReply.threadRoot.id}
-                      threadRoot={latestReply.threadRoot}
-                      userReply={latestReply}
-                      middlePostsCount={latestReply.middlePostsCount || 0}
-                      threadRepliesCount={latestReply.threadRepliesCount || 0}
-                    />
-                  );
-                });
-                
-                return (
-                  <>
-                    {groupedPreviews}
-                    {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} />}
-                  </>
-                );
-              })()}
-            </div>
-          ) : (
-            <div className="p-4">
-              <p style={{color: "#6e767d"}}>Henuz yanit yok.</p>
-            </div>
-          )
+          <>
+            {replyPosts.length > 0 ? (
+              <>
+                <div>
+                  {(() => {
+                    const threadGroups: { [key: string]: any[] } = {};
+                    const noThreadReplies: any[] = [];
+                    
+                    replyPosts.forEach((reply: any) => {
+                      if (reply.threadRoot) {
+                        const rootId = reply.threadRoot.id;
+                        if (!threadGroups[rootId]) {
+                          threadGroups[rootId] = [];
+                        }
+                        threadGroups[rootId].push(reply);
+                      } else {
+                        noThreadReplies.push(reply);
+                      }
+                    });
+                    
+                    const groupedPreviews = Object.values(threadGroups).sort((a: any[], b: any[]) => new Date(b[0].createdAt).getTime() - new Date(a[0].createdAt).getTime()).map((replies: any[]) => {
+                      const latestReply = replies[0];
+                      return (
+                        <ReplyThreadPreview
+                          key={latestReply.threadRoot.id}
+                          threadRoot={latestReply.threadRoot}
+                          userReply={latestReply}
+                          middlePostsCount={latestReply.middlePostsCount || 0}
+                          threadRepliesCount={latestReply.threadRepliesCount || 0}
+                        />
+                      );
+                    });
+                    
+                    return (
+                      <>
+                        {groupedPreviews}
+                        {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} />}
+                      </>
+                    );
+                  })()}
+                </div>
+                {repliesHasMore && repliesLoading && (
+                  <div className="flex justify-center py-4">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                      <p className="mt-2 text-sm text-gray-500">Daha fazla yanıt yükleniyor...</p>
+                    </div>
+                  </div>
+                )}
+                {!repliesHasMore && replyPosts.length > 0 && (
+                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm yanıtlar yüklendi</div>
+                )}
+              </>
+            ) : (
+              <div className="p-4">
+                <p style={{color: "#6e767d"}}>Henuz yanit yok.</p>
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === "media" && (
-          mediaPosts.length > 0 ? (
-            <PostList posts={mediaPosts} />
-          ) : (
-            <div className="p-4">
-              <p style={{color: "#6e767d"}}>Henuz medya paylasimi yok.</p>
-            </div>
-          )
+          <>
+            {mediaPosts.length > 0 ? (
+              <>
+                <PostList posts={mediaPosts} />
+                {mediaHasMore && mediaLoading && (
+                  <div className="flex justify-center py-4">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                      <p className="mt-2 text-sm text-gray-500">Daha fazla medya yükleniyor...</p>
+                    </div>
+                  </div>
+                )}
+                {!mediaHasMore && mediaPosts.length > 0 && (
+                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm medya yüklendi</div>
+                )}
+              </>
+            ) : (
+              <div className="p-4">
+                <p style={{color: "#6e767d"}}>Henuz medya paylasimi yok.</p>
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === "likes" && (
-          likedPosts.length > 0 ? (
-            <PostList posts={likedPosts} />
-          ) : (
-            <div className="p-4">
-              <p style={{color: "#6e767d"}}>Henuz begenilen gonderi yok.</p>
-            </div>
-          )
+          <>
+            {likedPosts.length > 0 ? (
+              <>
+                <PostList posts={likedPosts} />
+                {likesHasMore && likesLoading && (
+                  <div className="flex justify-center py-4">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                      <p className="mt-2 text-sm text-gray-500">Daha fazla beğeni yükleniyor...</p>
+                    </div>
+                  </div>
+                )}
+                {!likesHasMore && likedPosts.length > 0 && (
+                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm beğeniler yüklendi</div>
+                )}
+              </>
+            ) : (
+              <div className="p-4">
+                <p style={{color: "#6e767d"}}>Henuz begenilen gonderi yok.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>

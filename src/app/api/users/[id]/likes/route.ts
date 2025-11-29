@@ -9,25 +9,17 @@ export async function GET(
 ) {
   try {
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const skip = (page - 1) * limit;
+    const skip = parseInt(searchParams.get("skip") || "0");
+    const take = parseInt(searchParams.get("take") || "20");
 
     const username = params.id;
-
 
     const user = await prisma.user.findFirst({
       where: {
         nickname: {
           equals: username,
-
-
           mode: "insensitive"
-
-
         }
-
-
       }
     });
 
@@ -43,7 +35,7 @@ export async function GET(
         userId: user.id,
       },
       skip,
-      take: limit,
+      take,
       orderBy: {
         createdAt: "desc",
       },
@@ -142,20 +134,8 @@ export async function GET(
       return basePost;
     }));
 
-    const total = await prisma.like.count({
-      where: {
-        userId: user.id,
-      },
-    });
-
     return NextResponse.json({
       posts: formattedPosts,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     console.error("Kullanıcı beğenileri getirme hatası:", error);

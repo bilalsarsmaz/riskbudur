@@ -56,6 +56,13 @@ export async function GET(
       );
     }
 
+    // Thread yanıt sayısını hesapla (threadRootId = post.id olan yanıtlar)
+    const threadRepliesCount = await prisma.post.count({
+      where: {
+        threadRootId: post.id,
+      },
+    });
+
     // Direkt olarak parentPostId ile yanitlari cek
     const directReplies = await prisma.post.findMany({
       where: {
@@ -204,6 +211,7 @@ export async function GET(
         likes: post._count.likes,
         comments: post._count.replies,
       },
+      threadRepliesCount: threadRepliesCount,
     };
 
     return NextResponse.json(formattedPost);
