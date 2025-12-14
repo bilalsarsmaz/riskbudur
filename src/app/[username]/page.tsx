@@ -1,18 +1,30 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import LeftSidebar from "@/components/LeftSidebar";
-import RightSidebar from "@/components/RightSidebar";
-import MobileHeader from "@/components/MobileHeader";
-import MobileBottomNav from "@/components/MobileBottomNav";
+import StandardPageLayout from "@/components/StandardPageLayout";
 import EditProfileModal from "@/components/EditProfileModal";
-import { LinkIcon, CalendarIcon } from "@heroicons/react/24/solid";
-import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
-import { fetchApi } from "@/lib/api";
+import { LinkIcon, CalendarIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
+import {
+  IconArrowLeft,
+  IconCalendar,
+  IconLink,
+  IconMapPin,
+  IconDots,
+  IconMessageCircle,
+  IconRepeat,
+  IconHeart,
+  IconChartBar,
+  IconShare,
+  IconArrowUp,
+  IconRosetteDiscountCheckFilled
+} from "@tabler/icons-react";
+import { fetchApi, postApi, deleteApi } from "@/lib/api";
 import PostList from "@/components/PostList";
+import { EnrichedPost } from "@/types/post";
 import ReplyThreadPreview from "@/components/ReplyThreadPreview";
+import VerificationBadge from "@/components/VerificationBadge";
 
 interface Profile {
   username: string;
@@ -25,43 +37,32 @@ interface Profile {
   coverImage: string | null;
   profileImage: string | null;
   hasBlueTick: boolean;
-}
-
-interface Post {
-  id: string;
-  content: string;
-  createdAt: string;
-  mediaUrl?: string;
-  imageUrl?: string;
-  isAnonymous: boolean;
-  author: {
-    id: string;
-    nickname: string;
-    hasBlueTick: boolean;
-    profileImage?: string;
-  };
-  _count: {
-    likes: number;
-    comments: number;
-  };
-  isLiked?: boolean;
+  verificationTier?: 'NONE' | 'GREEN' | 'GOLD' | 'GRAY';
+  postsCount?: number;
+  isFollowing?: boolean;
+  id?: string;
 }
 
 export default function UserProfilePage() {
+  // ... existing code ...
+
   const params = useParams();
+  const router = useRouter();
   const username = params.username as string;
 
   const [activeTab, setActiveTab] = useState("posts");
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [mediaPosts, setMediaPosts] = useState<Post[]>([]);
-  const [likedPosts, setLikedPosts] = useState<Post[]>([]);
-  const [replyPosts, setReplyPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<EnrichedPost[]>([]);
+  const [mediaPosts, setMediaPosts] = useState<EnrichedPost[]>([]);
+  const [likedPosts, setLikedPosts] = useState<EnrichedPost[]>([]);
+  const [replyPosts, setReplyPosts] = useState<EnrichedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [validUsernames, setValidUsernames] = useState<string[]>([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isHoveringFollow, setIsHoveringFollow] = useState(false);
+
 
   // Pagination state'leri
   const [postsPage, setPostsPage] = useState(0);
@@ -92,31 +93,110 @@ export default function UserProfilePage() {
   const repliesLoadingRef = useRef(false);
 
   const parseBioWithMentions = (bio: string): React.ReactNode[] => {
-    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-    const parts: React.ReactNode[] = [];
+    if (!bio) return [];
+
+    const parts: (string | React.ReactNode)[] = [];
     let lastIndex = 0;
+    const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
+    const mentionRegex = /@[\w_]+/g;
+    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;
+
+    // Basit match yapısı
+    const matches: Array<{ type: 'hashtag' | 'mention' | 'link'; start: number; end: number; text: string }> = [];
+
     let match;
-    let key = 0;
-    
+
+    // Hashtag'leri bul
+    while ((match = hashtagRegex.exec(bio)) !== null) {
+      matches.push({ type: 'hashtag', start: match.index, end: match.index + match[0].length, text: match[0] });
+    }
+
+    // Mention'ları bul
     while ((match = mentionRegex.exec(bio)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(bio.substring(lastIndex, match.index));
+      const isEmail = match.index > 0 && bio[match.index - 1] !== ' ' && bio[match.index - 1] !== '\n';
+      if (!isEmail) {
+        matches.push({ type: 'mention', start: match.index, end: match.index + match[0].length, text: match[0] });
       }
-      const mentionedUsername = match[1];
-      if (validUsernames.includes(mentionedUsername.toLowerCase())) {
+    }
+
+    // Linkleri bul
+    while ((match = linkRegex.exec(bio)) !== null) {
+      const m = match!;
+      // Çakışma kontrolü
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+
+      if (!isOverlapping) {
+        matches.push({ type: 'link', start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
+    }
+
+    matches.sort((a, b) => a.start - b.start);
+
+    matches.forEach((match, index) => {
+      if (match.start > lastIndex) {
+        parts.push(bio.substring(lastIndex, match.start));
+      }
+
+      if (match.type === 'hashtag') {
+        const hashtag = match.text.slice(1);
         parts.push(
-          <Link key={key++} href={`/${mentionedUsername}`} className="text-[#1DCD9F]">
-            @{mentionedUsername}
+          <Link
+            key={`hashtag-${index}`}
+            href={`/hashtag/${encodeURIComponent(hashtag.toLowerCase())}`}
+            className="hover:underline hover:opacity-80"
+            style={{ color: "var(--app-global-link-color)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {match.text}
           </Link>
         );
-      } else {
-        parts.push(`@${mentionedUsername}`);
+        lastIndex = match.end;
+      } else if (match.type === 'mention') {
+        const username = match.text.slice(1);
+        parts.push(
+          <Link
+            key={`mention-${index}`}
+            href={`/${username}`}
+            className="hover:opacity-80" // Underline removed as per user preference
+            style={{ color: "var(--app-global-link-color)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {match.text}
+          </Link>
+        );
+        lastIndex = match.end;
+      } else if (match.type === 'link') {
+        let url = match.text;
+        if (url.startsWith('www.')) {
+          url = 'https://' + url;
+        } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        parts.push(
+          <a
+            key={`link-${index}`}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+            style={{ color: "var(--app-global-link-color)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {match.text}
+          </a>
+        );
+        lastIndex = match.end;
       }
-      lastIndex = match.index + match[0].length;
-    }
+    });
+
     if (lastIndex < bio.length) {
       parts.push(bio.substring(lastIndex));
     }
+
     return parts;
   };
 
@@ -129,7 +209,7 @@ export default function UserProfilePage() {
     try {
       const data = await fetchApi(`/users/${username}/posts?skip=${(postsPageRef.current + 1) * 20}&take=20`);
       const newPosts = data.posts || [];
-      
+
       if (newPosts.length === 0) {
         setPostsHasMore(false);
         postsHasMoreRef.current = false;
@@ -156,7 +236,7 @@ export default function UserProfilePage() {
     try {
       const data = await fetchApi(`/users/${username}/media?skip=${(mediaPageRef.current + 1) * 20}&take=20`);
       const newPosts = data.posts || [];
-      
+
       if (newPosts.length === 0) {
         setMediaHasMore(false);
         mediaHasMoreRef.current = false;
@@ -183,7 +263,7 @@ export default function UserProfilePage() {
     try {
       const data = await fetchApi(`/users/${username}/likes?skip=${(likesPageRef.current + 1) * 20}&take=20`);
       const newPosts = data.posts || [];
-      
+
       if (newPosts.length === 0) {
         setLikesHasMore(false);
         likesHasMoreRef.current = false;
@@ -210,7 +290,7 @@ export default function UserProfilePage() {
     try {
       const data = await fetchApi(`/users/${username}/replies?skip=${(repliesPageRef.current + 1) * 20}&take=20`);
       const newPosts = data.posts || [];
-      
+
       if (newPosts.length === 0) {
         setRepliesHasMore(false);
         repliesHasMoreRef.current = false;
@@ -245,25 +325,9 @@ export default function UserProfilePage() {
         const data = await fetchApi(`/users/${username}`);
         setProfile(data);
         setError(null);
-        
+
         if (data.bio) {
-          const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-          const mentions: string[] = [];
-          let match;
-          while ((match = mentionRegex.exec(data.bio)) !== null) {
-            mentions.push(match[1]);
-          }
-          
-          const validUsers: string[] = [];
-          for (const mention of mentions) {
-            try {
-              const checkData = await fetchApi(`/users/check/${mention}`);
-              if (checkData.exists) {
-                validUsers.push(mention.toLowerCase());
-              }
-            } catch (e) {}
-          }
-          setValidUsernames(validUsers);
+
         }
       } catch (err) {
         setError("Profil yuklenirken bir hata olustu.");
@@ -340,7 +404,7 @@ export default function UserProfilePage() {
           const scrollHeight = document.documentElement.scrollHeight;
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
           const clientHeight = document.documentElement.clientHeight;
-          
+
           if (scrollHeight - scrollTop - clientHeight < 500) {
             if (activeTab === "posts" && postsHasMoreRef.current && !postsLoadingRef.current) {
               loadMorePosts();
@@ -374,6 +438,33 @@ export default function UserProfilePage() {
     }
   };
 
+  useEffect(() => {
+    if (profile) {
+      setIsFollowing(profile.isFollowing || false);
+    }
+  }, [profile]);
+
+  const handleFollow = async () => {
+    if (!profile?.id) return;
+
+    try {
+      if (isFollowing) {
+        setIsFollowing(false);
+        setProfile(prev => prev ? ({ ...prev, followers: prev.followers - 1, isFollowing: false }) : null);
+        await deleteApi(`/follows?followingId=${profile.id}`);
+      } else {
+        setIsFollowing(true);
+        setProfile(prev => prev ? ({ ...prev, followers: prev.followers + 1, isFollowing: true }) : null);
+        await postApi("/follows", { followingId: profile.id });
+      }
+    } catch (error) {
+      console.error("Takip işlemi başarısız:", error);
+      // Revert optimization on error
+      setIsFollowing(!isFollowing);
+      handleProfileUpdated();
+    }
+  };
+
   const LoadingContent = () => (
     <div className="flex items-center justify-center py-20">
       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1DCD9F]"></div>
@@ -382,7 +473,38 @@ export default function UserProfilePage() {
 
   const ProfileContent = () => (
     <>
-      <div className="border-b border-[#222222] overflow-hidden">
+
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-theme-bg/80 backdrop-blur-md flex items-center px-4 h-[60px] border-b border-theme-border">
+        <button
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              // Fallback if no history
+              window.location.href = '/home';
+            }
+          }}
+          className="mr-6 p-2 rounded-full hover:bg-[#181818] transition-colors"
+        >
+          <ArrowLeftIcon className="w-5 h-5" style={{ color: 'var(--app-body-text)' }} />
+        </button>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1">
+            <h2 className="font-bold text-lg leading-5" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h2>
+            <VerificationBadge
+              tier={profile!.verificationTier}
+              hasBlueTick={profile!.hasBlueTick}
+              username={profile!.username}
+              className="w-4 h-4 ml-1"
+              style={{ width: "20px", height: "20px", marginLeft: "0px" }}
+            />
+          </div>
+          <span className="text-xs text-[#71767b]">{profile!.postsCount || 0} gönderi</span>
+        </div>
+      </div>
+
+      <div className="border-b border-theme-border overflow-hidden">
         {profile!.coverImage ? (
           <div className="w-full h-48">
             <img
@@ -397,39 +519,54 @@ export default function UserProfilePage() {
 
         <div className="p-4">
           <div className="flex items-start justify-between">
-            <div className="relative" style={{marginTop: "-80px"}}>
+            <div className="relative" style={{ marginTop: "-80px" }}>
               {profile!.profileImage ? (
                 <img
                   src={profile!.profileImage}
                   alt={profile!.username}
-                  className="w-32 h-32 rounded-full border-4 border-black object-cover"
+                  className="w-32 h-32 rounded-full profile-circle object-cover"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-black bg-gray-300 flex items-center justify-center text-gray-600 text-4xl">
+                <div className="w-32 h-32 rounded-full profile-circle bg-gray-300 flex items-center justify-center text-gray-600 text-4xl">
                   {profile!.username.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            
-            <button 
-              onClick={() => isOwnProfile ? setIsEditModalOpen(true) : null}
-              className="px-4 py-2 rounded-full font-medium border border-[#222222] hover:bg-[#151515]"
+
+            <button
+              onClick={() => isOwnProfile ? setIsEditModalOpen(true) : handleFollow()}
+              onMouseEnter={() => setIsHoveringFollow(true)}
+              onMouseLeave={() => setIsHoveringFollow(false)}
+              className={`px-3 py-2 rounded-full font-bold border transition-colors ${isOwnProfile
+                ? "border-theme-border hover:bg-[#151515]"
+                : isFollowing
+                  ? "border-[#1DCD9F] text-[#1DCD9F] hover:bg-[#1DCD9F]/10 min-w-[140px]"
+                  : "border-theme-border text-theme-text hover:bg-white/10"
+                }`}
             >
-              {isOwnProfile ? "Profili Düzenle" : "Takip Et"}
+              {isOwnProfile
+                ? "Profili Düzenle"
+                : isFollowing
+                  ? (isHoveringFollow ? "Kovalama" : "Kovalanıyor")
+                  : "Kovala"
+              }
             </button>
           </div>
 
           <div className="mt-4">
             <div className="flex items-center mb-1">
-              <h1 className="text-2xl font-bold">{profile!.fullName}</h1>
-              {profile!.hasBlueTick && (
-                <IconRosetteDiscountCheckFilled className="post-badge post-badge-blue w-6 h-6 ml-0.5 verified-icon" />
-              )}
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h1>
+              <VerificationBadge
+                tier={profile!.verificationTier}
+                hasBlueTick={profile!.hasBlueTick}
+                username={profile!.username}
+                className="w-6 h-6 ml-0.5"
+              />
             </div>
             <p className="text-gray-500">@{profile!.username}</p>
-            
-            {profile!.bio && <p className="mt-2" style={{color: '#d9dadd'}}>{parseBioWithMentions(profile!.bio)}</p>}
-            
+
+            {profile!.bio && <p className="mt-2" style={{ color: 'var(--app-body-text)' }}>{parseBioWithMentions(profile!.bio)}</p>}
+
             <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 mt-2">
               {profile!.website && (
                 <a
@@ -437,61 +574,81 @@ export default function UserProfilePage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center"
-                  style={{color: '#1DCD9F'}}
+                  style={{ color: 'var(--app-global-link-color)' }}
                 >
                   <LinkIcon className="w-4 h-4 mr-1" />
                   {profile!.website}
                 </a>
               )}
-              <div className="flex items-center" style={{color: "#6e767d"}}>
+              <div className="flex items-center" style={{ color: "var(--app-subtitle)" }}>
                 <CalendarIcon className="w-4 h-4 mr-1" />
-                Katilma tarihi: {profile!.joinDate}
+                Katılma tarihi: {profile!.joinDate}
               </div>
             </div>
 
             <div className="flex space-x-4 mt-2">
-              <span>
-                <strong>{profile!.following}</strong> <span style={{color: "#6e767d"}}>Takip Edilen</span>
-              </span>
-              <span>
-                <strong>{profile!.followers}</strong> <span style={{color: "#6e767d"}}>Takipci</span>
-              </span>
+              <Link
+                href={`/${username}/connections?tab=following`}
+                className="hover:underline cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span style={{ color: "var(--app-subtitle)" }}>
+                  <strong style={{ color: "var(--app-body-text)" }}>{profile!.following}</strong> Kovalanan
+                </span>
+              </Link>
+              <Link
+                href={`/${username}/connections?tab=followers`}
+                className="hover:underline cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span style={{ color: "var(--app-subtitle)" }}>
+                  <strong style={{ color: "var(--app-body-text)" }}>{profile!.followers}</strong> Kovalayan
+                </span>
+              </Link>
             </div>
           </div>
         </div>
 
-        <div className="flex border-t border-[#222222]">
+        <div className="flex border-t border-theme-border">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`flex-1 py-4 text-center font-medium ${
-              activeTab === "posts" ? "border-b-2 border-[#1DCD9F]" : ""
-            }`}
+            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "posts" ? "font-bold" : "text-theme-text"}`}
+            style={{ color: activeTab === "posts" ? "var(--app-global-link-color)" : undefined }}
           >
             Gönderiler
+            {activeTab === "posts" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("replies")}
-            className={`flex-1 py-4 text-center font-medium ${
-              activeTab === "replies" ? "border-b-2 border-[#1DCD9F]" : ""
-            }`}
+            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "replies" ? "font-bold" : "text-theme-text"}`}
+            style={{ color: activeTab === "replies" ? "var(--app-global-link-color)" : undefined }}
           >
             Yanıtlar
+            {activeTab === "replies" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("media")}
-            className={`flex-1 py-4 text-center font-medium ${
-              activeTab === "media" ? "border-b-2 border-[#1DCD9F]" : ""
-            }`}
+            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "media" ? "font-bold" : "text-theme-text"}`}
+            style={{ color: activeTab === "media" ? "var(--app-global-link-color)" : undefined }}
           >
             Medya
+            {activeTab === "media" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("likes")}
-            className={`flex-1 py-4 text-center font-medium ${
-              activeTab === "likes" ? "border-b-2 border-[#1DCD9F]" : ""
-            }`}
+            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "likes" ? "font-bold" : "text-theme-text"}`}
+            style={{ color: activeTab === "likes" ? "var(--app-global-link-color)" : undefined }}
           >
             Beğeniler
+            {activeTab === "likes" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+            )}
           </button>
         </div>
       </div>
@@ -501,7 +658,7 @@ export default function UserProfilePage() {
           <>
             {posts.length > 0 ? (
               <>
-                <PostList posts={posts} />
+                <PostList posts={posts} currentUserId={currentUser?.id} />
                 {postsHasMore && postsLoading && (
                   <div className="flex justify-center py-4">
                     <div className="text-center">
@@ -516,7 +673,7 @@ export default function UserProfilePage() {
               </>
             ) : (
               <div className="p-4">
-                <p style={{color: "#6e767d"}}>Henuz gonderi yok.</p>
+                <p style={{ color: "#6e767d" }}>Henuz gonderi yok.</p>
               </div>
             )}
           </>
@@ -530,7 +687,7 @@ export default function UserProfilePage() {
                   {(() => {
                     const threadGroups: { [key: string]: any[] } = {};
                     const noThreadReplies: any[] = [];
-                    
+
                     replyPosts.forEach((reply: any) => {
                       if (reply.threadRoot) {
                         const rootId = reply.threadRoot.id;
@@ -542,7 +699,7 @@ export default function UserProfilePage() {
                         noThreadReplies.push(reply);
                       }
                     });
-                    
+
                     const groupedPreviews = Object.values(threadGroups).sort((a: any[], b: any[]) => new Date(b[0].createdAt).getTime() - new Date(a[0].createdAt).getTime()).map((replies: any[]) => {
                       const latestReply = replies[0];
                       return (
@@ -555,11 +712,11 @@ export default function UserProfilePage() {
                         />
                       );
                     });
-                    
+
                     return (
                       <>
                         {groupedPreviews}
-                        {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} />}
+                        {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} currentUserId={currentUser?.id} />}
                       </>
                     );
                   })()}
@@ -578,7 +735,7 @@ export default function UserProfilePage() {
               </>
             ) : (
               <div className="p-4">
-                <p style={{color: "#6e767d"}}>Henuz yanit yok.</p>
+                <p style={{ color: "#6e767d" }}>Henuz yanit yok.</p>
               </div>
             )}
           </>
@@ -588,7 +745,7 @@ export default function UserProfilePage() {
           <>
             {mediaPosts.length > 0 ? (
               <>
-                <PostList posts={mediaPosts} />
+                <PostList posts={mediaPosts} currentUserId={currentUser?.id} />
                 {mediaHasMore && mediaLoading && (
                   <div className="flex justify-center py-4">
                     <div className="text-center">
@@ -603,7 +760,7 @@ export default function UserProfilePage() {
               </>
             ) : (
               <div className="p-4">
-                <p style={{color: "#6e767d"}}>Henuz medya paylasimi yok.</p>
+                <p style={{ color: "#6e767d" }}>Henuz medya paylasimi yok.</p>
               </div>
             )}
           </>
@@ -613,7 +770,7 @@ export default function UserProfilePage() {
           <>
             {likedPosts.length > 0 ? (
               <>
-                <PostList posts={likedPosts} />
+                <PostList posts={likedPosts} currentUserId={currentUser?.id} />
                 {likesHasMore && likesLoading && (
                   <div className="flex justify-center py-4">
                     <div className="text-center">
@@ -628,7 +785,7 @@ export default function UserProfilePage() {
               </>
             ) : (
               <div className="p-4">
-                <p style={{color: "#6e767d"}}>Henuz begenilen gonderi yok.</p>
+                <p style={{ color: "#6e767d" }}>Henuz begenilen gonderi yok.</p>
               </div>
             )}
           </>
@@ -639,109 +796,27 @@ export default function UserProfilePage() {
 
   if (loading) {
     return (
-      <>
-        <MobileHeader />
-        <div className="hidden lg:flex justify-center w-full">
-          <div className="flex w-full max-w-[1310px]">
-            <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
-              <div className="h-full p-0 m-0 border-0">
-                <LeftSidebar />
-              </div>
-            </header>
-            <main className="content flex flex-1 min-h-screen">
-              <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
-                <LoadingContent />
-              </section>
-              <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
-                <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                  <RightSidebar />
-                </div>
-              </aside>
-            </main>
-          </div>
-        </div>
-        <div className="lg:hidden flex flex-col min-h-screen">
-          <main className="content flex-1 pt-14 pb-16">
-            <LoadingContent />
-          </main>
-        </div>
-        <MobileBottomNav />
-      </>
+      <StandardPageLayout>
+        <LoadingContent />
+      </StandardPageLayout>
     );
   }
 
   if (error || !profile) {
     return (
-      <>
-        <MobileHeader />
-        <div className="hidden lg:flex justify-center w-full">
-          <div className="flex w-full max-w-[1310px]">
-            <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
-              <div className="h-full p-0 m-0 border-0">
-                <LeftSidebar />
-              </div>
-            </header>
-            <main className="content flex flex-1 min-h-screen">
-              <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
-                <div className="p-8 text-center">
-                  <p className="text-red-500">{error || "Profil bulunamadi"}</p>
-                </div>
-              </section>
-              <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
-                <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                  <RightSidebar />
-                </div>
-              </aside>
-            </main>
-          </div>
+      <StandardPageLayout>
+        <div className="p-8 text-center">
+          <p className="text-red-500">{error || "Profil bulunamadi"}</p>
         </div>
-        <div className="lg:hidden flex flex-col min-h-screen">
-          <main className="content flex-1 pt-14 pb-16">
-            <div className="p-8 text-center">
-              <p className="text-red-500">{error || "Profil bulunamadi"}</p>
-            </div>
-          </main>
-        </div>
-        <MobileBottomNav />
-      </>
+      </StandardPageLayout>
     );
   }
 
   return (
     <>
-      <MobileHeader />
-      
-      <div className="hidden lg:flex justify-center w-full">
-        <div className="flex w-full max-w-[1310px]">
-          <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
-            <div className="h-full p-0 m-0 border-0">
-              <LeftSidebar />
-            </div>
-          </header>
-
-          <main className="content flex flex-1 min-h-screen">
-            <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
-              <ProfileContent />
-            </section>
-
-            <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
-              <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                <RightSidebar />
-              </div>
-            </aside>
-          </main>
-        </div>
-      </div>
-
-      <div className="lg:hidden flex flex-col min-h-screen">
-        <main className="content flex-1 pt-14 pb-16">
-          <section className="timeline w-full flex flex-col items-stretch">
-            <ProfileContent />
-          </section>
-        </main>
-      </div>
-
-      <MobileBottomNav />
+      <StandardPageLayout>
+        <ProfileContent />
+      </StandardPageLayout>
 
       {isOwnProfile && profile && (
         <EditProfileModal

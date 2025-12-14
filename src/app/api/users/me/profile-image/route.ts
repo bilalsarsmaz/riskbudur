@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-const prisma = new PrismaClient();
-
-export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -38,7 +35,7 @@ export async function POST(req: Request) {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profiles');
     await mkdir(uploadDir, { recursive: true });
 
-    const userId = typeof decoded.userId === "bigint" ? decoded.userId.toString() : String(decoded.userId);
+    const userId = String(decoded.userId);
     const fileName = `${userId}-${Date.now()}${path.extname(image.name)}`;
     const filePath = path.join(uploadDir, fileName);
 

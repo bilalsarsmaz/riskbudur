@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
 // BigInt serialization için yardımcı fonksiyon
@@ -28,7 +28,7 @@ function serializeBigInt(obj: any): any {
   return obj;
 }
 
-const prisma = new PrismaClient();
+
 
 // Bookmark ekle
 export async function POST(req: Request) {
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       where: {
         userId_postId: {
           userId: decoded.userId,
-          postId,
+          postId: BigInt(postId),
         },
       },
     });
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     const bookmark = await prisma.bookmark.create({
       data: {
         userId: decoded.userId,
-        postId,
+        postId: BigInt(postId),
       },
     });
 
@@ -135,7 +135,7 @@ export async function DELETE(req: Request) {
       where: {
         userId_postId: {
           userId: decoded.userId,
-          postId,
+          postId: BigInt(postId),
         },
       },
     });
@@ -152,7 +152,7 @@ export async function DELETE(req: Request) {
       where: {
         userId_postId: {
           userId: decoded.userId,
-          postId,
+          postId: BigInt(postId),
         },
       },
     });
@@ -168,7 +168,7 @@ export async function DELETE(req: Request) {
       { status: 500 }
     );
   }
-} 
+}
 // Kullanıcının bookmarklarını getir
 export async function GET(req: Request) {
   try {
@@ -200,7 +200,7 @@ export async function GET(req: Request) {
                 nickname: true,
                 fullName: true,
                 hasBlueTick: true,
-                hasOrangeTick: true,
+                verificationTier: true,
                 profileImage: true,
               },
             },

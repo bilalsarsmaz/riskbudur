@@ -112,9 +112,9 @@ export default function ImageCropModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/80">
-      <div className="w-full max-w-md mx-4 bg-black border border-[#333] rounded-2xl overflow-hidden flex flex-col">
+      <div className="w-full max-w-md mx-4 bg-black border border-theme-border rounded-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#333]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-theme-border">
           <h2 className="text-lg font-bold text-white">Fotoğrafı Düzenle</h2>
           <button
             onClick={onClose}
@@ -146,7 +146,7 @@ export default function ImageCropModal({
         </div>
 
         {/* Zoom Control */}
-        <div className="px-4 py-4 border-t border-[#333]">
+        <div className="px-4 py-4 border-t border-theme-border">
           <div className="mb-4">
             <label className="block text-sm text-gray-400 mb-2">Yakınlaştır</label>
             <input
@@ -169,8 +169,17 @@ export default function ImageCropModal({
               İptal
             </button>
             <button
+              onClick={() => {
+                onCropComplete(imageSrc);
+                onClose();
+              }}
+              className="flex-1 px-4 py-2 bg-[#333] text-white rounded-lg hover:bg-[#444] transition-colors"
+            >
+              Kırpmadan Kullan
+            </button>
+            <button
               onClick={handleSave}
-              className="flex-1 px-4 py-2 bg-[#1DCD9F] text-white rounded-lg hover:opacity-90 transition-colors"
+              className="flex-1 px-4 py-2 bg-[#1DCD9F] !text-black rounded-lg hover:opacity-90 transition-colors"
             >
               Kaydet
             </button>

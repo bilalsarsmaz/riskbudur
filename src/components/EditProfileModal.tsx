@@ -220,7 +220,7 @@ export default function EditProfileModal({
     <>
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30 px-4">
       <div
-        className="w-full mx-4 max-w-[600px] max-h-[85vh] lg:max-h-[90vh] rounded-2xl overflow-hidden flex flex-col bg-black border border-[#333]"
+        className="w-full mx-4 max-w-[600px] max-h-[85vh] lg:max-h-[90vh] rounded-2xl overflow-hidden flex flex-col bg-black border border-theme-border"
         
       >
         {/* Header */}
@@ -323,7 +323,7 @@ export default function EditProfileModal({
           {/* Form Fields */}
           <div className="px-4 pt-16 pb-4 space-y-6">
             {/* İsim */}
-            <div className="border border-[#333] rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
               <label className="block text-xs text-gray-500 mb-1">İsim</label>
               <input
                 type="text"
@@ -335,7 +335,7 @@ export default function EditProfileModal({
             </div>
 
             {/* Kişisel bilgiler (Bio) */}
-            <div className="border border-[#333] rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
               <label className="block text-xs text-gray-500 mb-1">Kişisel bilgiler</label>
               <textarea
                 value={bio}
@@ -347,7 +347,7 @@ export default function EditProfileModal({
             </div>
 
             {/* Konum */}
-            <div className="border border-[#333] rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
               <label className="block text-xs text-gray-500 mb-1">Konum</label>
               <input
                 type="text"
@@ -359,7 +359,7 @@ export default function EditProfileModal({
             </div>
 
             {/* Web Sitesi */}
-            <div className="border border-[#333] rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
               <label className="block text-xs text-gray-500 mb-1">Web sitesi</label>
               <input
                 type="url"

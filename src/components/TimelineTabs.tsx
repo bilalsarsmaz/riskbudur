@@ -1,45 +1,74 @@
- // @ts-nocheck
+// @ts-nocheck
 
- "use client";
+"use client";
 
- type TimelineType = "all" | "following";
+import { useState, useEffect, useRef } from "react";
 
- interface TimelineTabsProps {
-   activeTab: TimelineType;
-   onTabChange: (tab: TimelineType) => void;
- }
+type TimelineType = "all" | "following";
 
- export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsProps) {
-   return (
-     <div className="w-full bg-black border-b border-[#222222]">
-       <div className="flex">
-         <button
-           onClick={() => onTabChange("all")}
-           className={`flex-1 py-4 px-4 text-center relative transition-colors ${
-             activeTab === "all"
-               ? "text-[#1DCD9F] font-bold"
-               : "text-gray-400 font-medium hover:text-gray-200"
-           }`}
-         >
-           Sitedeki Herkes
-           {activeTab === "all" && (
-             <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1DCD9F] rounded-t-full"></div>
-           )}
-         </button>
-         <button
-           onClick={() => onTabChange("following")}
-           className={`flex-1 py-4 px-4 text-center relative transition-colors ${
-             activeTab === "following"
-               ? "text-[#1DCD9F] font-bold"
-               : "text-gray-400 font-medium hover:text-gray-200"
-           }`}
-         >
-           Takip Ettiklerim
-           {activeTab === "following" && (
-             <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1DCD9F] rounded-t-full"></div>
-           )}
-         </button>
-       </div>
-     </div>
-   );
- }
+interface TimelineTabsProps {
+  activeTab: TimelineType;
+  onTabChange: (tab: TimelineType) => void;
+}
+
+export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsProps) {
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // iOS bounce fix & threshold
+      if (currentScrollY < 10) {
+        setIsVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setIsVisible(false); // Scroll down -> hide
+      } else {
+        setIsVisible(true); // Scroll up -> show
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div
+      className={`w-full bg-theme-bg/80 backdrop-blur-md border-b border-theme-border sticky top-14 lg:top-0 z-20 h-[60px] flex transition-transform duration-300 ease-in-out ${!isVisible ? '-translate-y-[120%]' : 'translate-y-0'
+        } lg:translate-y-0`}
+    >
+      <div className="flex w-full h-full">
+        <button
+          onClick={() => onTabChange("all")}
+          className={`flex-1 h-full flex items-center justify-center relative transition-colors ${activeTab === "all"
+            ? "text-[var(--app-global-link-color)] font-bold"
+            : "text-theme-text font-medium hover:text-gray-200"
+            }`}
+        >
+          Herkes
+          {activeTab === "all" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--app-global-link-color)] rounded-t-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => onTabChange("following")}
+          className={`flex-1 h-full flex items-center justify-center relative transition-colors ${activeTab === "following"
+            ? "text-[var(--app-global-link-color)] font-bold"
+            : "text-theme-text font-medium hover:text-gray-200"
+            }`}
+        >
+          Kovaladıklarım
+          {activeTab === "following" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--app-global-link-color)] rounded-t-full"></div>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}

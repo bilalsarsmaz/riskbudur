@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
 
-    // Ana postu getir
     const post = await prisma.post.findUnique({
       where: { id: BigInt(id) },
       include: {
@@ -19,9 +16,9 @@ export async function GET(
             id: true,
             nickname: true,
             hasBlueTick: true,
-            hasOrangeTick: true,
-            profileImage: true,
+            verificationTier: true,
             fullName: true,
+            profileImage: true,
           },
         },
         parentPost: {
@@ -31,6 +28,7 @@ export async function GET(
                 id: true,
                 nickname: true,
                 fullName: true,
+                verificationTier: true,
               }
             }
           }
@@ -56,14 +54,12 @@ export async function GET(
       );
     }
 
-    // Thread yanıt sayısını hesapla (threadRootId = post.id olan yanıtlar)
     const threadRepliesCount = await prisma.post.count({
       where: {
         threadRootId: post.id,
       },
     });
 
-    // Direkt olarak parentPostId ile yanitlari cek
     const directReplies = await prisma.post.findMany({
       where: {
         parentPostId: BigInt(id)
@@ -75,6 +71,7 @@ export async function GET(
             id: true,
             nickname: true,
             hasBlueTick: true,
+            verificationTier: true,
             profileImage: true,
             fullName: true,
           },
@@ -88,7 +85,6 @@ export async function GET(
       },
     });
 
-    // Her yanit icin alt yanitlari da cek (recursive)
     const fetchNestedReplies = async (parentId: bigint): Promise<any[]> => {
       const replies = await prisma.post.findMany({
         where: { parentPostId: parentId },
@@ -99,6 +95,7 @@ export async function GET(
               id: true,
               nickname: true,
               hasBlueTick: true,
+              verificationTier: true,
               profileImage: true,
               fullName: true,
             },
@@ -134,7 +131,6 @@ export async function GET(
       return result;
     };
 
-    // Tum yanitlari topla (direkt + nested)
     let allReplies: any[] = [];
     for (const reply of directReplies) {
       allReplies.push({
@@ -155,7 +151,6 @@ export async function GET(
       allReplies.push(...nestedReplies);
     }
 
-    // Bu post'un alinti yaptigi postu bul
     const quote = await prisma.quote.findFirst({
       where: {
         authorId: post.authorId,
@@ -173,6 +168,7 @@ export async function GET(
                 id: true,
                 nickname: true,
                 hasBlueTick: true,
+                verificationTier: true,
                 fullName: true,
                 profileImage: true,
               },
@@ -224,14 +220,13 @@ export async function GET(
   }
 }
 
-// Post silme
 export async function DELETE(
   req: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
-    
+    const { id } = await context.params;
+
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -239,9 +234,9 @@ export async function DELETE(
         { status: 401 }
       );
     }
-    
+
     const token = authHeader.replace("Bearer ", "");
-    
+
     let userId: string;
     try {
       const jwt = await import("jsonwebtoken");
@@ -253,37 +248,85 @@ export async function DELETE(
         { status: 401 }
       );
     }
-    
+
     const post = await prisma.post.findUnique({
       where: { id: BigInt(id) },
-      select: { authorId: true }
+      select: {
+        authorId: true,
+        content: true,
+        createdAt: true,
+        hashtags: true
+      }
     });
-    
+
     if (!post) {
       return NextResponse.json(
         { message: "Post bulunamadi" },
         { status: 404 }
       );
     }
-    
+
     if (post.authorId !== userId) {
       return NextResponse.json(
         { message: "Bu gonderiyi silme yetkiniz yok" },
         { status: 403 }
       );
     }
-    
-    // Iliskili verileri sil
+
+    // Eger bu post bir alinti ise, ilgili Quote kaydini da bulup silelim.
+    // Quote modeli postId tutmadigi icin fuzzy match yapiyoruz (GET metodundaki mantigin aynisi)
+    const quoteRecord = await prisma.quote.findFirst({
+      where: {
+        authorId: post.authorId,
+        content: post.content,
+        createdAt: {
+          gte: new Date(post.createdAt.getTime() - 2000), // 2 saniyelik tolerans
+          lte: new Date(post.createdAt.getTime() + 2000),
+        },
+      }
+    });
+
+    if (quoteRecord) {
+      // Bu alıntı için oluşturulan bildirimi sil (QUOTE type notification points to the NEW quote post id, wihch is 'id' here)
+      // Actually, when a quote is created, the notification has postId = newPost.id (which is this post's id). 
+      // So deleting notifications by postId below will handle it.
+      await prisma.quote.delete({ where: { id: quoteRecord.id } });
+    }
+
+    // Bu post ile ilgili tüm bildirimleri sil (QUOTE, REPLY, MENTION, LIKE vb. bu post ID'sine bağlı olanlar)
+    await prisma.notification.deleteMany({ where: { postId: BigInt(id) } });
+
     await prisma.like.deleteMany({ where: { postId: BigInt(id) } });
     await prisma.comment.deleteMany({ where: { postId: BigInt(id) } });
     await prisma.quote.deleteMany({ where: { quotedPostId: BigInt(id) } });
     await prisma.bookmark.deleteMany({ where: { postId: BigInt(id) } });
     await prisma.post.deleteMany({ where: { parentPostId: BigInt(id) } });
-    
+
     await prisma.post.delete({
       where: { id: BigInt(id) }
     });
-    
+
+    // Bosalan hashtagleri temizle
+    if (post.hashtags && post.hashtags.length > 0) {
+      for (const tag of post.hashtags) {
+        const remainingPosts = await prisma.post.count({
+          where: {
+            hashtags: {
+              some: {
+                id: tag.id
+              }
+            }
+          }
+        });
+
+        if (remainingPosts === 0) {
+          await prisma.hashtag.delete({
+            where: { id: tag.id }
+          });
+        }
+      }
+    }
+
     return NextResponse.json({ message: "Gonderi silindi" });
   } catch (error) {
     console.error("Post silme hatasi:", error);

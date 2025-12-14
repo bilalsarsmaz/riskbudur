@@ -1,37 +1,16 @@
 "use client";
 
 import PostItem from "./PostItem";
-
-interface Author {
-  id: string;
-  nickname: string;
-  hasBlueTick: boolean;
-}
-
-interface PostCount {
-  likes: number;
-  comments: number;
-}
-
-export interface Post {
-  id: string;
-  content: string;
-  mediaUrl?: string;
-  imageUrl?: string;
-  createdAt: string;
-  author: Author;
-  _count: PostCount;
-  isLiked?: boolean;
-  isThread?: boolean;
-}
+import { EnrichedPost } from "@/types/post";
 
 interface PostListProps {
-  posts: Post[];
+  posts: EnrichedPost[];
   currentUserId?: string;
-  onPostDeleted?: (postId: string) => void;
+  onPostDeleted?: (post: EnrichedPost) => void;
+  onPostCreated?: (post: EnrichedPost) => void;
 }
 
-export default function PostList({ posts, currentUserId, onPostDeleted }: PostListProps) {
+export default function PostList({ posts, currentUserId, onPostDeleted, onPostCreated }: PostListProps) {
   if (posts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -44,12 +23,13 @@ export default function PostList({ posts, currentUserId, onPostDeleted }: PostLi
   return (
     <div className="w-full">
       {posts.map((post, index) => (
-        <PostItem 
-          key={post.id} 
-          post={post} 
-          isFirst={index === 0} 
-          currentUserId={currentUserId} 
+        <PostItem
+          key={post.id}
+          post={post}
+          isFirst={index === 0}
+          currentUserId={currentUserId}
           onPostDeleted={onPostDeleted}
+          onPostCreated={onPostCreated}
           isThread={post.isThread || false}
           showThreadFooter={true}
         />

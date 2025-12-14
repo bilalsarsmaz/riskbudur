@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 async function findThreadRoot(postId: bigint): Promise<any> {
   const post = await prisma.post.findUnique({
@@ -13,14 +11,15 @@ async function findThreadRoot(postId: bigint): Promise<any> {
           nickname: true,
           fullName: true,
           hasBlueTick: true,
+          verificationTier: true,
           profileImage: true,
         },
       },
     },
   });
-  
+
   if (!post) return null;
-  
+
   if (!post.parentPostId) {
     return {
       id: post.id.toString(),
@@ -31,7 +30,7 @@ async function findThreadRoot(postId: bigint): Promise<any> {
       author: post.author,
     };
   }
-  
+
   return findThreadRoot(post.parentPostId);
 }
 
@@ -52,18 +51,19 @@ async function countPostsBetween(rootId: bigint, replyId: bigint): Promise<numbe
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
     const { searchParams } = new URL(req.url);
     const skip = parseInt(searchParams.get("skip") || "0");
     const take = parseInt(searchParams.get("take") || "20");
 
-    const username = context.params.id;
+    const params = await props.params;
+    const username = params.id;
 
     const user = await prisma.user.findFirst({
-      where: { 
-        nickname: { 
+      where: {
+        nickname: {
           equals: username,
           mode: "insensitive"
         }
@@ -79,7 +79,7 @@ export async function GET(
     }
 
     const replies = await prisma.post.findMany({
-      where: { 
+      where: {
         authorId: user.id,
         parentPostId: { not: null }
       },
@@ -93,7 +93,7 @@ export async function GET(
             nickname: true,
             fullName: true,
             hasBlueTick: true,
-            hasOrangeTick: true,
+            verificationTier: true,
             profileImage: true,
           },
         },
@@ -105,6 +105,7 @@ export async function GET(
                 nickname: true,
                 fullName: true,
                 hasBlueTick: true,
+                verificationTier: true,
                 profileImage: true,
               },
             },
@@ -122,7 +123,7 @@ export async function GET(
 
     const formattedReplies = await Promise.all(replies.map(async (reply) => {
       const threadRoot = await findThreadRoot(reply.parentPostId!);
-      
+
       let middlePostsCount = 0;
       let threadRepliesCount = 0;
       if (threadRoot && reply.parentPostId) {

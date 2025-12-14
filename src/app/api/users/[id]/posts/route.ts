@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const { searchParams } = new URL(req.url);
     const skip = parseInt(searchParams.get("skip") || "0");
@@ -47,6 +46,7 @@ export async function GET(
             id: true,
             nickname: true,
             hasBlueTick: true,
+            verificationTier: true,
             profileImage: true,
             fullName: true,
           },
@@ -80,6 +80,7 @@ export async function GET(
                   id: true,
                   nickname: true,
                   hasBlueTick: true,
+                  verificationTier: true,
                   fullName: true,
                   profileImage: true,
                 },
@@ -108,6 +109,7 @@ export async function GET(
           id: post.author.id,
           nickname: post.author.nickname,
           hasBlueTick: post.author.hasBlueTick,
+          verificationTier: post.author.verificationTier,
           profileImage: post.author.profileImage,
           fullName: post.author.fullName,
         },

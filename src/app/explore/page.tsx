@@ -4,170 +4,175 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
-import MobileHeader from "@/components/MobileHeader";
-import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileHeader from "@/components/mobile/MobileHeader";
+import MobileBottomNav from "@/components/mobile/MobileBottomNav";
 import { fetchApi } from "@/lib/api";
+import GlobalHeader from "@/components/GlobalHeader";
 
 interface Hashtag {
-  id: string;
-  name: string;
-  count: number;
+    id: string;
+    name: string;
+    count: number;
 }
 
 export default function ExplorePage() {
-  const router = useRouter();
-  const [hashtags, setHashtags] = useState<Hashtag[]>([]);
-  const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const [hashtags, setHashtags] = useState<Hashtag[]>([]);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/");
-      return;
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            router.push("/");
+            return;
+        }
+
+        const fetchTrending = async () => {
+            try {
+                const data = await fetchApi("/hashtags/trending?limit=15");
+                setHashtags(data.hashtags || []);
+            } catch (err) {
+                console.error("Trending hashtag hatası:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTrending();
+    }, [router]);
+
+    if (loading) {
+        return (
+            <>
+                <MobileHeader />
+                <div className="hidden lg:flex justify-center w-full">
+                    <div className="flex w-full max-w-[1310px]">
+                        <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
+                            <div className="h-full p-0 m-0 border-0">
+                                <LeftSidebar />
+                            </div>
+                        </header>
+                        <main className="content flex flex-1 min-h-screen">
+                            <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
+                                <div className="flex items-center justify-center py-20">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                                </div>
+                            </section>
+                            <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+                                <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+                                    <RightSidebar hideHashtags={true} />
+                                </div>
+                            </aside>
+                        </main>
+                    </div>
+                </div>
+                <div className="lg:hidden flex flex-col min-h-screen">
+                    <main className="content flex-1 pt-14 pb-16">
+                        <div className="flex items-center justify-center py-20">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                        </div>
+                    </main>
+                </div>
+                <MobileBottomNav />
+            </>
+        );
     }
 
-    const fetchTrending = async () => {
-      try {
-        const data = await fetchApi("/hashtags/trending?limit=15");
-        setHashtags(data.hashtags || []);
-      } catch (err) {
-        console.error("Trending hashtag hatası:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrending();
-  }, [router]);
-
-  if (loading) {
     return (
-      <>
-        <MobileHeader />
-        <div className="hidden lg:flex justify-center w-full">
-          <div className="flex w-full max-w-[1310px]">
-            <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
-              <div className="h-full p-0 m-0 border-0">
-                <LeftSidebar />
-              </div>
-            </header>
-            <main className="content flex flex-1 min-h-screen">
-              <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
-                <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+        <>
+            {/* Mobil Header */}
+            <MobileHeader />
+
+            {/* Desktop Layout Wrapper - ekran ortasında */}
+            <div className="hidden lg:flex justify-center w-full">
+                <div className="flex w-full max-w-[1310px]">
+                    {/* Sol Sidebar */}
+                    <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
+                        <div className="h-full p-0 m-0 border-0">
+                            <LeftSidebar />
+                        </div>
+                    </header>
+
+                    {/* Ana içerik */}
+                    <main className="content flex flex-1 min-h-screen">
+                        {/* Timeline - Hashtag Listesi */}
+                        <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
+                            {/* Başlık */}
+                            {/* Başlık */}
+                            <GlobalHeader
+                                title="Keşfet"
+                                subtitle="Mevzu ne tatlım?"
+                                showBackButton={true}
+                            />
+
+                            {/* Hashtag Listesi */}
+                            <div className="p-4">
+                                {hashtags.map((hashtag) => (
+                                    <div
+                                        key={hashtag.id}
+                                        onClick={() => router.push(`/hashtag/${hashtag.name}`)}
+                                        className="flex flex-col items-start py-2 rounded-lg cursor-pointer px-2"
+                                    >
+                                        <span className="font-bold" style={{ color: "var(--app-body-text)" }}>#{hashtag.name}</span>
+                                        <span className="text-xs" style={{ color: '#6e767d' }}>{hashtag.count} gönderi</span>
+                                    </div>
+                                ))}
+
+                                {hashtags.length === 0 && (
+                                    <div className="py-8 text-center" style={{ color: '#6e767d' }}>
+                                        Henüz gündemde etiket yok.
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
+                        {/* Sağ Sidebar - Popüler Postlar + Footer */}
+                        <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+                            <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+                                <RightSidebar hideHashtags={true} />
+                            </div>
+                        </aside>
+                    </main>
                 </div>
-              </section>
-              <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
-                <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                  <RightSidebar hideHashtags={true} />
-                </div>
-              </aside>
-            </main>
-          </div>
-        </div>
-        <div className="lg:hidden flex flex-col min-h-screen">
-          <main className="content flex-1 pt-14 pb-16">
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
             </div>
-          </main>
-        </div>
-        <MobileBottomNav />
-      </>
+
+            {/* Mobil Layout */}
+            <div className="lg:hidden flex flex-col min-h-screen">
+                <main className="content flex-1 pt-14 pb-16">
+                    <section className="timeline w-full flex flex-col items-stretch">
+                        {/* Başlık */}
+                        <GlobalHeader
+                            title="Keşfet"
+                            subtitle="Gündemdeki etiketler"
+                            className="!top-14"
+                            showBackButton={true}
+                        />
+
+                        {/* Hashtag Listesi */}
+                        <div className="p-4">
+                            {hashtags.map((hashtag) => (
+                                <div
+                                    key={hashtag.id}
+                                    onClick={() => router.push(`/hashtag/${hashtag.name}`)}
+                                    className="flex flex-col items-start py-2 rounded-lg cursor-pointer px-2"
+                                >
+                                    <span className="font-bold" style={{ color: "var(--app-body-text)" }}>#{hashtag.name}</span>
+                                    <span className="text-xs" style={{ color: '#6e767d' }}>{hashtag.count} gönderi</span>
+                                </div>
+                            ))}
+
+                            {hashtags.length === 0 && (
+                                <div className="py-8 text-center" style={{ color: '#6e767d' }}>
+                                    Henüz gündemde etiket yok.
+                                </div>
+                            )}
+                        </div>
+                    </section>
+                </main>
+            </div>
+
+            {/* Mobil Bottom Nav */}
+            <MobileBottomNav />
+        </>
     );
-  }
-
-  return (
-    <>
-      {/* Mobil Header */}
-      <MobileHeader />
-
-      {/* Desktop Layout Wrapper - ekran ortasında */}
-      <div className="hidden lg:flex justify-center w-full">
-        <div className="flex w-full max-w-[1310px]">
-          {/* Sol Sidebar */}
-          <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
-            <div className="h-full p-0 m-0 border-0">
-              <LeftSidebar />
-            </div>
-          </header>
-
-          {/* Ana içerik */}
-          <main className="content flex flex-1 min-h-screen">
-            {/* Timeline - Hashtag Listesi */}
-            <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
-              {/* Başlık */}
-              <div className="sticky top-0 z-10 border-b border-[#222222] p-4">
-                <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>Keşfet</h1>
-                <p className="text-sm mt-1" style={{color: '#6e767d'}}>Gündemdeki etiketler</p>
-              </div>
-
-              {/* Hashtag Listesi */}
-              <div className="p-4">
-                {hashtags.map((hashtag) => (
-                  <div
-                    key={hashtag.id}
-                    onClick={() => router.push(`/hashtag/${hashtag.name}`)}
-                    className="flex flex-col items-start py-2 hover:bg-[#151515] rounded-lg cursor-pointer px-2"
-                  >
-                    <span className="text-[#1DCD9F]">#{hashtag.name}</span>
-                    <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} gönderi</span>
-                  </div>
-                ))}
-
-                {hashtags.length === 0 && (
-                  <div className="py-8 text-center" style={{color: '#6e767d'}}>
-                    Henüz gündemde etiket yok.
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Sağ Sidebar - Popüler Postlar + Footer */}
-            <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
-              <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                <RightSidebar hideHashtags={true} />
-              </div>
-            </aside>
-          </main>
-        </div>
-      </div>
-
-      {/* Mobil Layout */}
-      <div className="lg:hidden flex flex-col min-h-screen">
-        <main className="content flex-1 pt-14 pb-16">
-          <section className="timeline w-full flex flex-col items-stretch">
-            {/* Başlık */}
-            <div className="sticky top-14 z-10 border-b border-[#222222] p-4">
-              <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>Keşfet</h1>
-                <p className="text-sm mt-1" style={{color: '#6e767d'}}>Gündemdeki etiketler</p>
-            </div>
-
-            {/* Hashtag Listesi */}
-            <div className="p-4">
-              {hashtags.map((hashtag) => (
-                <div
-                  key={hashtag.id}
-                  onClick={() => router.push(`/hashtag/${hashtag.name}`)}
-                  className="flex flex-col items-start py-2 hover:bg-[#151515] rounded-lg cursor-pointer px-2"
-                >
-                  <span className="text-[#1DCD9F]">#{hashtag.name}</span>
-                  <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} gönderi</span>
-                </div>
-              ))}
-
-              {hashtags.length === 0 && (
-                <div className="py-8 text-center" style={{color: '#6e767d'}}>
-                  Henüz gündemde etiket yok.
-                </div>
-              )}
-            </div>
-          </section>
-        </main>
-      </div>
-
-      {/* Mobil Bottom Nav */}
-      <MobileBottomNav />
-    </>
-  );
 }

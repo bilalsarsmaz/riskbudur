@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
-
-const prisma = new PrismaClient();
 
 // Yeni yanit (reply) ekle - artik Post olarak kaydediliyor
 export async function POST(req: Request) {
@@ -23,7 +21,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { content, postId, isAnonymous } = await req.json();
+    const { content, postId, isAnonymous, linkPreview } = await req.json();
 
     // Parent post'un var olup olmadigini kontrol et
     const parentPost = await prisma.post.findUnique({
@@ -54,7 +52,7 @@ export async function POST(req: Request) {
     // Yoksa parent post'un parentPostId'si yoksa (root post ise) parent post'un ID'sini kullan
     // Yoksa parent post'un parentPostId'sini threadRoot olarak kullan
     let threadRootId: bigint;
-    
+
     if (parentPost.threadRootId) {
       // Parent zaten bir thread'in parcasi
       threadRootId = parentPost.threadRootId;
@@ -74,6 +72,7 @@ export async function POST(req: Request) {
         authorId: decoded.userId,
         parentPostId: BigInt(postId),
         threadRootId: threadRootId,
+        linkPreview: linkPreview || undefined,
       },
       include: {
         author: {
@@ -82,6 +81,7 @@ export async function POST(req: Request) {
             nickname: true,
             fullName: true,
             hasBlueTick: true,
+            verificationTier: true,
             profileImage: true,
           },
         },
@@ -91,6 +91,7 @@ export async function POST(req: Request) {
               select: {
                 id: true,
                 nickname: true,
+                verificationTier: true,
               }
             }
           }
@@ -103,6 +104,18 @@ export async function POST(req: Request) {
         }
       },
     });
+
+    // Bildirim oluştur (Eğer kendi postuna yanıt vermiyorsa)
+    if (parentPost.authorId !== decoded.userId) {
+      await prisma.notification.create({
+        data: {
+          type: "REPLY",
+          recipientId: parentPost.authorId,
+          actorId: decoded.userId,
+          postId: reply.id, // Bildirim yeni oluşturulan yanıta (reply) işaret etmeli
+        },
+      });
+    }
 
     const formattedReply = {
       id: reply.id.toString(),

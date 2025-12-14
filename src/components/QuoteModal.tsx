@@ -2,106 +2,78 @@
 
 import { useState, useEffect } from "react";
 import { postApi } from "@/lib/api";
-import { Post } from "./PostList";
-import { CheckBadgeIcon } from "@heroicons/react/24/solid";
-import { CheckBadgeIcon as CheckBadgeIconOutline } from "@heroicons/react/24/outline";
+import { EnrichedPost } from "@/types/post";
+import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import Link from "next/link";
-import CommentComposeBox from "./CommentComposeBox";
+import ComposeBox from "./ComposeBox";
+import { formatCustomDate } from "@/utils/date";
 
 interface QuoteModalProps {
-  post: Post;
+  post: EnrichedPost;
   isOpen: boolean;
   onClose: () => void;
-  onQuoteAdded: () => void;
+  onQuoteAdded: (post?: EnrichedPost) => void;
 }
 
 export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: QuoteModalProps) {
-  const [formattedDate, setFormattedDate] = useState("");
-  
-  const isAnonymous = (post as any).isAnonymous || false;
-
-  useEffect(() => {
-    if (post?.createdAt) {
-      const date = new Date(post.createdAt);
-      const now = new Date();
-      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-      
-      if (diffInSeconds < 60) {
-        setFormattedDate("şimdi");
-      } else if (diffInSeconds < 3600) {
-        setFormattedDate(`${Math.floor(diffInSeconds / 60)} dk önce`);
-      } else if (diffInSeconds < 86400) {
-        setFormattedDate(`${Math.floor(diffInSeconds / 3600)} saat önce`);
-      } else {
-        setFormattedDate(`${Math.floor(diffInSeconds / 86400)} gün önce`);
-      }
-    }
-  }, [post]);
-
-  const handleQuoteSubmit = async (content: string) => {
-    try {
-      await postApi("/posts/quote", {
-        quotedPostId: post.id,
-        content: content.trim() || undefined
-      });
-      
-      onQuoteAdded();
-      onClose();
-    } catch (err) {
-      throw err;
-    }
-  };
+  const isAnonymous = post.isAnonymous || false;
+  const formattedDate = formatCustomDate(post.createdAt);
+  const likes = post._count?.likes || 0;
+  const comments = post._count?.comments || 0;
+  const isPopular = (likes > 30 || comments > 10);
 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-white rounded-lg w-full max-w-lg mx-4 shadow-xl border border-orange-400">
+      <div className="rounded-lg w-full max-w-lg mx-4 shadow-xl border border-[var(--app-global-link-color)]" style={{ backgroundColor: "var(--app-body-bg)" }}>
         <div className="h-10 flex items-center justify-between px-4">
           <div className="flex items-center">
-            <span className="text-sm font-bold text-orange-500 hover:text-orange-600 transition-colors font-montserrat">ultraswall</span>
-            <div className="mx-3 h-4 border-l border-gray-300"></div>
-            <span className="text-xs font-medium text-gray-700">Alıntıla</span>
+            <span className="text-sm font-bold text-[var(--app-global-link-color)] hover:opacity-80 transition-colors font-montserrat">riskbudur</span>
+            <div className="mx-3 h-4 border-l border-theme-border"></div>
+            <span className="text-xs font-medium" style={{ color: "var(--app-subtitle)" }}>Alıntıla</span>
           </div>
-          <button 
+          <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="hover:opacity-80 transition-colors"
+            style={{ color: "var(--app-subtitle)" }}
             title="Kapat"
             aria-label="Kapat"
           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5" 
-              viewBox="0 0 20 20" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
               fill="currentColor"
             >
-              <path 
-                fillRule="evenodd" 
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
-                clipRule="evenodd" 
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
               />
             </svg>
           </button>
         </div>
-        <hr className="border-gray-200" />
+        <hr className="border-theme-border" />
+
         <div className="p-4 pb-0">
-          <div className="post-quote mb-3 rounded-lg overflow-hidden" style={{border: "0.4px solid #222222"}}>
+          <div className="post-quote mb-3 rounded-lg overflow-hidden" style={{ border: "0.4px solid #333" }}>
             <div className="p-3">
               <div className="flex items-start">
                 <div className="post-quote-avatar">
                   {isAnonymous ? (
                     <div className="w-8 h-8 rounded-full mr-2 flex items-center justify-center">
-                      <img 
-                        src="/logo.png" 
-                        alt="Anonim" 
-                        className="w-8 h-8 rounded-full object-cover" 
+                      <img
+                        src="/riskbudurlogo.png"
+                        alt="Anonim"
+                        className="w-8 h-8 rounded-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -113,9 +85,9 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                       />
                     </div>
                   ) : post.author.profileImage ? (
-                    <img 
-                      src={post.author.profileImage} 
-                      alt={post.author.nickname} 
+                    <img
+                      src={post.author.profileImage}
+                      alt={post.author.nickname}
                       className="w-8 h-8 rounded-full object-cover mr-2"
                     />
                   ) : (
@@ -124,42 +96,42 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                     </div>
                   )}
                 </div>
-                
+
                 <div className="post-quote-content flex-1">
                   <div className="post-quote-header flex items-center mb-1">
                     {isAnonymous ? (
-                      <span className="post-quote-author font-medium text-gray-900 text-sm">
+                      <span className="post-quote-author font-medium text-sm" style={{ color: "var(--app-body-text)" }}>
                         Anonim Kullanıcı
                       </span>
                     ) : (
                       <Link href={`/${post.author.nickname}`}>
-                        <span className="post-quote-author font-medium text-gray-900 text-sm">
+                        <span className="post-quote-author font-medium text-sm" style={{ color: "var(--app-body-text)" }}>
                           {post.author.fullName || post.author.nickname}
                         </span>
                       </Link>
                     )}
                     {!isAnonymous && post.author.hasBlueTick && (
-                      <CheckBadgeIcon className="post-quote-badge post-quote-badge-blue w-4 h-4 ml-1 text-blue-500" />
+                      <IconRosetteDiscountCheckFilled className="w-4 h-4 ml-1 text-[var(--app-global-link-color)]" />
                     )}
-                    {(post as any).isPopular && (
-                      <CheckBadgeIconOutline className="post-quote-badge post-quote-badge-orange w-4 h-4 ml-1 text-orange-500" />
+                    {isPopular && (
+                      <IconRosetteDiscountCheckFilled className="w-4 h-4 ml-1 text-orange-500" />
                     )}
-                    <span className="post-quote-separator mx-1 font-light text-xs" style={{color: "#4a4a4a"}}>·</span>
-                    <span className="post-quote-date text-xs font-light" style={{color: "#4a4a4a"}}>{formattedDate}</span>
+                    <span className="mx-1 font-light text-xs" style={{ color: "var(--app-subtitle)" }}>·</span>
+                    <span className="text-xs font-light" style={{ color: "var(--app-subtitle)" }}>{formattedDate}</span>
                   </div>
-                  
-                  <Link href={`/status/${post.id}`}>
+
+                  <Link href={`/${post.author.nickname}/status/${post.id}`}>
                     {post.content && (
-                      <div className="post-quote-text text-gray-800 text-sm line-clamp-3">
+                      <div className="post-quote-text text-sm line-clamp-3" style={{ color: 'var(--app-body-text)' }}>
                         {post.content}
                       </div>
                     )}
-                    
+
                     {(post.mediaUrl || post.imageUrl) && (
-                      <div className={`post-quote-media rounded-lg overflow-hidden ${post.content ? 'mt-2' : ''}`} style={{border: "0.4px solid #222222"}}>
-                        <img 
-                          src={post.imageUrl || post.mediaUrl} 
-                          alt="Alıntılanan post görseli" 
+                      <div className={`post-quote-media rounded-lg overflow-hidden ${post.content ? 'mt-2' : ''}`} style={{ border: "0.4px solid #333" }}>
+                        <img
+                          src={post.imageUrl || post.mediaUrl}
+                          alt="Alıntılanan post görseli"
                           className="w-full h-auto object-cover"
                         />
                       </div>
@@ -170,15 +142,13 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
             </div>
           </div>
         </div>
-        
+
         <div className="px-4 pb-4 pt-2">
-          <CommentComposeBox 
-            postId={post.id}
-            onCommentAdded={onQuoteAdded}
+          <ComposeBox
+            quotedPostId={post.id}
+            onPostCreated={(newPost) => onQuoteAdded(newPost)}
             onCancel={onClose}
-            hideAvatar={true}
-            textareaClassName="border-0 focus:ring-0"
-            onSubmit={handleQuoteSubmit}
+            placeholder="Bir şeyler ekle..."
             submitButtonText="Alıntıla"
           />
         </div>

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
-
-const prisma = new PrismaClient();
 
 // Yorumu güncelle
 export async function PUT(
@@ -61,6 +59,7 @@ export async function PUT(
             id: true,
             nickname: true,
             hasBlueTick: true,
+            verificationTier: true,
           },
         },
       },

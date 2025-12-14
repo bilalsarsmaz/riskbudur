@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -16,8 +16,6 @@ export async function POST(req: Request) {
     }
 
     const { email, password } = await req.json();
-
-    console.log("Giriş denemesi:", { email });
 
     // Kullanıcıyı bul
     const user = await prisma.user.findUnique({
@@ -55,8 +53,6 @@ export async function POST(req: Request) {
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
     );
-
-    console.log("Giriş başarılı:", { email });
 
     // Response oluştur
     const response = NextResponse.json({

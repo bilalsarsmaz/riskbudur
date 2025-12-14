@@ -2,38 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import LeftSidebar from "@/components/LeftSidebar";
-import RightSidebar from "@/components/RightSidebar";
-import MobileHeader from "@/components/MobileHeader";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import PostList from "@/components/PostList";
 import { fetchApi } from "@/lib/api";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-
-interface Post {
-  id: string;
-  content: string;
-  createdAt: string;
-  mediaUrl?: string;
-  isAnonymous: boolean;
-  author: {
-    id: string;
-    nickname: string;
-    fullName: string;
-    hasBlueTick: boolean;
-    profileImage?: string;
-  };
-  _count: {
-    likes: number;
-    comments: number;
-  };
-}
+import { EnrichedPost } from "@/types/post";
+import GlobalHeader from "@/components/GlobalHeader";
+import StandardPageLayout from "@/components/StandardPageLayout";
 
 export default function HashtagPage() {
   const params = useParams();
   const router = useRouter();
-  const tag = params.tag as string;
-  const [posts, setPosts] = useState<Post[]>([]);
+  const rawTag = params.tag as string;
+  const tag = decodeURIComponent(rawTag);
+  const [posts, setPosts] = useState<EnrichedPost[]>([]);
   const [hashtagInfo, setHashtagInfo] = useState<{ name: string; count: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,123 +45,35 @@ export default function HashtagPage() {
     }
   }, [tag, router]);
 
-  // Loading state
-  const LoadingContent = () => (
-    <div className="flex items-center justify-center py-20">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
-    </div>
-  );
-
-  // Error state
-  const ErrorContent = () => (
-    <div className="p-8 text-center">
-      <p style={{color: '#d9dadd'}}>{error || "Hashtag bulunamadı"}</p>
-    </div>
-  );
-
-  // Header component
-  const PageHeader = ({ sticky = false }: { sticky?: boolean }) => (
-    <div className={`${sticky ? 'sticky top-0' : ''} z-10 border-b border-[#222222] p-4 flex items-center`}>
-      <button
-        onClick={() => router.push("/explore")}
-        className="p-2 hover:bg-[#151515] rounded-full mr-4"
-      >
-        <ArrowLeftIcon className="w-5 h-5" />
-      </button>
-      <div>
-        <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>#{hashtagInfo?.name || tag}</h1>
-        {hashtagInfo && (
-          <p className="text-sm" style={{color: '#6e767d'}}>{hashtagInfo.count} gönderi</p>
-        )}
-      </div>
-    </div>
-  );
-
-  // Mobile Header for hashtag page
-  const MobilePageHeader = () => (
-    <div className="sticky top-14 z-10 border-b border-[#222222] p-4 flex items-center">
-      <button
-        onClick={() => router.push("/explore")}
-        className="p-2 hover:bg-[#151515] rounded-full mr-4"
-      >
-        <ArrowLeftIcon className="w-5 h-5" />
-      </button>
-      <div>
-        <h1 className="text-xl font-bold" style={{color: '#d9dadd'}}>#{hashtagInfo?.name || tag}</h1>
-        {hashtagInfo && (
-          <p className="text-sm" style={{color: '#6e767d'}}>{hashtagInfo.count} gönderi</p>
-        )}
-      </div>
-    </div>
+  const headerTitle = (
+    <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1DCD9F] to-[#d9dadd] leading-tight">
+      #{hashtagInfo?.name || tag}
+    </span>
   );
 
   return (
-    <>
-      {/* Mobil Header */}
-      <MobileHeader />
+    <StandardPageLayout>
+      <GlobalHeader
+        title={headerTitle}
+        subtitle={hashtagInfo ? `${hashtagInfo.count} gönderi` : undefined}
+        onBack={() => router.back()}
+      />
 
-      {/* Desktop Layout Wrapper - ekran ortasında */}
-      <div className="hidden lg:flex justify-center w-full">
-        <div className="flex w-full max-w-[1310px]">
-          {/* Sol Sidebar */}
-          <header className="left-nav flex-shrink-0 w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
-            <div className="h-full p-0 m-0 border-0">
-              <LeftSidebar />
-            </div>
-          </header>
-
-          {/* Ana içerik */}
-          <main className="content flex flex-1 min-h-screen">
-            {/* Timeline - Post Listesi */}
-            <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
-              <PageHeader sticky={true} />
-
-              {loading ? (
-                <LoadingContent />
-              ) : error || !hashtagInfo ? (
-                <ErrorContent />
-              ) : posts.length > 0 ? (
-                <PostList posts={posts} />
-              ) : (
-                <div className="p-8 text-center">
-                  <p style={{color: '#6e767d'}}>Bu etiketle henüz gönderi yok.</p>
-                </div>
-              )}
-            </section>
-
-            {/* Sağ Sidebar */}
-            <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
-              <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                <RightSidebar />
-              </div>
-            </aside>
-          </main>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
         </div>
-      </div>
-
-      {/* Mobil Layout */}
-      <div className="lg:hidden flex flex-col min-h-screen">
-        <main className="content flex-1 pt-14 pb-16">
-          <section className="timeline w-full flex flex-col items-stretch">
-            <MobilePageHeader />
-
-            {loading ? (
-              <LoadingContent />
-            ) : error || !hashtagInfo ? (
-              <ErrorContent />
-            ) : posts.length > 0 ? (
-              <PostList posts={posts} />
-            ) : (
-              <div className="p-8 text-center">
-                <p style={{color: '#6e767d'}}>Bu etiketle henüz gönderi yok.</p>
-              </div>
-            )}
-          </section>
-        </main>
-      </div>
-
-      {/* Mobil Bottom Nav */}
-      <MobileBottomNav />
-    </>
+      ) : error || !hashtagInfo ? (
+        <div className="p-8 text-center">
+          <p style={{ color: '#d9dadd' }}>{error || "Hashtag bulunamadı"}</p>
+        </div>
+      ) : posts.length > 0 ? (
+        <PostList posts={posts} />
+      ) : (
+        <div className="p-8 text-center">
+          <p style={{ color: '#6e767d' }}>Bu etiketle henüz gönderi yok.</p>
+        </div>
+      )}
+    </StandardPageLayout>
   );
 }

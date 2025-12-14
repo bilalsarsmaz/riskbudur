@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
 // BigInt serialization için yardımcı fonksiyon
@@ -28,7 +28,7 @@ function serializeBigInt(obj: any): any {
   return obj;
 }
 
-const prisma = new PrismaClient();
+
 
 // Beğeni ekle
 export async function POST(req: Request) {
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       where: {
         userId_postId: {
           userId: decoded.userId,
-          postId,
+          postId: BigInt(postId),
         },
       },
     });
@@ -84,9 +84,21 @@ export async function POST(req: Request) {
     const like = await prisma.like.create({
       data: {
         userId: decoded.userId,
-        postId,
+        postId: BigInt(postId),
       },
     });
+
+    // Bildirim oluştur (Eğer kendi postu değilse)
+    if (post.authorId !== decoded.userId) {
+      await prisma.notification.create({
+        data: {
+          type: "LIKE",
+          recipientId: post.authorId,
+          actorId: decoded.userId,
+          postId: BigInt(postId),
+        },
+      });
+    }
 
     // BigInt değerlerini string'e çevir
     const serializedLike = serializeBigInt(like);
@@ -135,7 +147,7 @@ export async function DELETE(req: Request) {
       where: {
         userId_postId: {
           userId: decoded.userId,
-          postId,
+          postId: BigInt(postId),
         },
       },
     });
@@ -147,12 +159,21 @@ export async function DELETE(req: Request) {
       );
     }
 
+    // Bildirimi kaldır (varsa)
+    await prisma.notification.deleteMany({
+      where: {
+        type: "LIKE",
+        actorId: decoded.userId,
+        postId: BigInt(postId),
+      },
+    });
+
     // Beğeniyi kaldır
     await prisma.like.delete({
       where: {
         userId_postId: {
           userId: decoded.userId,
-          postId,
+          postId: BigInt(postId),
         },
       },
     });

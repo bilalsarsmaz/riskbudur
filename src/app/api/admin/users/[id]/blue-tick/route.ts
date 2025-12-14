@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
 export async function POST(
@@ -10,16 +8,16 @@ export async function POST(
 ) {
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-                  new URL(request.url).searchParams.get("token") ||
-                  request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
-    
+      new URL(request.url).searchParams.get("token") ||
+      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const userId = BigInt(decoded.userId);
-    const targetUserId = BigInt(params.id);
+    // const userId = decoded.userId;
+    const targetUserId = params.id;
 
     // Onay rozeti ver
     await prisma.user.update({
@@ -46,16 +44,16 @@ export async function DELETE(
 ) {
   try {
     const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-                  new URL(request.url).searchParams.get("token") ||
-                  request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
-    
+      new URL(request.url).searchParams.get("token") ||
+      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const userId = BigInt(decoded.userId);
-    const targetUserId = BigInt(params.id);
+    // const userId = decoded.userId;
+    const targetUserId = params.id;
 
     // Onay rozetini kaldır
     await prisma.user.update({

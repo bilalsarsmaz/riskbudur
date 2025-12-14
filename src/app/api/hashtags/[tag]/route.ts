@@ -1,14 +1,29 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth";
 
 export async function GET(
   req: Request,
-  { params }: { params: { tag: string } }
+  props: { params: Promise<{ tag: string }> }
 ) {
+  const params = await props.params;
   try {
-    const tag = params.tag;
+    const tag = decodeURIComponent(params.tag);
+    let userId: string | null = null;
+
+    // Authorization header'dan token'ı al
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      try {
+        const payload = await verifyToken(token);
+        if (payload) {
+          userId = payload.userId as string;
+        }
+      } catch (e) {
+        console.error("Token doğrulama hatası:", e);
+      }
+    }
 
     const hashtag = await prisma.hashtag.findUnique({
       where: { name: tag },
@@ -22,6 +37,7 @@ export async function GET(
                 nickname: true,
                 fullName: true,
                 hasBlueTick: true,
+                verificationTier: true,
                 profileImage: true
               }
             },
@@ -30,7 +46,15 @@ export async function GET(
                 likes: true,
                 comments: true
               }
-            }
+            },
+            likes: userId ? {
+              where: { userId: userId },
+              select: { userId: true }
+            } : false,
+            bookmarks: userId ? {
+              where: { userId: userId },
+              select: { userId: true }
+            } : false
           }
         }
       }
@@ -49,11 +73,14 @@ export async function GET(
       mediaUrl: post.mediaUrl,
       createdAt: post.createdAt.toISOString(),
       isAnonymous: post.isAnonymous,
+      isLiked: post.likes && post.likes.length > 0,
+      isBookmarked: post.bookmarks && post.bookmarks.length > 0,
       author: {
         id: post.author.id,
         nickname: post.author.nickname,
         fullName: post.author.fullName,
         hasBlueTick: post.author.hasBlueTick,
+        verificationTier: post.author.verificationTier,
         profileImage: post.author.profileImage
       },
       _count: {

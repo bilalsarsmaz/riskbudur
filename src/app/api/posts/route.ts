@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
 // Hashtag'leri cikar
@@ -9,8 +9,6 @@ function extractHashtags(content: string): string[] {
   if (!matches) return [];
   return [...new Set(matches.map(tag => tag.slice(1).toLowerCase()))];
 }
-
-const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
   try {
@@ -29,13 +27,40 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const skip = parseInt(searchParams.get("skip") || "0");
     const take = parseInt(searchParams.get("take") || "20");
+    const timeline = searchParams.get("timeline"); // "following" or null
+
+    // Where clause for timeline filtering
+    const whereClause: any = {
+      parentPostId: null, // Sadece root post'lar
+    };
+
+    // If timeline is "following", only show posts from followed users
+    if (timeline === "following" && userId) {
+      // Get list of followed user IDs
+      const followedUsers = await prisma.follow.findMany({
+        where: {
+          followerId: userId
+        },
+        select: {
+          followingId: true
+        }
+      });
+
+      const followedUserIds = followedUsers.map(f => f.followingId);
+
+      // Exclude user's own ID from the list (user shouldn't see their own posts in Following)
+      const filteredFollowedUserIds = followedUserIds.filter(id => id !== userId);
+
+      // Add author filter
+      whereClause.authorId = {
+        in: filteredFollowedUserIds
+      };
+    }
 
     // ONEMLI: Sadece root post'lari getir (parentPostId = null)
     // Yanitlar timeline'da gosterilmez, sadece post detayinda gosterilir
     const posts = await prisma.post.findMany({
-      where: {
-        parentPostId: null, // Sadece root post'lar
-      },
+      where: whereClause,
       skip,
       take,
       orderBy: { createdAt: "desc" },
@@ -47,6 +72,7 @@ export async function GET(req: NextRequest) {
             fullName: true,
             profileImage: true,
             hasBlueTick: true,
+            verificationTier: true,
           },
         },
         _count: {
@@ -78,7 +104,7 @@ export async function GET(req: NextRequest) {
     let commentedPostIds: string[] = [];
     let quotedPostIds: string[] = [];
     let bookmarkedPostIds: string[] = [];
-    
+
     if (userId) {
       try {
         const userLikes = await prisma.like.findMany({
@@ -96,7 +122,7 @@ export async function GET(req: NextRequest) {
       } catch (likeError) {
         console.error("Likes fetch error:", likeError);
       }
-      
+
       try {
         const userComments = await prisma.comment.findMany({
           where: {
@@ -113,7 +139,7 @@ export async function GET(req: NextRequest) {
       } catch (commentError) {
         console.error("Comments fetch error:", commentError);
       }
-      
+
       try {
         const userQuotes = await prisma.quote.findMany({
           where: {
@@ -130,7 +156,7 @@ export async function GET(req: NextRequest) {
       } catch (quoteError) {
         console.error("Quotes fetch error:", quoteError);
       }
-      
+
       try {
         const userBookmarks = await prisma.bookmark.findMany({
           where: {
@@ -171,6 +197,7 @@ export async function GET(req: NextRequest) {
                   fullName: true,
                   profileImage: true,
                   hasBlueTick: true,
+                  verificationTier: true,
                 },
               },
             },
@@ -187,7 +214,6 @@ export async function GET(req: NextRequest) {
       });
 
       const isThread = threadRepliesCount >= 4;
-      console.log(`Post ${post.id}: threadRepliesCount=${threadRepliesCount}, isThread=${isThread}`);
 
       const basePost = {
         id: post.id.toString(),
@@ -216,6 +242,7 @@ export async function GET(req: NextRequest) {
       if (quote && quote.quotedPost) {
         return {
           ...basePost,
+          quotedPostId: quote.quotedPost.id.toString(), // Added explicit ID field
           quotedPost: {
             id: quote.quotedPost.id.toString(),
             content: quote.quotedPost.content,
@@ -272,7 +299,7 @@ export async function POST(req: NextRequest) {
 
     if (parentPostId) {
       actualParentPostId = BigInt(parentPostId);
-      
+
       // Parent post'u bul
       const parentPost = await prisma.post.findUnique({
         where: { id: actualParentPostId },
@@ -311,6 +338,7 @@ export async function POST(req: NextRequest) {
             fullName: true,
             profileImage: true,
             hasBlueTick: true,
+            verificationTier: true,
           },
         },
         _count: {
@@ -347,6 +375,7 @@ export async function POST(req: NextRequest) {
       },
       isPopular: false,
       isThread: false,
+      quotedPostId: null, // Default
     };
 
     return NextResponse.json(formattedPost, { status: 201 });

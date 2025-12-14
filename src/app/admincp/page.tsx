@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import GlobalHeader from "@/components/GlobalHeader";
+import AdmSecondaryLayout from "@/components/AdmSecondaryLayout";
 import AdminSidebar from "@/components/AdminSidebar";
-import MobileHeader from "@/components/MobileHeader";
-import { 
+import {
   IconUsers,
   IconFileText,
   IconFlag,
-  IconChartBar
+  IconChartBar,
+  IconUserCheck
 } from "@tabler/icons-react";
 
 export default function AdminDashboard() {
@@ -18,7 +20,8 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalPosts: 0,
     totalReports: 0,
-    activeUsers: 0
+    activeUsers: 0,
+    pendingUsers: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -29,111 +32,73 @@ export default function AdminDashboard() {
       return;
     }
     setIsAuthenticated(true);
-    // TODO: Admin kontrolü yapılmalı
-    
-    // İstatistikleri yükle
+    // TODO: Admin check
     fetchStats();
   }, [router]);
 
   const fetchStats = async () => {
     try {
-      // TODO: API endpoint'leri oluşturulmalı
+      // Mock data for demo
       setStats({
-        totalUsers: 0,
-        totalPosts: 0,
-        totalReports: 0,
-        activeUsers: 0
+        totalUsers: 12543,
+        totalPosts: 45230,
+        totalReports: 12,
+        activeUsers: 843,
+        pendingUsers: 5
       });
     } catch (error) {
-      console.error("İstatistikler yüklenirken hata:", error);
+      console.error("Error fetching stats:", error);
     } finally {
       setLoading(false);
     }
   };
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="mt-4">Yönlendiriliyor...</p>
-        </div>
-      </div>
-    );
+    return <div className="min-h-screen bg-black" />;
   }
 
   const statCards = [
-    { label: "Toplam Kullanıcı", value: stats.totalUsers, icon: IconUsers, color: "text-blue-500" },
-    { label: "Toplam Gönderi", value: stats.totalPosts, icon: IconFileText, color: "text-green-500" },
-    { label: "Şikayetler", value: stats.totalReports, icon: IconFlag, color: "text-red-500" },
-    { label: "Aktif Kullanıcılar", value: stats.activeUsers, icon: IconChartBar, color: "text-yellow-500" }
+    { label: "Toplam Kullanıcı", value: stats.totalUsers, icon: IconUsers, color: "text-blue-500", bg: "bg-blue-500/5", border: "border-blue-500/20" },
+    { label: "Toplam Gönderi", value: stats.totalPosts, icon: IconFileText, color: "text-green-500", bg: "bg-green-500/5", border: "border-green-500/20" },
+    { label: "Şikayetler", value: stats.totalReports, icon: IconFlag, color: "text-red-500", bg: "bg-red-500/5", border: "border-red-500/20" },
+    { label: "Aktif Kullanıcılar", value: stats.activeUsers, icon: IconChartBar, color: "text-yellow-500", bg: "bg-yellow-500/5", border: "border-yellow-500/20" },
+    { label: "Onay Bekleyen Kullanıcılar", value: stats.pendingUsers, icon: IconUserCheck, color: "text-purple-500", bg: "bg-purple-500/5", border: "border-purple-500/20" }
   ];
 
   return (
-    <>
-      <MobileHeader />
-      
-      <header className="left-nav hidden lg:block fixed left-0 top-0 h-screen overflow-y-auto z-10 w-[68px] sm:w-[88px] lg:w-[595px]">
-        <div className="absolute left-0 sm:left-0 lg:left-[320px] w-full sm:w-full lg:w-[275px] h-full p-0 m-0 border-0">
-          <AdminSidebar />
-        </div>
-      </header>
-
-      <div className="lg:ml-[68px] sm:ml-[88px] lg:ml-[595px] flex justify-center">
-        <main className="content flex w-full max-w-[1310px] min-h-screen">
-          {/* Orta Alan */}
-          <section className="admin-content flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch bg-black text-white lg:border-l lg:border-r border-[#222222] pt-14 pb-16 lg:pt-6 lg:pb-6">
-            <div className="px-4">
-              <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-              
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                  <p className="mt-2 text-gray-500">Yükleniyor...</p>
+    <AdmSecondaryLayout sidebarContent={<AdminSidebar />} maxWidth="1200px">
+      <GlobalHeader title="Riskbudur Admin Paneli" subtitle="Dashboard" />
+      <div className="p-6">
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2" style={{ borderColor: 'var(--app-accent)' }}></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {statCards.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={index}
+                  className={`border rounded-2xl p-6 transition-all hover:bg-white/5 cursor-pointer ${stat.border} ${stat.bg}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium mb-2 opacity-80" style={{ color: 'var(--app-subtitle)' }}>{stat.label}</p>
+                      <h3 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--app-body-text)' }}>
+                        {stat.value.toLocaleString('tr-TR')}
+                      </h3>
+                    </div>
+                    <div className={`p-3 rounded-xl bg-white/5 ${stat.color}`}>
+                      <Icon className="w-7 h-7" />
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {statCards.map((stat, index) => {
-                    const Icon = stat.icon;
-                    return (
-                      <div
-                        key={index}
-                        className="bg-[#111111] border border-[#222222] rounded-lg p-4 hover:bg-[#1a1a1a] transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-gray-400 text-sm mb-1">{stat.label}</p>
-                            <p className="text-2xl font-bold">{stat.value}</p>
-                          </div>
-                          <Icon className={`w-8 h-8 ${stat.color}`} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Sağ Sidebar */}
-          <aside className="right-side hidden 2xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6 bg-black text-white border border-[#222222] rounded-lg">
-            <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto p-4">
-              <h2 className="text-xl font-bold mb-4">Hızlı İşlemler</h2>
-              <div className="space-y-2">
-                <button className="w-full text-left px-4 py-2 rounded-lg hover:bg-[#111111] transition-colors">
-                  Yeni Kullanıcı Ekle
-                </button>
-                <button className="w-full text-left px-4 py-2 rounded-lg hover:bg-[#111111] transition-colors">
-                  Şikayetleri İncele
-                </button>
-                <button className="w-full text-left px-4 py-2 rounded-lg hover:bg-[#111111] transition-colors">
-                  Sistem Ayarları
-                </button>
-              </div>
-            </div>
-          </aside>
-        </main>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </>
+    </AdmSecondaryLayout>
   );
 }

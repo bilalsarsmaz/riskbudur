@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
-
-const prisma = new PrismaClient();
 
 // Hashtag extraction fonksiyonu
 function extractHashtags(content: string): string[] {
   const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
   const matches = content.match(hashtagRegex);
   if (!matches) return [];
-  
+
   return [...new Set(matches.map(tag => tag.slice(1).toLowerCase()))];
 }
 
@@ -41,8 +39,6 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("Yeni alıntı post oluşturuluyor:", { content, quotedPostId, isAnonymous, imageUrl, userId: decoded.userId });
-
     // Alıntılanan postun var olup olmadığını kontrol et
     const quotedPost = await prisma.post.findUnique({
       where: { id: BigInt(quotedPostId) },
@@ -52,6 +48,7 @@ export async function POST(req: Request) {
             id: true,
             nickname: true,
             hasBlueTick: true,
+            verificationTier: true,
             fullName: true,
             profileImage: true,
           },
@@ -67,7 +64,6 @@ export async function POST(req: Request) {
     }
 
     const hashtagNames = extractHashtags(content);
-    console.log("Bulunan hashtag'ler:", hashtagNames);
 
     // Önce normal post oluştur
     const newPost = await prisma.post.create({
@@ -89,6 +85,7 @@ export async function POST(req: Request) {
             id: true,
             nickname: true,
             hasBlueTick: true,
+            verificationTier: true,
             fullName: true,
             profileImage: true,
           },
@@ -118,6 +115,7 @@ export async function POST(req: Request) {
                 id: true,
                 nickname: true,
                 hasBlueTick: true,
+                verificationTier: true,
                 fullName: true,
                 profileImage: true,
               },
@@ -127,7 +125,17 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("Alıntı post oluşturuldu:", { post: newPost, quote });
+    // Kendisi değilse bildirim oluştur
+    if (quotedPost.author.id !== decoded.userId) {
+      await prisma.notification.create({
+        data: {
+          type: 'QUOTE',
+          actorId: decoded.userId,
+          recipientId: quotedPost.author.id,
+          postId: newPost.id, // Notification points to the NEW quote post
+        },
+      });
+    }
 
     // BigInt alanlarını string'e çevir
     const formattedPost = {
@@ -140,9 +148,11 @@ export async function POST(req: Request) {
         id: newPost.author.id,
         nickname: newPost.author.nickname,
         hasBlueTick: newPost.author.hasBlueTick,
+        verificationTier: newPost.author.verificationTier,
         fullName: newPost.author.fullName,
         profileImage: newPost.author.profileImage
       },
+      quotedPostId: quotedPost.id.toString(), // Added explicit ID field
       quotedPost: {
         id: quotedPost.id.toString(),
         content: quotedPost.content,

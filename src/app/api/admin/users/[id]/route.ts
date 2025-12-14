@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
 export async function DELETE(
@@ -9,23 +7,26 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id: targetUserId } = await params;
     const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-                  new URL(request.url).searchParams.get("token") ||
-                  request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
-    
+      new URL(request.url).searchParams.get("token") ||
+      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const userId = BigInt(decoded.userId);
-    const targetUserId = BigInt(params.id);
+    // const userId = decoded.userId;
+    // const userId = decoded.userId;
+    // const targetUserId = params.id; // Moved up
 
     // İlişkili verileri sil
     await prisma.comment.deleteMany({
       where: { authorId: targetUserId }
     });
 
+    // Like.userId is String
     await prisma.like.deleteMany({
       where: { userId: targetUserId }
     });
@@ -35,7 +36,7 @@ export async function DELETE(
     });
 
     await prisma.follow.deleteMany({
-      where: { 
+      where: {
         OR: [
           { followerId: targetUserId },
           { followingId: targetUserId }
@@ -70,20 +71,22 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id: targetUserId } = await params;
     const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-                  new URL(request.url).searchParams.get("token") ||
-                  request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
-    
+      new URL(request.url).searchParams.get("token") ||
+      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const userId = BigInt(decoded.userId);
-    const targetUserId = BigInt(params.id);
+    // const userId = decoded.userId;
+    // const userId = decoded.userId;
+    // const targetUserId = params.id; // Moved up
 
     const body = await request.json();
-    const { fullName, nickname, email } = body;
+    const { fullName, nickname, email, verificationTier, role } = body;
 
     // Güncelleme verilerini hazırla
     const updateData: any = {};
@@ -102,13 +105,14 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      const lowerNickname = nickname.toLowerCase();
-      if (lowerNickname.includes("admin") || lowerNickname.includes("ultraswall")) {
-        return NextResponse.json(
-          { error: "Kullanıcı adı 'admin' veya 'ultraswall' içeremez" },
-          { status: 400 }
-        );
-      }
+      // Admin API allows setting restricted nicknames
+      // const lowerNickname = nickname.toLowerCase();
+      // if (lowerNickname.includes("admin") || lowerNickname.includes("riskbudur")) {
+      //   return NextResponse.json(
+      //     { error: "Kullanıcı adı 'admin' veya 'riskbudur' içeremez" },
+      //     { status: 400 }
+      //   );
+      // }
       // Aynı nickname kontrolü (kendisi hariç)
       const existingUser = await prisma.user.findFirst({
         where: {
@@ -148,6 +152,13 @@ export async function PATCH(
       }
       updateData.email = email;
     }
+    if (verificationTier !== undefined) {
+      updateData.verificationTier = verificationTier;
+      updateData.hasBlueTick = verificationTier !== 'NONE';
+    }
+    if (role !== undefined) {
+      updateData.role = role;
+    }
 
     // Kullanıcıyı güncelle
     const updatedUser = await prisma.user.update({
@@ -156,7 +167,7 @@ export async function PATCH(
     });
 
     return NextResponse.json({
-      id: Number(updatedUser.id),
+      id: updatedUser.id,
       nickname: updatedUser.nickname,
       fullName: updatedUser.fullName,
       email: updatedUser.email

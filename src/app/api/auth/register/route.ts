@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
@@ -15,10 +13,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { email, password, nickname: rawNickname } = await req.json();
-
-
-    console.log("Kayıt denemesi:", { email, nickname });
+    const { email, password, nickname } = await req.json();
 
     // Email kontrolü
     const existingEmail = await prisma.user.findUnique({
@@ -34,8 +29,9 @@ export async function POST(req: Request) {
 
     // Nickname kontrolü
     const existingNickname = await prisma.user.findFirst({
-      where: { 
-        nickname: { 
+      where: {
+        nickname: {
+          equals: nickname,
           mode: "insensitive"
         }
       }
@@ -67,8 +63,6 @@ export async function POST(req: Request) {
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
     );
-
-    console.log("Kayıt başarılı:", { email, nickname });
 
     // Response oluştur
     const response = NextResponse.json({

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient();
 
 // Thread'in tum postlarini getir
 export async function GET(
@@ -36,6 +34,7 @@ export async function GET(
             fullName: true,
             profileImage: true,
             hasBlueTick: true,
+            verificationTier: true,
           },
         },
         _count: {
@@ -61,7 +60,7 @@ export async function GET(
       where: {
         OR: [
           { id: threadRootId }, // Root post
-          { 
+          {
             threadRootId: threadRootId,
             authorId: rootPost.authorId, // Sadece ayni yazarin yanitlari (thread devami)
           },
@@ -76,6 +75,7 @@ export async function GET(
             fullName: true,
             profileImage: true,
             hasBlueTick: true,
+            verificationTier: true,
           },
         },
         _count: {
@@ -95,7 +95,7 @@ export async function GET(
 
     if (userId) {
       const postIds = threadPosts.map(p => p.id);
-      
+
       const userLikes = await prisma.like.findMany({
         where: { userId, postId: { in: postIds } },
         select: { postId: true },
@@ -124,6 +124,7 @@ export async function GET(
             fullName: true,
             profileImage: true,
             hasBlueTick: true,
+            verificationTier: true,
           },
         },
         _count: {

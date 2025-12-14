@@ -1,34 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  --app-body-bg: #000000;
+  /* Dark Theme (Default) - Gece Teması */
+  --app-body-bg: #040404;
   --app-body-text: #EEEEEE;
-  --app-border: #222222;
-  --app-surface: #000000;
-  --app-header-bg: #000000;
+  /* Primary & Secondary Text */
+  --app-subtitle: #686D76;
+  /* Alt başlıklar, @username, timestamp */
+  --app-border: #373A40;
+  /* Tüm borderlar */
+  --app-surface: #040404;
+  /* Card arka plan */
+  --app-header-bg: #040404;
   --app-header-hover: #111111;
-  --app-right-bg: #000000;
-  --app-footer-bg: #050505;
-  --app-accent: #1DCD9F;
-  --app-muted: #6e767d;
-  --app-icon-menu: #c0c0c0;
-  --app-icon-compose: #1DCD9F;
-  --app-icon-nav: #c0c0c0;
-  --app-icon-verified: #1DCD9F;
-  --app-icon-interaction: #6e6e6e;
+  --app-header-hover: #111111;
+  --app-right-bg: #040404;
+  --app-footer-bg: #040404;
+  /* Global Link Color - Site Yeşili -> Turuncusu */
+  --app-global-link-color: #dc5f00;
+  --app-accent: var(--app-global-link-color);
+  --app-icon-compose: var(--app-global-link-color);
+  --app-icon-nav: #EEEEEE;
+  /* Nav iconları */
+  --app-icon-verified: #dc5f00;
+  --app-icon-interaction: #373A40;
+  /* Post kart iconları (passive) */
   --font-montserrat: "Montserrat", sans-serif;
+}
+
+[data-theme='light'] {
+  --app-body-bg: #EEEEEE;
+  --app-body-text: #373A40;
+  --app-surface: #EEEEEE;
+  --app-header-bg: #EEEEEE;
+  --app-header-hover: #D0D0D0;
+  --app-header-hover: #D0D0D0;
+  --app-right-bg: #EEEEEE;
+  --app-footer-bg: #EEEEEE;
+
+  --app-subtitle: #686D76;
+  --app-border: #686D76;
+
+  --app-global-link-color: #DC5F00;
+  --app-accent: #DC5F00;
+  --app-icon-compose: #DC5F00;
+  --app-icon-nav: #373A40;
+  --app-icon-verified: #DC5F00;
+  --app-icon-interaction: #686D76;
 }
 
 @theme inline {
   --color-background: var(--app-body-bg);
   --color-foreground: var(--app-body-text);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
 }
 
 body {
   background-color: var(--app-body-bg) !important;
   color: var(--app-body-text) !important;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Global border color */
+* {
+  border-color: var(--app-border) !important;
+}
+
+/* Profile picture border */
+.profile-circle {
+  border: 4px solid var(--app-body-bg) !important;
 }
 
 .font-montserrat {
@@ -36,19 +76,65 @@ body {
 }
 
 /* Utility helpers */
-.app-text-primary { color: var(--app-body-text) !important; }
-.app-text-muted { color: var(--app-muted) !important; }
-.app-text-accent { color: var(--app-accent) !important; }
-.app-bg-accent { background-color: var(--app-accent) !important; color: #000 !important; }
-.app-bg-header { background-color: var(--app-header-bg) !important; }
-.app-bg-surface { background-color: var(--app-surface) !important; }
-.app-bg-right { background-color: var(--app-right-bg) !important; }
-.app-bg-footer { background-color: var(--app-footer-bg) !important; }
-.app-border { border-color: var(--app-border) !important; }
-.app-border-bottom { border-bottom-color: var(--app-border) !important; }
-.app-border-top { border-top-color: var(--app-border) !important; }
-.app-border-left { border-left-color: var(--app-border) !important; }
-.app-border-right { border-right-color: var(--app-border) !important; }
+.bg-black {
+  background-color: var(--app-body-bg) !important;
+}
+
+.app-text-primary {
+  color: var(--app-body-text) !important;
+}
+
+.app-text-muted {
+  color: var(--app-muted) !important;
+}
+
+.app-text-accent {
+  color: var(--app-accent) !important;
+}
+
+.app-bg-accent {
+  background-color: var(--app-accent) !important;
+  color: #000 !important;
+}
+
+
+
+.app-bg-header {
+  background-color: var(--app-header-bg) !important;
+}
+
+.app-bg-surface {
+  background-color: var(--app-surface) !important;
+}
+
+.app-bg-right {
+  background-color: var(--app-right-bg) !important;
+}
+
+.app-bg-footer {
+  background-color: var(--app-footer-bg) !important;
+}
+
+.app-border {
+  border-color: var(--app-border) !important;
+}
+
+.app-border-bottom {
+  border-bottom-color: var(--app-border) !important;
+}
+
+.app-border-top {
+  border-top-color: var(--app-border) !important;
+}
+
+.app-border-left {
+  border-left-color: var(--app-border) !important;
+}
+
+.app-border-right {
+  border-right-color: var(--app-border) !important;
+}
+
 .app-surface-card {
   background-color: var(--app-surface) !important;
   border-color: var(--app-border) !important;
@@ -63,12 +149,26 @@ header.left-nav,
   color: var(--app-body-text) !important;
 }
 
-.left-nav a { color: var(--app-body-text) !important; }
-.left-nav a:hover { background-color: var(--app-header-hover) !important; }
-.left-nav svg { color: var(--app-icon-menu) !important; }
-.left-nav .text-accent { color: var(--app-accent) !important; }
+.left-nav a {
+  color: var(--app-body-text) !important;
+}
+
+.left-nav a:hover {
+  /* background-color: var(--app-header-hover) !important; REMOVED per user request */
+}
+
+.left-nav svg {
+  color: var(--app-icon-menu) !important;
+}
+
+.left-nav .text-accent {
+  color: var(--app-accent) !important;
+}
+
 .left-nav .active svg,
-.left-nav .font-bold svg { color: var(--app-accent) !important; }
+.left-nav .font-bold svg {
+  color: var(--app-accent) !important;
+}
 
 .timeline {
   background-color: var(--app-body-bg) !important;
@@ -107,8 +207,13 @@ header.left-nav,
   color: var(--app-body-text) !important;
 }
 
-.right-side a { color: var(--app-accent) !important; }
-.right-side .text-muted { color: var(--app-muted) !important; }
+.right-side a {
+  color: var(--app-accent) !important;
+}
+
+.right-side .text-muted {
+  color: var(--app-muted) !important;
+}
 
 .right-side footer,
 .right-side .sidebar-footer {
@@ -118,31 +223,54 @@ header.left-nav,
 }
 
 /* Icon-specific colors */
-.composebox svg { color: var(--app-icon-compose) !important; }
+.composebox svg {
+  color: var(--app-icon-compose) !important;
+}
 
 .mobile-nav .nav-icon {
   color: var(--app-icon-nav) !important;
   transition: color 0.2s ease;
 }
 
-.mobile-nav .nav-icon.active {
-  color: var(--app-accent) !important;
+/* Post action icons (like, comment, share, etc.) */
+.interaction-icon {
+  color: var(--app-icon-interaction) !important;
 }
 
+
+/* Base verified icon helper */
+[class*="page"] .flex.items-center .verified-icon,
+[class*="page"] h1+.verified-icon,
+div.flex.items-center .verified-icon,
 .post .verified-icon,
 .post-quote .verified-icon,
 [class*="page"] .verified-icon,
 .profile-header .verified-icon {
-  color: var(--app-icon-verified) !important;
-  fill: var(--app-icon-verified) !important;
+  color: var(--app-icon-verified);
+  /* Default fallback */
+  fill: var(--app-icon-verified);
 }
 
-/* Profil sayfası onay rozeti - daha spesifik selector */
-[class*="page"] .flex.items-center .verified-icon,
-[class*="page"] h1 + .verified-icon,
-div.flex.items-center .verified-icon {
-  color: var(--app-icon-verified) !important;
-  fill: var(--app-icon-verified) !important;
+/* Tier specific overrides - !important used to override specific scoped styles if needed, 
+   but ideally we rely on these specific classes */
+.verified-icon.gold {
+  color: #FFBF00 !important;
+  fill: #FFBF00 !important;
+}
+
+.verified-icon.default {
+  color: var(--app-accent) !important;
+  fill: var(--app-accent) !important;
+}
+
+.verified-icon.gray {
+  color: #848789 !important;
+  fill: #848789 !important;
+}
+
+.verified-icon.blue {
+  color: #1d9bf0 !important;
+  fill: #1d9bf0 !important;
 }
 
 .post-author-name {
@@ -171,15 +299,33 @@ div.flex.items-center .verified-icon {
 }
 
 /* Generic link/icon helpers */
-.post { border-color: var(--app-border) !important; }
-.post a { color: var(--app-accent) !important; }
+.post {
+  border-color: var(--app-border) !important;
+}
 
-.accent-color { color: var(--app-accent); }
-.accent-bg { background-color: var(--app-accent); color: #000000; }
+.post a {
+  color: var(--app-accent) !important;
+}
+
+.accent-color {
+  color: var(--app-accent);
+}
+
+.accent-bg {
+  background-color: var(--app-accent);
+  color: #000000;
+}
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 0px; background: transparent; }
-* { scrollbar-width: none; -ms-overflow-style: none; }
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
 /* ===== Mobile Full Width Fix ===== */
 @media (max-width: 1023px) {
@@ -189,7 +335,7 @@ div.flex.items-center .verified-icon {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
-  
+
   .timeline .post,
   .timeline .composebox {
     width: 100% !important;
@@ -198,31 +344,106 @@ div.flex.items-center .verified-icon {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-  
+
   .post .flex.justify-between {
     width: 100% !important;
   }
-  
+
   /* Mobilde görseller tam genişlik */
   .post-media,
-  .post-quote-media,
   .linked-post-media {
     width: 100% !important;
     max-width: 100% !important;
   }
-  
+
   .post-media img,
-  .post-quote-media img,
   .linked-post-media img {
     max-width: 100% !important;
     width: 100% !important;
     height: auto !important;
   }
-  
-  /* Quote container mobilde tam genişlik */
-  .post-quote {
+
+  /* Quote container mobilde tam genişlik - REMOVED TO FIX QUOTE SIZING */
+  /* .post-quote {
     width: 100% !important;
     max-width: 100% !important;
+  } */
+}
+
+/* ===== End Mobile Full Width Fix ===== */
+
+.user-card {
+  @apply border-b border-[#2f3336] p-4 transition-colors;
+}
+
+/* Mobile Bottom Sheet Animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
-/* ===== End Mobile Full Width Fix ===== */
+
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ===== Static Page Styles (Global Theme) ===== */
+.static-page-content {
+  color: var(--app-body-text) !important;
+  font-family: var(--font-inter), sans-serif;
+  line-height: 1.6;
+}
+
+.static-page-content h1,
+.static-page-content h2,
+.static-page-content h3,
+.static-page-content h4,
+.static-page-content h5,
+.static-page-content h6 {
+  color: var(--app-body-text) !important;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.static-page-content h1 {
+  font-size: 1.5rem;
+}
+
+.static-page-content h2 {
+  font-size: 1.25rem;
+}
+
+.static-page-content p {
+  margin-bottom: 1em;
+  color: var(--app-body-text) !important;
+}
+
+.static-page-content a {
+  color: var(--app-global-link-color) !important;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.static-page-content strong,
+.static-page-content b {
+  font-weight: 700;
+  color: var(--app-body-text) !important;
+}
+
+.static-page-content ul,
+.static-page-content ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+  list-style-type: disc;
+}
+
+.static-page-content ol {
+  list-style-type: decimal;
+}

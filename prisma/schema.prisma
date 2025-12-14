@@ -11,33 +11,42 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+//   directUrl = env("DIRECT_URL")
+}
+
+enum VerificationTier {
+  NONE
+  GREEN
+  GOLD
+  GRAY
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String
-  nickname      String    @unique
-  fullName      String?
-  bio           String?
-  website       String?
-  profileImage  String?
-  coverImage    String?
-  role          Role      @default(USER)
-  isBanned      Boolean   @default(false)
-  hasBlueTick   Boolean   @default(false)
-  hasOrangeTick Boolean   @default(false)
-  blueTickUntil DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  posts         Post[]
-  likes         Like[]
-  comments      Comment[]
-  quotes        Quote[]
-  bookmarks     Bookmark[]
-  followers     Follow[]  @relation("following")
-  following     Follow[]  @relation("followers")
+  id               String           @id @default(cuid())
+  email            String           @unique
+  password         String
+  nickname         String           @unique
+  fullName         String?
+  bio              String?
+  website          String?
+  profileImage     String?
+  coverImage       String?
+  role             Role             @default(USER)
+  isBanned         Boolean          @default(false)
+  verificationTier VerificationTier @default(NONE)
+  hasBlueTick      Boolean          @default(false) // Deprecated, kept for backward compatibility
+  posts            Post[]
+  likes            Like[]
+  bookmarks        Bookmark[]
+  comments         Comment[]
+  quotes           Quote[]
+  followers        Follow[]         @relation("followers")
+  following        Follow[]         @relation("following")
+  announcements    Announcement[]
+  createdAt        DateTime?        @default(now())
+  updatedAt        DateTime?        @updatedAt
+  receivedNotifications Notification[] @relation("receivedNotifications")
+  sentNotifications     Notification[] @relation("sentNotifications")
 }
 
 model Post {
@@ -55,6 +64,7 @@ model Post {
   replies       Post[]    @relation("PostReplies")
   threadRoot    Post?     @relation("ThreadPosts", fields: [threadRootId], references: [id])
   threadPosts   Post[]    @relation("ThreadPosts")
+  notifications Notification[]
   likes         Like[]
 
   @@index([parentPostId])
@@ -134,4 +144,42 @@ enum Role {
   USER
   MODERATOR
   ADMIN
+}
+
+enum NotificationType {
+  LIKE
+  REPLY
+  MENTION
+  QUOTE
+  FOLLOW
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  read      Boolean          @default(false)
+  
+  recipientId String
+  recipient   User           @relation("receivedNotifications", fields: [recipientId], references: [id])
+  
+  actorId     String
+  actor       User           @relation("sentNotifications", fields: [actorId], references: [id])
+  
+  postId      BigInt?
+  post        Post?          @relation(fields: [postId], references: [id])
+  
+  createdAt   DateTime       @default(now())
+
+  @@index([recipientId])
+  @@index([createdAt])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  content   String
+  isActive  Boolean  @default(false)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

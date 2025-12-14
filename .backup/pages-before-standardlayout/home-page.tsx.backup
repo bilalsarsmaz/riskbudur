@@ -1,0 +1,426 @@
+"use client";
+
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import LeftSidebar from "@/components/LeftSidebar";
+import RightSidebar from "@/components/RightSidebar";
+import ComposeBox from "@/components/ComposeBox";
+import PostList from "@/components/PostList";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
+import MobileHeader from "@/components/mobile/MobileHeader";
+import MobileBottomNav from "@/components/mobile/MobileBottomNav";
+import MobileComposeModal from "@/components/MobileComposeModal";
+import TimelineTabs from "@/components/TimelineTabs";
+import { IconEdit } from "@tabler/icons-react";
+
+import { EnrichedPost } from "@/types/post";
+import { fetchApi } from "@/lib/api";
+import { feedCache } from "@/lib/feedCache";
+
+type TimelineType = "all" | "following";
+
+export default function HomePage() {
+  const router = useRouter();
+  const [posts, setPosts] = useState<EnrichedPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTimeline, setActiveTimeline] = useState<TimelineType>("all");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [newPostCount, setNewPostCount] = useState(0);
+  const [isMobileComposeOpen, setIsMobileComposeOpen] = useState(false);
+  const loadingRef = useRef(false);
+  const pageRef = useRef(0);
+  const hasMoreRef = useRef(true);
+  const scrollRef = useRef(0);
+  const activeTimelineRef = useRef<TimelineType>("all");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/");
+      return;
+    }
+    setIsAuthenticated(true);
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.userId) {
+        setCurrentUserId(payload.userId);
+      }
+    } catch (e) {
+      console.error("Token parse hatası:", e);
+    }
+  }, [router]);
+
+  const loadPosts = useCallback(
+    async (pageNum: number, reset: boolean = false) => {
+      if (loadingRef.current) {
+        return;
+      }
+
+      loadingRef.current = true;
+      setLoading(true);
+
+      try {
+        const timelineParam = activeTimelineRef.current === "following" ? "&timeline=following" : "";
+        const data = (await fetchApi(`/posts?skip=${pageNum * 20}&take=20${timelineParam}`)) as EnrichedPost[];
+        const newPosts = Array.isArray(data) ? data : [];
+
+        if (newPosts.length === 0) {
+          setHasMore(false);
+          hasMoreRef.current = false;
+        } else {
+          setPosts((prev) => {
+            if (reset || pageNum === 0) {
+              return newPosts;
+            }
+            return [...prev, ...newPosts];
+          });
+          setPage(pageNum);
+          pageRef.current = pageNum;
+          hasMoreRef.current = true;
+        }
+      } catch (error) {
+        console.error("Postlar yüklenirken hata oluştu:", error);
+        if (error instanceof Error && error.message.includes("401")) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          router.push("/");
+          return;
+        }
+        setHasMore(false);
+        hasMoreRef.current = false;
+      } finally {
+        setLoading(false);
+        loadingRef.current = false;
+      }
+    },
+    [router]
+  );
+
+  // Polling logic - Yeni post kontrolu
+  useEffect(() => {
+    if (!isAuthenticated || posts.length === 0) return;
+
+    const checkNewPosts = async () => {
+      try {
+        const latestId = posts[0].id; // En ustteki postun ID'si
+        const response = await fetchApi(`/posts/check-new?latestId=${latestId}`);
+        if (response && typeof response.count === 'number' && response.count > 0) {
+          setNewPostCount(response.count);
+        }
+      } catch (error) {
+        console.error("Yeni post kontrol hatasi:", error);
+      }
+    };
+
+    const interval = setInterval(checkNewPosts, 30000); // 30 saniyede bir kontrol et
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, posts]);
+
+  const handleShowNewPosts = () => {
+    setNewPostCount(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    loadPosts(0, true);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const cachedData = feedCache.get();
+      if (cachedData) {
+        setPosts(cachedData.posts);
+        setPage(cachedData.page);
+        setHasMore(cachedData.hasMore);
+        hasMoreRef.current = cachedData.hasMore;
+        pageRef.current = cachedData.page;
+        setLoading(false);
+        loadingRef.current = false;
+
+        // Scroll pozisyonunu geri yukle
+        setTimeout(() => {
+          window.scrollTo(0, cachedData.scrollPosition);
+        }, 100);
+      } else {
+        loadPosts(0, true);
+      }
+    }
+  }, [isAuthenticated, loadPosts]);
+
+  // Sayfadan ayrilirken cache'e kaydet
+  useEffect(() => {
+    return () => {
+      // Sadece post varsa kaydet
+      if (posts.length > 0) {
+        feedCache.set({
+          posts,
+          page,
+          hasMore,
+          scrollPosition: scrollRef.current > 0 ? scrollRef.current : window.scrollY
+        });
+      }
+    };
+  }, [posts, page, hasMore]);
+
+  // Scroll event listener ile infinite scroll
+  useEffect(() => {
+    if (!isAuthenticated || !hasMore) return;
+
+    let ticking = false;
+    const handleScroll = () => {
+      // Scroll pozisyonunu surekli guncelle
+      if (window.scrollY > 0) {
+        scrollRef.current = window.scrollY;
+      }
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollHeight = document.documentElement.scrollHeight;
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const clientHeight = document.documentElement.clientHeight;
+
+          // Sayfanın sonuna 500px kala yükle
+          if (scrollHeight - scrollTop - clientHeight < 500) {
+            if (hasMoreRef.current && !loadingRef.current) {
+              loadPosts(pageRef.current + 1);
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isAuthenticated, hasMore, loadPosts]);
+
+  const handlePostCreated = useCallback((newPost: EnrichedPost) => {
+    setPosts((prevPosts) => {
+      const updatedPosts = [newPost, ...prevPosts];
+      if (newPost.quotedPostId) {
+        return updatedPosts.map((p) => {
+          if (p.id === newPost.quotedPostId) {
+            return {
+              ...p,
+              isQuoted: true,
+              _count: {
+                ...p._count,
+                quotes: (p._count?.quotes || 0) + 1,
+              },
+            };
+          }
+          return p;
+        });
+      }
+      return updatedPosts;
+    });
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="mt-4">Yönlendiriliyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <MobileHeader />
+
+      {/* Mobile Layout */}
+      <div className="lg:hidden">
+        <div className="pt-14 pb-16">
+          <AnnouncementBanner />
+          <TimelineTabs
+            activeTab={activeTimeline}
+            onTabChange={(tab: TimelineType) => {
+              setActiveTimeline(tab);
+              activeTimelineRef.current = tab;
+              feedCache.clear();
+              loadPosts(0, true);
+            }}
+          />
+
+          {newPostCount > 0 && (
+            <div
+              onClick={handleShowNewPosts}
+              className="w-full h-[50px] border-b border-theme-border flex items-center justify-center cursor-pointer hover:bg-[#151515] transition-colors text-[#1DCD9F] text-[15px]"
+            >
+              {newPostCount} yeni gönderiyi göster
+            </div>
+          )}
+
+          {loading && posts.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <p className="mt-2 text-gray-500">Postlar yükleniyor...</p>
+            </div>
+          ) : (
+            <PostList
+              posts={posts}
+              currentUserId={currentUserId || undefined}
+              onPostDeleted={(deletedPost) => {
+                setPosts(prevPosts => {
+                  const filtered = prevPosts.filter(p => p.id !== deletedPost.id);
+                  if (deletedPost.quotedPostId) {
+                    return filtered.map(p => {
+                      if (p.id === deletedPost.quotedPostId) {
+                        return {
+                          ...p,
+                          isQuoted: false,
+                          _count: {
+                            ...p._count,
+                            quotes: Math.max(0, (p._count?.quotes || 0) - 1)
+                          }
+                        };
+                      }
+                      return p;
+                    });
+                  }
+                  return filtered;
+                });
+              }}
+              onPostCreated={handlePostCreated}
+            />
+          )}
+
+          {loading && posts.length > 0 && (
+            <div className="text-center py-4">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          )}
+
+          {!hasMore && posts.length > 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Tüm postlar yüklendi
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:flex justify-center w-full">
+        <div className="flex w-full max-w-[1310px]">
+          <header className="left-nav flex-shrink-0 w-[88px] xl:w-[275px] h-screen sticky top-0 overflow-y-auto z-10">
+            <div className="h-full p-0 m-0 border-0">
+              <LeftSidebar />
+            </div>
+          </header>
+
+          <main className="content flex flex-1 min-h-screen">
+            <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-theme-border pt-14 pb-16 lg:pt-0 lg:pb-0">
+              <AnnouncementBanner />
+              <TimelineTabs
+                activeTab={activeTimeline}
+                onTabChange={(tab: TimelineType) => {
+                  setActiveTimeline(tab);
+                  activeTimelineRef.current = tab; // Update ref immediately
+                  feedCache.clear(); // Tab degisirse cache temizle
+                  loadPosts(0, true);
+                }}
+              />
+
+              <ComposeBox
+                onPostCreated={handlePostCreated}
+                className="border-t-0"
+              />
+
+              {newPostCount > 0 && (
+                <div
+                  onClick={handleShowNewPosts}
+                  className="w-full h-[50px] border-b border-theme-border flex items-center justify-center cursor-pointer hover:bg-[#151515] transition-colors text-[#1DCD9F] text-[15px]"
+                >
+                  {newPostCount} yeni gönderiyi göster
+                </div>
+              )}
+
+              {loading && posts.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                  <p className="mt-2 text-gray-500">Postlar yükleniyor...</p>
+                </div>
+              ) : (
+                <>
+                  <PostList
+                    posts={posts}
+                    currentUserId={currentUserId || undefined}
+                    onPostDeleted={(deletedPost) => {
+                      setPosts(prevPosts => {
+                        const filtered = prevPosts.filter(p => p.id !== deletedPost.id);
+                        if (deletedPost.quotedPostId) {
+                          return filtered.map(p => {
+                            if (p.id === deletedPost.quotedPostId) {
+                              return {
+                                ...p,
+                                isQuoted: false,
+                                _count: {
+                                  ...p._count,
+                                  quotes: Math.max(0, (p._count?.quotes || 0) - 1)
+                                }
+                              };
+                            }
+                            return p;
+                          });
+                        }
+                        return filtered;
+                      });
+                    }}
+                    onPostCreated={handlePostCreated}
+                  />
+
+                  {hasMore && loading && (
+                    <div className="flex justify-center py-4">
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!hasMore && posts.length > 0 && (
+                    <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm postlar yüklendi</div>
+                  )}
+                </>
+              )}
+            </section>
+
+            <aside className="right-side hidden lg:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+              <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <RightSidebar />
+              </div>
+            </aside>
+          </main>
+        </div>
+      </div>
+
+      {/* Mobile FAB Button */}
+      {/* FLOATING COMPOSE BUTTON - COMMENTED FOR FUTURE USE
+      <button
+        onClick={() => setIsMobileComposeOpen(true)}
+        className="lg:hidden fixed bottom-20 right-4 w-14 h-14 bg-[#1DCD9F] rounded-full flex items-center justify-center shadow-lg hover:bg-[#1ab890] transition-all z-40 active:scale-95"
+        aria-label="Yeni gönderi oluştur"
+      >
+        <IconEdit className="w-6 h-6 text-white" stroke={2.5} />
+      </button>
+      */}
+
+      {/* Mobile Compose Modal */}
+      <MobileComposeModal
+        isOpen={isMobileComposeOpen}
+        onClose={() => setIsMobileComposeOpen(false)}
+        onPostCreated={handlePostCreated}
+      />
+
+      <MobileBottomNav />
+    </>
+  );
+}
+

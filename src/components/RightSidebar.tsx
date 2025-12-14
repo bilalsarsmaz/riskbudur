@@ -33,7 +33,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     const fetchTrendingHashtags = async () => {
       try {
         const data = await fetchApi("/hashtags/trending") as HashtagsResponse;
-        
+
         if (data.hashtags && data.hashtags.length > 0) {
           setTrendingHashtags(data.hashtags);
         } else {
@@ -56,7 +56,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
         setLoading(false);
       }
     };
-    
+
     fetchTrendingHashtags();
   }, [hideHashtags]);
 
@@ -64,8 +64,8 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     <div className="space-y-4">
       {/* Trending Hashtags */}
       {!hideHashtags && (
-        <div className="border border-[#222222] p-4 rounded-lg" style={{backgroundColor: '#000000'}}>
-          <h2 className="text-xl font-bold mb-4" style={{color: '#d9dadd'}}>Gündem</h2>
+        <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-surface)' }}>
+          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Gündem</h2>
           {loading ? (
             <div className="flex justify-center py-4">
               <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div>
@@ -73,21 +73,21 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
           ) : (
             <div className="space-y-2">
               {trendingHashtags.map((hashtag) => (
-                <Link 
+                <Link
                   key={hashtag.id}
                   href={`/hashtag/${hashtag.name}`}
-                  className="flex flex-col items-start py-2 hover:bg-[#151515] rounded-lg"
+                  className="flex flex-col items-start py-2 rounded-lg"
                 >
-                  <span className="text-[#1DCD9F]">#{hashtag.name}</span>
-                  <span className="text-xs" style={{color: '#6e767d'}}>{hashtag.count} gönderi</span>
+                  <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
+                  <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} gönderi</span>
                 </Link>
               ))}
-              
+
               {/* Daha fazla göster */}
-              <Link 
+              <Link
                 href="/explore"
-                className="flex items-center gap-1 pt-3 text-[#1DCD9F]"
-                style={{fontSize: '13px'}}
+                className="flex items-center gap-1 pt-3"
+                style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
               >
                 <span>Daha fazla göster</span>
                 <IconChevronRight className="h-4 w-4" />
@@ -98,21 +98,21 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
       )}
 
       {/* Popüler Postlar */}
-      <div className="border border-[#222222] p-4 rounded-lg" style={{backgroundColor: '#000000'}}>
-        <h2 className="text-xl font-bold mb-4" style={{color: '#d9dadd'}}>Popüler Postlar</h2>
+      <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-surface)' }}>
+        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Popüler Postlar</h2>
         <PopularPostsSlider />
       </div>
 
       {/* Footer */}
-      <div className="border border-[#222222] p-4 rounded-lg" style={{backgroundColor: '#000000'}}>
-        <div className="text-xs space-y-2" style={{color: '#6e767d'}}>
+      <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-footer-bg)' }}>
+        <div className="text-xs space-y-2" style={{ color: 'var(--app-subtitle)' }}>
           <div className="flex flex-wrap gap-2">
-            <Link href="/about" className="hover:underline">Hakkında</Link>
-            <Link href="/terms" className="hover:underline">Kullanım Şartları</Link>
-            <Link href="/privacy" className="hover:underline">Gizlilik</Link>
-            <Link href="/contact" className="hover:underline">İletişim</Link>
+            <Link href="/about" >Hakkında</Link>
+            <Link href="/terms">Kullanım Şartları</Link>
+            <Link href="/privacy">Gizlilik</Link>
+            <Link href="/contact">İletişim</Link>
           </div>
-          <p>© 2025 Ultraswall.com | Tüm hakları saklıdır.</p>
+          <p>© 2025 Geyik</p>
         </div>
       </div>
     </div>

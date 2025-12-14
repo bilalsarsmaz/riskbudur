@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
-
-// Kullanıcı bilgilerini getir
 export async function GET(req: Request) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1];
@@ -36,6 +33,7 @@ export async function GET(req: Request) {
         email: true,
         nickname: true,
         hasBlueTick: true,
+        verificationTier: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -99,7 +97,7 @@ export async function PUT(req: Request) {
           { status: 400 }
         );
       }
-      
+
       // Sadece İngilizce karakterler, sayılar ve alt çizgi kontrolü
       if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
         return NextResponse.json(
@@ -107,12 +105,12 @@ export async function PUT(req: Request) {
           { status: 400 }
         );
       }
-      
+
       // admin veya ultraswall içeremez kontrolü
       const lowerNickname = nickname.toLowerCase();
-      if (lowerNickname.includes("admin") || lowerNickname.includes("ultraswall")) {
+      if (lowerNickname.includes("admin") || lowerNickname.includes("riskbudur")) {
         return NextResponse.json(
-          { error: "Kullanıcı adı 'admin' veya 'ultraswall' içeremez" },
+          { error: "Kullanıcı adı 'admin' veya 'riskbudur' içeremez" },
           { status: 400 }
         );
       }
@@ -145,8 +143,8 @@ export async function PUT(req: Request) {
     // Kullanıcı adı değişikliği istenmişse ve bu kullanıcı adı başkası tarafından kullanılıyorsa
     if (nickname && nickname !== user.nickname) {
       const existingUser = await prisma.user.findFirst({
-        where: { 
-          nickname: { 
+        where: {
+          nickname: {
             mode: "insensitive"
           }
         }
@@ -195,6 +193,7 @@ export async function PUT(req: Request) {
         coverImage: true,
         role: true,
         hasBlueTick: true,
+        verificationTier: true,
         createdAt: true,
         updatedAt: true,
       },

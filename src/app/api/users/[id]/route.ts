@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const username = params.id;
     const user = await prisma.user.findFirst({
-      where: { 
-        nickname: { 
-          equals: username,
+      where: {
+        nickname: {
+          equals: params.id,
           mode: "insensitive"
         }
       },
@@ -25,6 +23,7 @@ export async function GET(
         profileImage: true,
         coverImage: true,
         hasBlueTick: true,
+        verificationTier: true,
         createdAt: true,
         _count: {
           select: {
@@ -43,13 +42,36 @@ export async function GET(
       );
     }
 
-    const joinDate = new Date(user.createdAt).toLocaleDateString('tr-TR', {
+
+    // Token varsa takip durumunu kontrol et
+    let isFollowing = false;
+    const authHeader = req.headers.get("authorization");
+    if (authHeader) {
+      const token = authHeader.split(" ")[1];
+      const { verifyToken } = await import("@/lib/auth");
+      const decoded: any = await verifyToken(token);
+
+      if (decoded) {
+        const follow = await prisma.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: decoded.userId,
+              followingId: user.id
+            }
+          }
+        });
+        isFollowing = !!follow;
+      }
+    }
+
+    const joinDate = new Date(user.createdAt || new Date()).toLocaleDateString('tr-TR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
 
     return NextResponse.json({
+      id: user.id, // Add ID
       username: user.nickname,
       fullName: user.fullName || user.nickname,
       bio: user.bio,
@@ -57,9 +79,12 @@ export async function GET(
       joinDate,
       following: user._count.following,
       followers: user._count.followers,
+      postsCount: user._count.posts,
       hasBlueTick: user.hasBlueTick,
+      verificationTier: user.verificationTier,
       coverImage: user.coverImage,
       profileImage: user.profileImage,
+      isFollowing // Add isFollowing
     });
   } catch (error) {
     console.error("Kullanıcı bilgisi getirme hatası:", error);

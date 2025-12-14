@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import Cookies from 'js-cookie';
 import { fetchApi } from "@/lib/api";
-import { 
+import {
   IconHome,
   IconHomeFilled,
   IconSearch,
@@ -19,15 +19,36 @@ import {
   IconLogout,
   IconSettings,
   IconDots,
-  IconRosetteDiscountCheckFilled
+  IconSparkles
 } from "@tabler/icons-react";
+import VerificationBadge from "./VerificationBadge";
+import { menuItems as baseMenuItems } from "@/constants/menuItems";
 
 export default function LeftSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
-  
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  }, []);
+
+  // Toggle theme
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -38,6 +59,8 @@ export default function LeftSidebar() {
           const parsed = JSON.parse(storedUserInfo);
           parsed.profileImage = data.profileImage;
           parsed.fullName = data.fullName;
+          parsed.verificationTier = data.verificationTier;
+          parsed.hasBlueTick = data.hasBlueTick;
           localStorage.setItem("userInfo", JSON.stringify(parsed));
         }
       } catch (err) {
@@ -50,72 +73,44 @@ export default function LeftSidebar() {
             id: "user",
             nickname: "kullanici",
             fullName: "Kullanıcı",
-            hasBlueTick: false
+            hasBlueTick: false,
+            verificationTier: 'NONE'
           });
         }
       }
     };
 
+    const fetchNotificationCount = async () => {
+      try {
+        const res = await fetchApi("/notifications/count");
+        if (res && typeof res.count === 'number') {
+          setNotificationCount(res.count);
+        }
+      } catch (error) {
+        console.error("Bildirim sayısı alınamadı:", error);
+      }
+    };
+
     fetchUserData();
+    fetchNotificationCount();
+
+    // Basit bir polling (her 30 saniyede bir güncelle)
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
   }, []);
-  
-  const menuItems = [
-    { 
-      id: "home", 
-      label: "Anasayfa", 
-      icon: IconHome, 
-      iconFilled: IconHomeFilled, 
-      href: "/home",
-      hasFilled: true
-    },
-    { 
-      id: "explore", 
-      label: "Keşfet", 
-      icon: IconSearch, 
-      iconFilled: IconSearch, 
-      href: "/explore",
-      hasFilled: false
-    },
-    { 
-      id: "notifications", 
-      label: "Bildirim", 
-      icon: IconBell, 
-      iconFilled: IconBellFilled, 
-      href: "/notifications", 
-      count: 5,
-      hasFilled: true
-    },
-    { 
-      id: "messages", 
-      label: "Mesajlar", 
-      icon: IconMail, 
-      iconFilled: IconMailFilled, 
-      href: "/messages", 
-      count: 2,
-      hasFilled: true
-    },
-    { 
-      id: "profile", 
-      label: "Profilim", 
-      icon: IconUser, 
-      iconFilled: IconUserFilled, 
-      href: userInfo ? `/${userInfo.nickname}` : "/profile",
-      hasFilled: true
-    },
-    { 
-      id: "bookmarks", 
-      label: "Kaydedilenler", 
-      icon: IconTargetArrow, 
-      iconFilled: IconTargetArrow, 
-      href: "/bookmarks",
-      hasFilled: false
-    }
-  ];
+
+  // Map menu items with dynamic href for profile - exclude compose from web version
+  const menuItems = baseMenuItems
+    .filter(item => item.id !== 'compose') // Compose only for mobile
+    .map(item => ({
+      ...item,
+      href: typeof item.href === 'function' ? item.href(userInfo?.nickname) : item.href
+    }));
 
   const handleUserMenuToggle = () => {
     setShowUserMenu(!showUserMenu);
   };
-  
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
@@ -128,7 +123,7 @@ export default function LeftSidebar() {
     return null;
   }
 
-  const getActiveMenuId = () => {
+  function getActiveMenuId() {
     if (pathname === "/home") return "home";
     if (pathname === "/explore") return "explore";
     if (pathname === "/notifications") return "notifications";
@@ -136,85 +131,116 @@ export default function LeftSidebar() {
     if (pathname === `/${userInfo.nickname}` || pathname === "/profile") return "profile";
     if (pathname === "/bookmarks") return "bookmarks";
     return "";
-  };
+  }
 
   const activeMenuId = getActiveMenuId();
 
   return (
-    <div className="px-2 sm:px-4 pb-4 sticky top-4 flex flex-col h-[calc(100vh-2rem)]" style={{ backgroundColor: '#000000' }}>
-      <div className="mb-4 px-2 hidden lg:block">
-        <Link href="/home" className="inline-block">
-          <img src="/logo3.png" alt="ultraswall" className="h-10 w-50" style={{ width: "200px", height: "40px", objectFit: "contain" }} />
+    <div className="px-2 w-full h-[calc(100vh-2rem)] sticky top-4 flex flex-col items-center xl:items-start" style={{ backgroundColor: 'var(--app-header-bg)' }}>
+      <div className="mb-4 px-2">
+        <Link href="/home" className="flex items-start justify-center xl:justify-start py-2 xl:pr-2 xl:pl-0">
+          <img src="/riskbudurlogo.png" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]" />
+          <div className="hidden xl:flex flex-col justify-center" style={{ marginTop: '5px' }}>
+            <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
+              riskbudur
+            </h1>
+            <p className="text-[9px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
+              underground sosyal medya
+            </p>
+          </div>
         </Link>
       </div>
-      
-      <nav className="flex-1">
-        <ul className="space-y-2 pt-0">
+
+      <nav className="flex-1 w-full">
+        <ul className="space-y-2 pt-0 flex flex-col items-center xl:items-stretch">
           {menuItems.map(item => {
             const isActive = activeMenuId === item.id;
             const Icon = (isActive && item.hasFilled) ? item.iconFilled : item.icon;
-            
+
             return (
-              <li key={item.id}>
-                <Link 
-                  href={item.href} 
-                  className="flex items-center justify-center lg:justify-start p-2 hover:bg-[#151515] rounded-lg"
-                  style={{ color: '#d9dadd' }}
+              <li key={item.id} className="w-full">
+                <Link
+                  href={item.href}
+                  className="flex items-center justify-center xl:justify-start p-3 xl:p-2 rounded-full xl:rounded-lg transition-colors aspect-square xl:aspect-auto w-fit xl:w-auto mx-auto xl:mx-0 relative"
+                  style={{ color: 'var(--app-body-text)' }}
                 >
-                  <Icon 
-                    className="h-6 w-6 lg:mr-3"
-                    style={{ color: isActive ? '#d9dadd' : '#d9dadd' }}
-                  />
-                  <span className={`hidden lg:inline ${isActive ? 'font-bold text-[#d9dadd]' : 'text-[#d9dadd]'}`}>{item.label}</span>
-                  {item.count && (
-                    <span className="hidden lg:flex ml-auto text-white rounded-full w-5 h-5 items-center justify-center text-xs" style={{ backgroundColor: '#1DCD9F' }}>
-                      {item.count}
-                    </span>
-                  )}
+                  <div className="relative">
+                    <Icon
+                      className="h-7 w-7 xl:h-6 xl:w-6 xl:mr-3"
+                      style={{ color: isActive ? 'var(--app-body-text)' : 'var(--app-subtitle)' }}
+                    />
+                    {item.id === 'notifications' && notificationCount > 0 && (
+                      <div className="absolute -top-1 right-2 text-black text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center" style={{ backgroundColor: 'var(--app-global-link-color)' }}>
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </div>
+                    )}
+                  </div>
+                  <span className={`hidden xl:inline text-[20px] ${isActive ? 'font-bold' : ''}`} style={{ color: 'var(--app-body-text)' }}>{item.label}</span>
+
                 </Link>
               </li>
             );
           })}
+
+          {/* HR Separator before Theme Toggle */}
+          <li className="w-full px-4 my-2">
+            <div className="border-t border-theme-border"></div>
+          </li>
+
+          {/* Theme Toggle Button */}
+          <li className="w-full">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center xl:justify-start p-3 xl:p-2 rounded-full xl:rounded-lg transition-colors aspect-square xl:aspect-auto w-fit xl:w-auto mx-auto xl:mx-0 w-full"
+            >
+              <IconSparkles className="h-7 w-7 xl:h-6 xl:w-6 xl:mr-3 text-[#1d9bf0]" />
+              <span className="hidden xl:inline text-[20px]" style={{ color: 'var(--app-body-text)' }}>
+                {theme === 'dark' ? 'Gündüz Teması' : 'Gece Teması'}
+              </span>
+            </button>
+          </li>
         </ul>
       </nav>
-      
-      <div className="mt-auto relative">
-        <div 
-          className="flex items-center justify-center lg:justify-start p-2 rounded-lg hover:bg-[#151515] cursor-pointer"
+
+      <div className="mt-auto relative w-full flex justify-center xl:justify-start">
+        <div
+          className="flex items-center justify-center p-2 rounded-full xl:rounded-lg cursor-pointer aspect-square xl:aspect-auto w-fit xl:w-full"
           onClick={handleUserMenuToggle}
         >
           {userInfo.profileImage ? (
             <img
               src={userInfo.profileImage}
               alt={userInfo.nickname}
-              className="w-10 h-10 rounded-full object-cover lg:mr-3"
-              style={{ border: '0.5px solid #222222' }}
+              className="w-10 h-10 rounded-full object-cover xl:mr-3"
+              style={{ border: '0.5px solid var(--app-border)' }}
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center lg:mr-3" style={{ border: '0.5px solid #222222', color: '#d9dadd' }}>
+            <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center xl:mr-3" style={{ border: '0.5px solid var(--app-border)', color: 'var(--app-subtitle)' }}>
               {userInfo.nickname?.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="hidden lg:flex flex-1 flex-col">
-            <div className="flex items-center text-[15px] font-bold" style={{ color: '#d9dadd' }}>
+          <div className="hidden xl:flex flex-1 flex-col">
+            <div className="flex items-center text-[15px] font-bold" style={{ color: 'var(--app-body-text)' }}>
               {userInfo.fullName || userInfo.nickname}
-              {userInfo.hasBlueTick && (
-                <IconRosetteDiscountCheckFilled className="w-5 h-5 ml-1" style={{ color: '#1DCD9F' }} />
-              )}
+              <VerificationBadge
+                tier={userInfo.verificationTier}
+                hasBlueTick={userInfo.hasBlueTick}
+                username={userInfo.nickname}
+              />
             </div>
-            <div className="text-[13px]" style={{ color: '#6e767d' }}>
+            <div className="text-[13px]" style={{ color: 'var(--app-subtitle)' }}>
               @{userInfo.nickname}
             </div>
           </div>
-          <IconDots className="hidden lg:block w-5 h-5" style={{ color: '#6e767d' }} />
+          <IconDots className="hidden xl:block w-5 h-5" style={{ color: 'var(--app-subtitle)' }} />
         </div>
-        
+
         {showUserMenu && (
-          <div className="absolute bottom-full left-0 mb-2 w-full lg:w-auto min-w-[200px] rounded-lg shadow-lg overflow-hidden z-10" style={{ backgroundColor: '#000000', border: '1px solid #222222' }}>
+          <div className="absolute bottom-full left-0 mb-2 w-[250px] rounded-lg shadow-lg overflow-hidden z-20" style={{ backgroundColor: 'var(--app-body-bg)', border: '1px solid var(--app-border)' }}>
             <div className="p-2">
-              <button 
-                className="flex items-center w-full p-2 hover:bg-[#151515] rounded-lg"
-                style={{ color: '#d9dadd' }}
+              <button
+                className="flex items-center w-full p-2 rounded-lg transition-colors"
+                style={{ color: 'var(--app-body-text)' }}
                 onClick={() => {
                   router.push("/settings");
                   setShowUserMenu(false);
@@ -223,9 +249,9 @@ export default function LeftSidebar() {
                 <IconSettings className="h-5 w-5 mr-2" />
                 Ayarlar
               </button>
-              <button 
-                className="flex items-center w-full p-2 hover:bg-[#151515] rounded-lg"
-                style={{ color: '#d9dadd' }}
+              <button
+                className="flex items-center w-full p-2 rounded-lg transition-colors"
+                style={{ color: 'var(--app-body-text)' }}
                 onClick={handleLogout}
               >
                 <IconLogout className="h-5 w-5 mr-2" />
@@ -235,6 +261,6 @@ export default function LeftSidebar() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }

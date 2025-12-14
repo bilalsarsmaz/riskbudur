@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
+
 
 export async function GET(req: Request) {
   try {
     // Token kontrolü
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "") || authHeader?.split(" ")[1];
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    
+
     // Kullanıcı kontrolü
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId }
@@ -34,8 +34,10 @@ export async function GET(req: Request) {
         email: true,
         profileImage: true,
         hasBlueTick: true,
+        verificationTier: true,
         isBanned: true,
-        createdAt: true
+        createdAt: true,
+        role: true
       },
       orderBy: {
         createdAt: "desc"
@@ -49,8 +51,10 @@ export async function GET(req: Request) {
       email: user.email,
       profileImage: user.profileImage,
       hasBlueTick: user.hasBlueTick || false,
+      verificationTier: user.verificationTier || 'NONE',
       isBanned: user.isBanned || false,
-      createdAt: user.createdAt.toISOString()
+      role: user.role || 'USER',
+      createdAt: user.createdAt ? user.createdAt.toISOString() : new Date().toISOString()
     })));
   } catch (error: any) {
     console.error("Users list error:", error);

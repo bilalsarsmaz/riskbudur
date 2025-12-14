@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
-
-const prisma = new PrismaClient();
 
 // Kullanıcıyı takip et
 export async function POST(req: Request) {
@@ -70,6 +68,15 @@ export async function POST(req: Request) {
       },
     });
 
+    // Bildirim oluştur
+    await prisma.notification.create({
+      data: {
+        type: 'FOLLOW',
+        actorId: decoded.userId,
+        recipientId: followingId,
+      },
+    });
+
     return NextResponse.json(follow, { status: 201 });
   } catch (error) {
     console.error("Takip etme hatası:", error);
@@ -125,6 +132,15 @@ export async function DELETE(req: Request) {
         { status: 404 }
       );
     }
+
+    // Bildirimi kaldır (varsa)
+    await prisma.notification.deleteMany({
+      where: {
+        type: 'FOLLOW',
+        actorId: decoded.userId,
+        recipientId: followingId,
+      },
+    });
 
     // Takibi kaldır
     await prisma.follow.delete({
