@@ -2,42 +2,65 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LeftSidebar from "@/components/LeftSidebar";
+import SecondaryLayout from "@/components/SecondaryLayout";
 import { fetchApi, postApi } from "@/lib/api";
-import { ChevronRightIcon, Cog8ToothIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import {
+  UserCircleIcon,
+  KeyIcon,
+  CheckBadgeIcon,
+  ExclamationTriangleIcon,
+  ChevronRightIcon
+} from "@heroicons/react/24/outline";
 
 interface User {
   id: string;
   nickname: string;
-  fullName: string;
+  fullName: string | null;
   email: string;
   bio?: string;
   website?: string;
+  gender?: string | null;
+  birthday?: string | null;
 }
 
 export default function SettingsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string | null>("account");
-  const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
-  const [activeDetailMenu, setActiveDetailMenu] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("account");
   const [loading, setLoading] = useState(true);
-  
+
   // Form states
+  const [fullName, setFullName] = useState("");
   const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("unspecified");
+  const [birthday, setBirthday] = useState("");
+
+  // Password states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+
+  // Verification states
+  const [verificationFullName, setVerificationFullName] = useState("");
+  const [verificationCategory, setVerificationCategory] = useState("media");
+  const [verificationText, setVerificationText] = useState("");
+  const [verificationImage, setVerificationImage] = useState<string | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const data = await fetchApi("/users/me");
         setUser(data);
+        setUser(data);
+        setFullName(data.fullName || "");
         setNickname(data.nickname);
         setEmail(data.email);
+        setGender(data.gender || "unspecified");
+        setBirthday(data.birthday ? new Date(data.birthday).toISOString().split('T')[0] : "");
       } catch (err) {
         console.error("Kullanıcı bilgileri alınamadı:", err);
       } finally {
@@ -47,463 +70,369 @@ export default function SettingsPage() {
     fetchUser();
   }, []);
 
-  const handleUpdateUsername = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await postApi("/users/me", { nickname });
-      setMessage("Kullanıcı adı başarıyla güncellendi!");
-      setTimeout(() => setMessage(""), 3000);
-    } catch (err) {
-      setMessage("Kullanıcı adı güncellenirken bir hata oluştu.");
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setVerificationImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleUpdateEmail = async (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await postApi("/users/me", { email });
-      setMessage("E-posta başarıyla güncellendi!");
-      setTimeout(() => setMessage(""), 3000);
-    } catch (err) {
-      setMessage("E-posta güncellenirken bir hata oluştu.");
+      await postApi("/users/me", {
+        fullName,
+        nickname,
+        email,
+        gender,
+        birthday: birthday || null
+      });
+      showMessage('success', "Hesap bilgileri güncellendi!");
+    } catch (err: any) {
+      showMessage('error', err.message || "Güncelleme sırasında hata oluştu.");
     }
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setMessage("Yeni şifreler eşleşmiyor!");
+      showMessage('error', "Yeni şifreler eşleşmiyor!");
       return;
     }
     try {
       await postApi("/users/me", { currentPassword, newPassword });
-      setMessage("Şifre başarıyla güncellendi!");
+      showMessage('success', "Şifre başarıyla güncellendi!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setTimeout(() => setMessage(""), 3000);
-    } catch (err) {
-      setMessage("Şifre güncellenirken bir hata oluştu.");
+    } catch (err: any) {
+      showMessage('error', err.message || "Şifre güncellenirken bir hata oluştu.");
     }
   };
 
-  const handleDeactivateAccount = async (e: React.FormEvent) => {
+  const handleVerificationRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (window.confirm("Hesabınızı devre dışı bırakmak istediğinizden emin misiniz?")) {
-      setMessage("Hesap devre dışı bırakma özelliği yakında aktif olacak.");
+    try {
+      await postApi("/verification-requests", {
+        fullName: verificationFullName,
+        category: verificationCategory,
+        description: verificationText,
+        identityImage: verificationImage
+      });
+      setIsSubmitted(true);
+      showMessage('success', "Başvurunuz alındı! İncelendikten sonra size dönüş yapılacaktır.");
+      setVerificationFullName("");
+      setVerificationText("");
+      setVerificationImage(null);
+    } catch (err: any) {
+      showMessage('error', err.message || "Başvuru sırasında hata oluştu.");
     }
   };
 
-  const handleBackButton = () => {
-    if (activeDetailMenu) {
-      setActiveDetailMenu(null);
-    } else if (activeSubMenu) {
-      setActiveSubMenu(null);
+  const handleDeactivateAccount = async () => {
+    if (window.confirm("Hesabınızı devre dışı bırakmak istediğinizden emin misiniz?")) {
+      showMessage('error', "Hesap devre dışı bırakma özelliği yakında aktif olacak.");
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
-        </div>
+      <div className="flex justify-center items-center h-screen bg-black">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-center">
-        <div className="hidden lg:block w-[260px] shrink-0">
-          <LeftSidebar />
+    <SecondaryLayout maxWidth="1050px">
+      <div className="flex w-full min-h-[calc(100vh-60px)]">
+
+        {/* Sol Panel - Kategoriler */}
+        <div className="w-[300px] border-r border-theme-border p-4 hidden md:block">
+          <h1 className="text-2xl font-bold mb-6 px-2">Ayarlar</h1>
+          <nav className="space-y-1">
+            <button
+              onClick={() => setActiveCategory("account")}
+              className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${activeCategory === 'account' ? 'bg-[#1a1a1a] text-white' : 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'}`}
+            >
+              <div className="flex items-center space-x-3">
+                <UserCircleIcon className="w-6 h-6" />
+                <span className="font-medium">Hesabım</span>
+              </div>
+              {activeCategory === 'account' && <div className="w-1 h-4 bg-orange-500 rounded-full"></div>}
+            </button>
+
+            <button disabled className="w-full flex items-center justify-between p-3 rounded-lg text-gray-600 cursor-not-allowed">
+              <span className="font-medium ml-9">Premium (Yakında)</span>
+            </button>
+            <button disabled className="w-full flex items-center justify-between p-3 rounded-lg text-gray-600 cursor-not-allowed">
+              <span className="font-medium ml-9">Bildirimler (Yakında)</span>
+            </button>
+          </nav>
         </div>
 
-        <div className="w-full max-w-[1000px] flex">
-          {/* Sol Panel - Kategoriler */}
-          <div className="w-[350px] border border-theme-border rounded-l-lg overflow-hidden" style={{backgroundColor: '#0a0a0a'}}>
-            <div className="p-4 border-b border-theme-border flex items-center">
-              <Cog8ToothIcon className="w-6 h-6 mr-3" />
-              <h1 className="text-xl font-bold">Ayarlar</h1>
+        {/* Sağ Panel - İçerik */}
+        <div className="flex-1 p-6 md:p-10 overflow-y-auto">
+          {message && (
+            <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-900/30 text-green-400 border border-green-900' : 'bg-red-900/30 text-red-400 border border-red-900'}`}>
+              {message.text}
             </div>
+          )}
 
-            <div>
-              <button
-                onClick={() => setActiveCategory(activeCategory === "account" ? null : "account")}
-                className={`w-full px-4 py-4 text-left hover:bg-[#151515] flex items-center justify-between relative ${
-                  activeCategory === "account" ? "bg-gray-900" : ""
-                }`}
-              >
-                <span className="font-medium">Hesap Ayarları</span>
-                <ChevronRightIcon className="w-5 h-5" />
-                {activeCategory === "account" && (
-                  <div className="absolute right-0 top-0 bottom-0 w-1" style={{backgroundColor: 'oklch(0.71 0.24 43.55)'}}></div>
-                )}
-              </button>
-
-              <button
-                disabled
-                className="w-full px-4 py-4 text-left opacity-50 cursor-not-allowed flex items-center justify-between"
-              >
-                <span className="font-medium">Premium</span>
-                <ChevronRightIcon className="w-5 h-5" />
-              </button>
-
-              <button
-                disabled
-                className="w-full px-4 py-4 text-left opacity-50 cursor-not-allowed flex items-center justify-between"
-              >
-                <span className="font-medium">Güvenlik</span>
-                <ChevronRightIcon className="w-5 h-5" />
-              </button>
-
-              <button
-                disabled
-                className="w-full px-4 py-4 text-left opacity-50 cursor-not-allowed flex items-center justify-between"
-              >
-                <span className="font-medium">Bildirimler</span>
-                <ChevronRightIcon className="w-5 h-5" />
-              </button>
-
-              <button
-                disabled
-                className="w-full px-4 py-4 text-left opacity-50 cursor-not-allowed flex items-center justify-between"
-              >
-                <span className="font-medium">Yardım Merkezi</span>
-                <ChevronRightIcon className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* İkinci Panel */}
           {activeCategory === "account" && (
-            <div className="w-[650px] border-t border-r border-b border-theme-border rounded-r-lg" style={{backgroundColor: '#0a0a0a'}}>
-              {/* Ana Menü */}
-              {!activeSubMenu && !activeDetailMenu && (
-                <>
-                  <div className="p-4">
-                    <h2 className="text-lg font-bold">Hesap Ayarları</h2>
+            <div className="space-y-12 max-w-2xl">
+
+              {/* Profil Bölümü */}
+              <section>
+                <h2 className="text-xl font-bold mb-1 flex items-center">
+                  Hesap Bilgileri
+                </h2>
+                <p className="text-gray-500 text-sm mb-6">Temel hesap bilgilerinizi buradan yönetebilirsiniz.</p>
+
+                <form onSubmit={handleUpdateProfile} className="space-y-6 bg-[#0a0a0a] p-6 rounded-2xl border border-theme-border">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Tam Adınız</label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Ad Soyad"
+                      className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                    />
                   </div>
 
                   <div>
-                    <button
-                      onClick={() => setActiveSubMenu("account-info")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Hesap bilgileri</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Hesabına ait bilgileri keşfet.</div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveSubMenu("password")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Şifreni değiştir</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Eğer güçlü değilse, şifreni değiştir.</div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveSubMenu("deactivate")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium text-red-500">Hesabını devre dışı bırak</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Hesabını nasıl devre dışı bırakacağını öğren.</div>
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Hesap Bilgileri Alt Menüsü */}
-              {activeSubMenu === "account-info" && !activeDetailMenu && (
-                <>
-                  <div className="p-4 border-b border-theme-border flex items-center">
-                    <button
-                      onClick={handleBackButton}
-                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
-                    >
-                      <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold">Hesap Bilgileri</h2>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Kullanıcı Adı</label>
+                    <input
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                    />
                   </div>
 
                   <div>
-                    <button
-                      onClick={() => setActiveDetailMenu("username")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Kullanıcı Adı</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>@{user?.nickname}</div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveDetailMenu("email")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Email</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>{user?.email}</div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveDetailMenu("verified")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Onaylanmış hesap</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Mavi Tik başvurusu</div>
-                    </button>
-
-                    <div className="border-t border-theme-border my-2"></div>
-
-                    <button
-                      onClick={() => setActiveDetailMenu("location")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Konum</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Konumunuzu ekleyin</div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveDetailMenu("gender")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Cinsiyet</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Cinsiyetinizi belirtin</div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveDetailMenu("birthdate")}
-                      className="w-full px-4 py-4 text-left hover:bg-[#151515]"
-                    >
-                      <div className="font-medium">Doğum Tarihi</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Doğum tarihinizi girin</div>
-                    </button>
-
-                    <button
-                      disabled
-                      className="w-full px-4 py-4 text-left opacity-50 cursor-not-allowed"
-                    >
-                      <div className="font-medium">Takım</div>
-                      <div className="text-sm" style={{color: "#6e767d"}}>Favori takımınızı seçin</div>
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Şifre Değiştir */}
-              {activeSubMenu === "password" && !activeDetailMenu && (
-                <>
-                  <div className="p-4 border-b border-theme-border flex items-center">
-                    <button
-                      onClick={handleBackButton}
-                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
-                    >
-                      <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold">Şifreni Değiştir</h2>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">E-posta Adresi</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                    />
                   </div>
 
-                  <div className="p-6">
-                    <form onSubmit={handleUpdatePassword}>
-                      <div className="mb-4">
-                        <label className="block mb-2">Mevcut Şifre</label>
-                        <input
-                          type="password"
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-theme-border"
-                          style={{backgroundColor: '#1a1a1a'}}
-                          required
-                        />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Cinsiyet</label>
+                      <div className="relative">
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white appearance-none focus:outline-none focus:border-orange-500 transition-colors"
+                        >
+                          <option value="unspecified">Belirtmek İstemiyorum</option>
+                          <option value="male">Erkek</option>
+                          <option value="female">Kadın</option>
+                          <option value="other">Diğer</option>
+                        </select>
+                        <ChevronRightIcon className="w-5 h-5 absolute right-4 top-3.5 text-gray-500 rotate-90 pointer-events-none" />
                       </div>
-                      <div className="mb-4">
-                        <label className="block mb-2">Yeni Şifre</label>
-                        <input
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-theme-border"
-                          style={{backgroundColor: '#1a1a1a'}}
-                          required
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <label className="block mb-2">Yeni Şifre (Tekrar)</label>
-                        <input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-theme-border"
-                          style={{backgroundColor: '#1a1a1a'}}
-                          required
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        className="px-6 py-2 rounded-full font-medium text-white"
-                        style={{backgroundColor: 'oklch(0.71 0.24 43.55)'}}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Doğum Günü</label>
+                      <input
+                        type="date"
+                        value={birthday}
+                        onChange={(e) => setBirthday(e.target.value)}
+                        className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors [color-scheme:dark]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button type="submit" className="px-6 py-2 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors">
+                      Bilgileri Güncelle
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              <div className="border-b border-theme-border"></div>
+
+              {/* Şifre Bölümü */}
+              <section>
+                <h2 className="text-xl font-bold mb-1 flex items-center">
+                  <KeyIcon className="w-6 h-6 mr-2 text-orange-500" />
+                  Güvenlik ve Şifre
+                </h2>
+                <p className="text-gray-500 text-sm mb-6">Hesabınızın güvenliği için güçlü bir şifre kullanın.</p>
+
+                <form onSubmit={handleUpdatePassword} className="space-y-6 bg-[#0a0a0a] p-6 rounded-2xl border border-theme-border">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Mevcut Şifre</label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Yeni Şifre</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Yeni Şifre (Tekrar)</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button type="submit" className="px-6 py-2 bg-orange-600 text-white font-semibold rounded-full hover:bg-orange-700 transition-colors">
+                      Şifreyi Değiştir
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              <div className="border-b border-theme-border"></div>
+
+              {/* Mavi Tik Bölümü */}
+              <section>
+                <h2 className="text-xl font-bold mb-1 flex items-center">
+                  <CheckBadgeIcon className="w-6 h-6 mr-2 text-blue-500" />
+                  Onaylanmış Hesap (Mavi Tik)
+                </h2>
+                <p className="text-gray-500 text-sm mb-6">Topluluk tarafından tanınan bir kişi veya markaysanız onay rozeti alabilirsiniz.</p>
+
+                <form onSubmit={handleVerificationRequest} className="space-y-6 bg-gradient-to-br from-[#0a0a0a] to-blue-900/10 p-6 rounded-2xl border border-blue-900/30">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Gerçek İsim ve Soyisim</label>
+                    <input
+                      type="text"
+                      required
+                      value={verificationFullName}
+                      onChange={(e) => setVerificationFullName(e.target.value)}
+                      placeholder="Kimlikte yazan isminiz"
+                      className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Kategori</label>
+                    <div className="relative">
+                      <select
+                        value={verificationCategory}
+                        onChange={(e) => setVerificationCategory(e.target.value)}
+                        className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white appearance-none focus:outline-none focus:border-blue-500 transition-colors"
                       >
-                        Kaydet
-                      </button>
-                      {message && <p className="mt-4 text-green-500">{message}</p>}
-                    </form>
+                        <option value="media">Medya ve Haberler</option>
+                        <option value="brand">Marka ve İşletme</option>
+                        <option value="creator">İçerik Üreticisi</option>
+                        <option value="entertainment">Eğlence</option>
+                        <option value="other">Diğer</option>
+                      </select>
+                      <ChevronRightIcon className="w-5 h-5 absolute right-4 top-3.5 text-gray-500 rotate-90 pointer-events-none" />
+                    </div>
                   </div>
-                </>
-              )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Neden onaylanmalısınız?</label>
+                    <textarea
+                      required
+                      value={verificationText}
+                      onChange={(e) => setVerificationText(e.target.value)}
+                      placeholder="Bize kendinizden veya markanızdan kısaca bahsedin..."
+                      className="w-full bg-[#151515] border border-theme-border rounded-lg px-4 py-3 text-white min-h-[100px] focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
 
-              {/* Hesabı Devre Dışı Bırak */}
-              {activeSubMenu === "deactivate" && !activeDetailMenu && (
-                <>
-                  <div className="p-4 border-b border-theme-border flex items-center">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Kimlik Fotoğrafı veya Belge</label>
+                    <div className="border border-dashed border-theme-border rounded-lg p-6 flex flex-col items-center justify-center bg-[#151515] hover:bg-[#1a1a1a] transition-colors cursor-pointer relative">
+                      <input
+                        type="file"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        required
+                      />
+                      {verificationImage ? (
+                        <div className="relative w-full h-32">
+                          <img src={verificationImage} alt="Preview" className="w-full h-full object-contain rounded" />
+                          <p className="text-center text-xs text-green-500 mt-2">Görsel seçildi</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center mb-3">
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                          </div>
+                          <p className="text-gray-400 text-sm">Fotoğraf yüklemek için tıklayın</p>
+                          <p className="text-gray-600 text-xs mt-1">Sadece PNG, JPG.</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
                     <button
-                      onClick={handleBackButton}
-                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
+                      type="submit"
+                      disabled={isSubmitted}
+                      className={`px-6 py-2 font-semibold rounded-full transition-colors shadow-lg ${isSubmitted ? 'bg-green-600 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-900/20'}`}
                     >
-                      <ArrowLeftIcon className="w-5 h-5" />
+                      {isSubmitted ? "Başarılı! ✅" : "Başvuruyu Gönder"}
                     </button>
-                    <h2 className="text-lg font-bold">Hesabını Devre Dışı Bırak</h2>
                   </div>
+                </form>
+              </section>
 
-                  <div className="p-6">
-                    <form onSubmit={handleDeactivateAccount}>
-                      <p className="mb-4" style={{color: "#6e767d"}}>
-                        Hesabınızı devre dışı bıraktığınızda, profiliniz ve gönderileriniz gizlenecektir. 
-                        İstediğiniz zaman tekrar giriş yaparak hesabınızı aktif hale getirebilirsiniz.
-                      </p>
-                      <button
-                        type="submit"
-                        className="px-6 py-2 rounded-full font-medium text-white bg-red-600 hover:bg-red-700"
-                      >
-                        Hesabı Devre Dışı Bırak
-                      </button>
-                      {message && <p className="mt-4 text-yellow-500">{message}</p>}
-                    </form>
-                  </div>
-                </>
-              )}
+              <div className="border-b border-theme-border"></div>
 
-              {/* Detay Sayfaları */}
-              {activeDetailMenu === "username" && (
-                <>
-                  <div className="p-4 border-b border-theme-border flex items-center">
-                    <button
-                      onClick={handleBackButton}
-                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
-                    >
-                      <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold">Kullanıcı Adı</h2>
+              {/* Tehlikeli Bölge */}
+              <section className="opacity-80 hover:opacity-100 transition-opacity">
+                <h2 className="text-xl font-bold mb-1 flex items-center text-red-500">
+                  <ExclamationTriangleIcon className="w-6 h-6 mr-2" />
+                  Tehlikeli Bölge
+                </h2>
+                <div className="mt-4 bg-red-900/10 border border-red-900/30 p-6 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-white">Hesabı Devre Dışı Bırak</h3>
+                    <p className="text-sm text-gray-500 mt-1">Bu işlem hesabınızı geçici olarak kapatır.</p>
                   </div>
+                  <button
+                    onClick={handleDeactivateAccount}
+                    className="px-5 py-2 border border-red-800 text-red-500 rounded-lg hover:bg-red-900/20 transition-colors text-sm font-medium"
+                  >
+                    Devre Dışı Bırak
+                  </button>
+                </div>
+              </section>
 
-                  <div className="p-6">
-                    <form onSubmit={handleUpdateUsername}>
-                      <div className="mb-4">
-                        <label className="block mb-2">Yeni Kullanıcı Adı</label>
-                        <input
-                          type="text"
-                          value={nickname}
-                          onChange={(e) => setNickname(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-theme-border"
-                          style={{backgroundColor: '#1a1a1a'}}
-                          required
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        className="px-6 py-2 rounded-full font-medium text-white"
-                        style={{backgroundColor: 'oklch(0.71 0.24 43.55)'}}
-                      >
-                        Kaydet
-                      </button>
-                      {message && <p className="mt-4 text-green-500">{message}</p>}
-                    </form>
-                  </div>
-                </>
-              )}
-
-              {activeDetailMenu === "email" && (
-                <>
-                  <div className="p-4 border-b border-theme-border flex items-center">
-                    <button
-                      onClick={handleBackButton}
-                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
-                    >
-                      <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold">Email</h2>
-                  </div>
-
-                  <div className="p-6">
-                    <form onSubmit={handleUpdateEmail}>
-                      <div className="mb-4">
-                        <label className="block mb-2">Yeni E-posta</label>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg border border-theme-border"
-                          style={{backgroundColor: '#1a1a1a'}}
-                          required
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        className="px-6 py-2 rounded-full font-medium text-white"
-                        style={{backgroundColor: 'oklch(0.71 0.24 43.55)'}}
-                      >
-                        Kaydet
-                      </button>
-                      {message && <p className="mt-4 text-green-500">{message}</p>}
-                    </form>
-                  </div>
-                </>
-              )}
-
-              {activeDetailMenu === "verified" && (
-                <>
-                  <div className="p-4 border-b border-theme-border flex items-center">
-                    <button
-                      onClick={handleBackButton}
-                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
-                    >
-                      <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold">Onaylanmış Hesap</h2>
-                  </div>
-
-                  <div className="p-6">
-                    <p style={{color: "#6e767d"}}>
-                      Mavi tik başvurusu özelliği yakında aktif olacak.
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {(activeDetailMenu === "location" || activeDetailMenu === "gender" || activeDetailMenu === "birthdate") && (
-                <>
-                  <div className="p-4 border-b border-theme-border flex items-center">
-                    <button
-                      onClick={handleBackButton}
-                      className="p-2 hover:bg-[#151515] rounded-full mr-4"
-                    >
-                      <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold">
-                      {activeDetailMenu === "location" && "Konum"}
-                      {activeDetailMenu === "gender" && "Cinsiyet"}
-                      {activeDetailMenu === "birthdate" && "Doğum Tarihi"}
-                    </h2>
-                  </div>
-
-                  <div className="p-6">
-                    <p style={{color: "#6e767d"}}>
-                      Bu özellik yakında aktif olacak.
-                    </p>
-                  </div>
-                </>
-              )}
+              <div className="h-20"></div> {/* Bottom spacer */}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </SecondaryLayout>
   );
 }

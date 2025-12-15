@@ -199,7 +199,8 @@ export default function HomePage() {
         {newPostCount > 0 && (
           <div
             onClick={handleShowNewPosts}
-            className="w-full h-[50px] border-b border-theme-border flex items-center justify-center cursor-pointer hover:bg-[#151515] transition-colors text-[#1DCD9F] text-[15px]"
+            className="w-full h-[50px] border-b border-theme-border flex items-center justify-center cursor-pointer hover:bg-[#151515] transition-colors text-[15px]"
+            style={{ color: "var(--app-global-link-color)" }}
           >
             {newPostCount} yeni gönderiyi göster
           </div>

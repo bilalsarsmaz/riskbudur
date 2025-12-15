@@ -19,6 +19,13 @@ export async function GET(req: NextRequest) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
         userId = decoded.userId;
+
+        // Update lastSeen
+        await prisma.user.update({
+          where: { id: userId },
+          data: { lastSeen: new Date() }
+        }).catch(err => console.error("LastSeen update error:", err));
+
       } catch (error) {
         // Token gecersiz, devam et
       }
@@ -189,7 +196,14 @@ export async function GET(req: NextRequest) {
         },
         include: {
           quotedPost: {
-            include: {
+            select: {
+              id: true,
+              content: true,
+              createdAt: true,
+              imageUrl: true,
+              mediaUrl: true,
+              linkPreview: true,
+              isAnonymous: true,
               author: {
                 select: {
                   id: true,
@@ -292,6 +306,18 @@ export async function POST(req: NextRequest) {
 
     // Hashtag'leri cikar
     const hashtagNames = extractHashtags(content);
+
+    // Mevcut hashtaglerin updatedAt tarihini guncelle (Aktiflik takibi icin)
+    if (hashtagNames.length > 0) {
+      await prisma.hashtag.updateMany({
+        where: {
+          name: { in: hashtagNames }
+        },
+        data: {
+          updatedAt: new Date()
+        }
+      });
+    }
 
     // Thread root ID hesapla
     let threadRootId: bigint | null = null;

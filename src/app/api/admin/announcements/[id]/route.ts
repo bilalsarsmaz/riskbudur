@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { verifyAdmin } from "@/lib/adminAuth";
 
 export async function PUT(
     request: Request,
     { params }: { params: { id: string } }
 ) {
     try {
-        const authHeader = request.headers.get("Authorization");
-        const token = authHeader?.split(" ")[1] ?? "";
-        const payload = await verifyToken(token);
+        const { id: announcementId } = await params;
 
-        if (!payload || payload.role !== "ADMIN") {
-            return NextResponse.json({ error: "Yetkisiz işlem" }, { status: 403 });
+        // Admin yetki kontrolü
+        const authResult = await verifyAdmin(request);
+        if (authResult.error) {
+            return authResult.error;
         }
 
         const { isActive, content } = await request.json();
@@ -22,14 +22,14 @@ export async function PUT(
             await prisma.announcement.updateMany({
                 where: {
                     isActive: true,
-                    NOT: { id: params.id }
+                    NOT: { id: announcementId }
                 },
                 data: { isActive: false },
             });
         }
 
         const announcement = await prisma.announcement.update({
-            where: { id: params.id },
+            where: { id: announcementId },
             data: {
                 isActive,
                 content
@@ -48,16 +48,16 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const authHeader = request.headers.get("Authorization");
-        const token = authHeader?.split(" ")[1] ?? "";
-        const payload = await verifyToken(token);
+        const { id: announcementId } = await params;
 
-        if (!payload || payload.role !== "ADMIN") {
-            return NextResponse.json({ error: "Yetkisiz işlem" }, { status: 403 });
+        // Admin yetki kontrolü
+        const authResult = await verifyAdmin(request);
+        if (authResult.error) {
+            return authResult.error;
         }
 
         await prisma.announcement.delete({
-            where: { id: params.id },
+            where: { id: announcementId },
         });
 
         return NextResponse.json({ success: true });

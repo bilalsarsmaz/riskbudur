@@ -583,29 +583,30 @@ export default function PostItem({
                         className="post-quote-badge w-4 h-4 ml-0.5"
                       />
                     )}
+                    <span className="post-quote-username text-[15px] font-normal ml-1" style={{ color: "var(--app-subtitle)" }}>@{post.quotedPost.author.nickname}</span>
                     <span className="post-quote-separator mx-1 text-[15px]" style={{ color: "var(--app-subtitle)" }}>·</span>
                     <span className="post-quote-date text-[15px]" style={{ color: "var(--app-subtitle)" }}>{formatCustomDate(post.quotedPost.createdAt)}</span>
                   </div>
 
-                  <div className="post-quote-content px-3 pb-3" onClick={(e) => {
+                  <div className="post-quote-content px-3 pb-2" onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/${post.quotedPost?.author.nickname}/status/${post.quotedPost?.id}`);
                   }}>
-                    <p className="post-quote-text text-[15px] line-clamp-3 cursor-pointer" style={{ color: "var(--app-body-text)" }}>
-                      {post.quotedPost.content}
-                    </p>
-                    {(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) && (
-                      <img
-                        src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
-                        alt="Quoted post media"
-                        className="w-full mt-2 rounded-lg object-cover max-h-[300px] cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
-                        }}
-                      />
-                    )}
+                    <div className="post-quote-text text-[15px] line-clamp-3 cursor-pointer" style={{ color: "var(--app-body-text)" }}>
+                      {parseContent(post.quotedPost.content)}
+                    </div>
                   </div>
+                  {(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) && (
+                    <img
+                      src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
+                      alt="Quoted post media"
+                      className="w-full object-cover max-h-[300px] cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
+                      }}
+                    />
+                  )}
                 </div>
               );
             })()}
@@ -809,78 +810,90 @@ export default function PostItem({
             </div>
 
             {/* YouTube/Link Preview - X.com Style */}
-            {post.linkPreview && (
-              <div className="mb-3">
-                {post.linkPreview.type === 'youtube' && post.linkPreview.videoId ? (
-                  youtubeEmbedOpen ? (
-                    <div className="relative w-full rounded-xl overflow-hidden border border-theme-border" style={{ paddingBottom: '56.25%' }}>
-                      <iframe
-                        className="absolute top-0 left-0 w-full h-full"
-                        src={`https://www.youtube.com/embed/${post.linkPreview.videoId}?autoplay=1`}
-                        title={post.linkPreview.title}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="flex rounded-xl overflow-hidden border border-theme-border cursor-pointer hover:bg-[#111] transition-colors"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setYoutubeEmbedOpen(true);
-                      }}
-                    >
-                      <div className="relative flex-shrink-0" style={{ width: "130px", height: "130px", minWidth: "130px" }}>
-                        <img
-                          src={post.linkPreview.thumbnail}
-                          alt={post.linkPreview.title}
-                          className="w-full h-full object-cover"
+            {post.linkPreview && (() => {
+              const getYoutubeId = (url: string) => {
+                const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+                const match = url.match(regex);
+                return match ? match[1] : null;
+              };
+
+              const isYoutube = post.linkPreview.type === 'youtube' || post.linkPreview.url.includes('youtube') || post.linkPreview.url.includes('youtu.be');
+              const videoId = post.linkPreview.videoId || (isYoutube ? getYoutubeId(post.linkPreview.url) : null);
+              const thumbnail = post.linkPreview.thumbnail || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null);
+
+              return (
+                <div className="mb-3">
+                  {isYoutube && videoId ? (
+                    youtubeEmbedOpen ? (
+                      <div className="relative w-full rounded-xl overflow-hidden border border-theme-border" style={{ paddingBottom: '56.25%' }}>
+                        <iframe
+                          className="absolute top-0 left-0 w-full h-full"
+                          src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                          title={post.linkPreview.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
                         />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="bg-black bg-opacity-80 rounded-full p-2">
-                            <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex rounded-xl overflow-hidden border border-theme-border cursor-pointer hover:bg-[#111] transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setYoutubeEmbedOpen(true);
+                        }}
+                      >
+                        <div className="relative flex-shrink-0" style={{ width: "130px", height: "130px", minWidth: "130px" }}>
+                          <img
+                            src={thumbnail || ''}
+                            alt={post.linkPreview.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-black bg-opacity-80 rounded-full p-2">
+                              <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                            </div>
                           </div>
                         </div>
+                        <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                          <div className="text-xs mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.siteName || 'youtube.com'}</div>
+                          <div className="text-sm font-medium line-clamp-2 mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.title}</div>
+                          {post.linkPreview.description && (
+                            <div className="text-xs line-clamp-2" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.description}</div>
+                          )}
+                        </div>
                       </div>
+                    )
+                  ) : (
+                    <a
+                      href={post.linkPreview.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex rounded-xl overflow-hidden border border-theme-border hover:bg-[#111] transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {thumbnail && (
+                        <div className="relative flex-shrink-0" style={{ width: "130px", height: "130px", minWidth: "130px" }}>
+                          <img
+                            src={thumbnail}
+                            alt={post.linkPreview.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
-                        <div className="text-xs text-gray-500 mb-1">{post.linkPreview.siteName || 'youtube.com'}</div>
-                        <div className="text-sm font-medium text-white line-clamp-2 mb-1">{post.linkPreview.title}</div>
+                        <div className="text-xs mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.siteName}</div>
+                        <div className="text-sm font-medium line-clamp-2 mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.title}</div>
                         {post.linkPreview.description && (
-                          <div className="text-xs text-gray-400 line-clamp-2">{post.linkPreview.description}</div>
+                          <div className="text-xs line-clamp-2" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.description}</div>
                         )}
                       </div>
-                    </div>
-                  )
-                ) : (
-                  <a
-                    href={post.linkPreview.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex rounded-xl overflow-hidden border border-theme-border hover:bg-[#111] transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {post.linkPreview.thumbnail && (
-                      <div className="relative flex-shrink-0" style={{ width: "130px", height: "130px", minWidth: "130px" }}>
-                        <img
-                          src={post.linkPreview.thumbnail}
-                          alt={post.linkPreview.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
-                      <div className="text-xs text-gray-500 mb-1">{post.linkPreview.siteName}</div>
-                      <div className="text-sm font-medium text-white line-clamp-2 mb-1">{post.linkPreview.title}</div>
-                      {post.linkPreview.description && (
-                        <div className="text-xs text-gray-400 line-clamp-2">{post.linkPreview.description}</div>
-                      )}
-                    </div>
-                  </a>
-                )}
-              </div>
-            )}
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Alıntılanan post */}
             {post.quotedPost && (() => {
@@ -938,6 +951,7 @@ export default function PostItem({
                     {post.quotedPost.isPopular && (
                       <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-orange w-4 h-4 ml-0.5 verified-icon" />
                     )}
+                    <span className="post-quote-username text-[15px] font-normal ml-1" style={{ color: "var(--app-subtitle)" }}>@{post.quotedPost.author.nickname}</span>
                     <span className="post-quote-separator mx-1 text-[15px]" style={{ color: "var(--app-subtitle)" }}>·</span>
                     <span className="post-quote-date text-[15px]" style={{ color: "var(--app-subtitle)" }}>{formatCustomDate(post.quotedPost.createdAt)}</span>
                   </div>
@@ -950,51 +964,69 @@ export default function PostItem({
                     }}
                   >
                     {post.quotedPost.content && (
-                      <div className="post-quote-text text-[15px] px-3 pb-3">
+                      <div className="post-quote-text text-[15px] px-3 pb-2">
                         {parseContent(post.quotedPost.content)}
                       </div>
                     )}
+                  </div>
 
-                    {(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) && (
-                      <div className="mt-2 w-full flex justify-center overflow-hidden rounded-lg border border-theme-border cursor-pointer" onClick={(e) => {
-                        e.stopPropagation();
-                        setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
-                      }}>
-                        <img
-                          src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
-                          alt="Alıntılanan post görseli"
-                          className="w-full h-auto object-cover"
-                          style={{ maxHeight: "350px", minHeight: "150px" }}
-                        />
-                      </div>
-                    )}
+                  {(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) && (
+                    <div className="w-full flex justify-center overflow-hidden cursor-pointer border-t border-theme-border" onClick={(e) => {
+                      e.stopPropagation();
+                      setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
+                    }}>
+                      <img
+                        src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
+                        alt="Alıntılanan post görseli"
+                        className="w-full h-auto object-cover"
+                        style={{ maxHeight: "350px", minHeight: "150px" }}
+                      />
+                    </div>
+                  )}
 
-                    {post.quotedPost.linkPreview && (
+                  {post.quotedPost.linkPreview && (() => {
+                    const getYoutubeThumbnail = (url: string) => {
+                      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+                      const match = url.match(regex);
+                      return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
+                    };
+
+                    const thumbnail = post.quotedPost.linkPreview.thumbnail ||
+                      (post.quotedPost.linkPreview.type === 'youtube' || post.quotedPost.linkPreview.url.includes('youtube') || post.quotedPost.linkPreview.url.includes('youtu.be')
+                        ? getYoutubeThumbnail(post.quotedPost.linkPreview.url)
+                        : null);
+
+                    return (
                       <div className="mt-2 border-t border-theme-border">
-                        {post.quotedPost.linkPreview.thumbnail && (
+                        {thumbnail ? (
                           <div className="relative w-full aspect-video">
                             <img
-                              src={post.quotedPost.linkPreview.thumbnail}
+                              src={thumbnail}
                               alt={post.quotedPost.linkPreview.title}
                               className="w-full h-full object-cover"
                             />
-                            {post.quotedPost.linkPreview.type === 'youtube' && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="bg-black bg-opacity-80 rounded-full p-2">
-                                  <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                            {(post.quotedPost.linkPreview.type === 'youtube' || post.quotedPost.linkPreview.url.includes('youtube') || post.quotedPost.linkPreview.url.includes('youtu.be')) && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                <div className="bg-[#1D9BF0] text-white rounded-full p-3 shadow-lg">
+                                  <IconPlayerPlay className="h-6 w-6" fill="white" />
                                 </div>
                               </div>
                             )}
                           </div>
+                        ) : (post.quotedPost.linkPreview.type === 'youtube' || post.quotedPost.linkPreview.url.includes('youtube') || post.quotedPost.linkPreview.url.includes('youtu.be')) && (
+                          <div className="relative w-full aspect-video bg-black flex items-center justify-center">
+                            <IconPlayerPlay className="h-12 w-12 text-gray-500" />
+                          </div>
                         )}
                         <div className="p-3 bg-black/50">
-                          <div className="text-xs text-gray-500 mb-1">{post.quotedPost.linkPreview.siteName}</div>
-                          <div className="text-[15px] font-medium text-white line-clamp-2">{post.quotedPost.linkPreview.title}</div>
+                          <div className="text-xs mb-1 uppercase" style={{ color: "var(--app-subtitle)" }}>{post.quotedPost.linkPreview.siteName || 'YouTube'}</div>
+                          <div className="text-[15px] font-medium line-clamp-2 leading-5" style={{ color: "var(--app-subtitle)" }}>{post.quotedPost.linkPreview.title}</div>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
+
               );
             })()}
 

@@ -19,7 +19,11 @@ import {
   IconLogout,
   IconSettings,
   IconDots,
-  IconSparkles
+  IconSparkles,
+  IconSun,
+  IconMoon,
+  IconSunFilled,
+  IconMoonFilled,
 } from "@tabler/icons-react";
 import VerificationBadge from "./VerificationBadge";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
@@ -99,9 +103,17 @@ export default function LeftSidebar() {
     return () => clearInterval(interval);
   }, []);
 
-  // Map menu items with dynamic href for profile - exclude compose from web version
+  // Map menu items with dynamic href for profile
+  // 1. Exclude compose (mobile only)
+  // 2. Exclude admin items if user is not admin
   const menuItems = baseMenuItems
-    .filter(item => item.id !== 'compose') // Compose only for mobile
+    .filter(item => {
+      if (item.id === 'compose') return false;
+      if (item.isAdmin) {
+        return userInfo?.role === 'ADMIN' || userInfo?.role === 'SUPERADMIN';
+      }
+      return true;
+    })
     .map(item => ({
       ...item,
       href: typeof item.href === 'function' ? item.href(userInfo?.nickname) : item.href
@@ -125,11 +137,11 @@ export default function LeftSidebar() {
 
   function getActiveMenuId() {
     if (pathname === "/home") return "home";
-    if (pathname === "/explore") return "explore";
+    if (pathname?.startsWith("/i/explore")) return "explore";
     if (pathname === "/notifications") return "notifications";
     if (pathname === "/messages") return "messages";
     if (pathname === `/${userInfo.nickname}` || pathname === "/profile") return "profile";
-    if (pathname === "/bookmarks") return "bookmarks";
+    if (pathname?.startsWith("/i/bookmarks")) return "bookmarks";
     return "";
   }
 
@@ -182,27 +194,52 @@ export default function LeftSidebar() {
             );
           })}
 
-          {/* HR Separator before Theme Toggle */}
-          <li className="w-full px-4 my-2">
-            <div className="border-t border-theme-border"></div>
-          </li>
 
-          {/* Theme Toggle Button */}
-          <li className="w-full">
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center xl:justify-start p-3 xl:p-2 rounded-full xl:rounded-lg transition-colors aspect-square xl:aspect-auto w-fit xl:w-auto mx-auto xl:mx-0 w-full"
-            >
-              <IconSparkles className="h-7 w-7 xl:h-6 xl:w-6 xl:mr-3 text-[#1d9bf0]" />
-              <span className="hidden xl:inline text-[20px]" style={{ color: 'var(--app-body-text)' }}>
-                {theme === 'dark' ? 'Gündüz Teması' : 'Gece Teması'}
-              </span>
-            </button>
-          </li>
         </ul>
       </nav>
 
-      <div className="mt-auto relative w-full flex justify-center xl:justify-start">
+      <div className="mt-auto relative w-full flex flex-col items-center xl:items-start xl:px-2">
+        {/* Theme Toggle (Moved to Footer) */}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center xl:justify-start p-3 xl:p-2 rounded-full xl:rounded-lg transition-colors aspect-square xl:aspect-auto w-fit xl:w-auto mx-auto xl:mx-0 w-full group mb-1 xl:mb-0"
+        >
+          {/* Custom Toggle Switch */}
+          <div
+            className={`relative w-[48px] h-[26px] rounded-full transition-colors duration-300 xl:mr-3 flex-shrink-0 border ${theme === 'dark' ? 'bg-black border-gray-700' : 'bg-gray-200 border-gray-300'}`}
+          >
+            {/* Sun Icon (Left Background - Visible when Dark) */}
+            <div className={`absolute left-1.5 top-1 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
+              <IconSun className="w-4 h-4 text-gray-500" />
+            </div>
+
+            {/* Moon Icon (Right Background - Visible when Light) */}
+            <div className={`absolute right-1.5 top-1 transition-opacity duration-300 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
+              <IconMoon className="w-4 h-4 text-gray-400" />
+            </div>
+
+            {/* Sliding Circle */}
+            <div
+              className={`absolute top-[2px] w-[20px] h-[20px] rounded-full shadow-sm flex items-center justify-center transition-transform duration-300 bg-[#f97316] ${theme === 'dark' ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}
+            >
+              {theme === 'dark' ? (
+                <IconMoonFilled className="w-3 h-3 text-white" />
+              ) : (
+                <IconSunFilled className="w-3 h-3 text-white" />
+              )}
+            </div>
+          </div>
+
+          <span className="hidden xl:inline text-[13px]" style={{ color: 'var(--app-body-text)' }}>
+            Platform Temasını Değiştir
+          </span>
+        </button>
+
+        {/* HR Separator */}
+        <div className="w-full px-2 my-2 xl:my-2 hidden xl:block">
+          <div className="border-t border-theme-border"></div>
+        </div>
+
         <div
           className="flex items-center justify-center p-2 rounded-full xl:rounded-lg cursor-pointer aspect-square xl:aspect-auto w-fit xl:w-full"
           onClick={handleUserMenuToggle}

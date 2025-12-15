@@ -13,7 +13,8 @@ import {
   IconSitemap,
   IconSettings,
   IconLogout,
-  IconDots
+  IconDots,
+  IconArrowLeftToArc
 } from "@tabler/icons-react";
 
 export default function AdminSidebar() {
@@ -78,6 +79,12 @@ export default function AdminSidebar() {
       label: "Ayarlar",
       icon: IconSettings,
       href: "/admincp/settings"
+    },
+    {
+      id: "back-to-platform",
+      label: "Platforma Dön",
+      icon: IconArrowLeftToArc,
+      href: "/home"
     }
   ];
 

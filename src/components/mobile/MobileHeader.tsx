@@ -23,6 +23,7 @@ import {
   IconSparkles
 } from "@tabler/icons-react";
 import VerificationBadge from "@/components/VerificationBadge";
+import { menuItems as baseMenuItems } from "@/constants/menuItems";
 
 export default function MobileHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -118,58 +119,36 @@ export default function MobileHeader() {
     };
   }, [isMenuOpen]);
 
-  const menuItems = [
-    {
-      id: "home",
-      label: "Anasayfa",
-      icon: IconHome,
-      iconFilled: IconHomeFilled,
-      href: "/home",
-      hasFilled: true
-    },
-    {
-      id: "explore",
-      label: "Keşfet",
-      icon: IconSearch,
-      iconFilled: IconSearch,
-      href: "/explore",
-      hasFilled: false
-    },
-    {
-      id: "notifications",
-      label: "Bildirim",
-      icon: IconBell,
-      iconFilled: IconBellFilled,
-      href: "/notifications",
-      count: 5,
-      hasFilled: true
-    },
-    {
-      id: "messages",
-      label: "Mesajlar",
-      icon: IconMail,
-      iconFilled: IconMailFilled,
-      href: "/messages",
-      count: 2,
-      hasFilled: true
-    },
-    {
-      id: "profile",
-      label: "Profilim",
-      icon: IconUser,
-      iconFilled: IconUserFilled,
-      href: userInfo ? `/${userInfo.nickname}` : "/profile",
-      hasFilled: true
-    },
-    {
-      id: "bookmarks",
-      label: "Kaydedilenler",
-      icon: IconTargetArrow,
-      iconFilled: IconTargetArrow,
-      href: "/bookmarks",
-      hasFilled: false
-    }
-  ];
+  const menuItems = baseMenuItems
+    .filter(item => {
+      // Mobile header drawer usually shows everything EXCEPT things that might be duplicating bottom nav?
+      // Actually usually it shows everything.
+      // But we should filter admin items using role.
+      if (item.showInMobile === false && item.id !== "profile" && item.id !== "bookmarks" && item.id !== "dashboard") {
+        // Keep profile and bookmarks and dashboard even if showInMobile is false (because they are in drawer but not bottom nav)
+        // Actually showInMobile usually means "Bottom Nav".
+        // Drawer shows "More" stuff.
+        return false;
+      }
+      // This logic is tricky because baseMenuItems has `showInMobile` for bottom nav.
+      // Let's just include specific IDs that we know go into the drawer, OR include everything.
+      // The previous hardcoded list had: Home, Explore, Notifications, Messages, Profile, Bookmarks.
+      // Missing: Compose (handled by button).
+      // New: Dashboard.
+
+      if (item.id === 'compose') return false;
+
+      if (item.isAdmin) {
+        return userInfo?.role === 'ADMIN' || userInfo?.role === 'SUPERADMIN';
+      }
+      return true;
+    })
+    .map(item => ({
+      ...item,
+      // Map icons if needed, but baseMenuItems already has them.
+      // We might need to handle 'count' manually if we want to keep it, but dynamic is better.
+      href: typeof item.href === 'function' ? item.href(userInfo?.nickname) : item.href
+    }));
 
   const getActiveMenuId = () => {
     if (pathname === "/home") return "home";

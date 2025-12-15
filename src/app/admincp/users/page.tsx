@@ -97,7 +97,8 @@ export default function AdminUsers() {
       if (response.ok) {
         await fetchUsers();
       } else {
-        alert("İşlem başarısız oldu");
+        const errorData = await response.json();
+        alert(errorData.error || "İşlem başarısız oldu");
       }
     } catch (error) {
       console.error("Ban işlemi hatası:", error);
@@ -107,7 +108,11 @@ export default function AdminUsers() {
     }
   };
 
-  const handleDelete = async (userId: string, nickname: string) => {
+  const handleDelete = async (userId: string, nickname: string, role?: string) => {
+    if (role === 'SUPERADMIN') {
+      alert("Süper Admin silinemez!");
+      return;
+    }
     if (!confirm(`"${nickname}" kullanıcısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz!`)) {
       return;
     }
@@ -136,6 +141,10 @@ export default function AdminUsers() {
   };
 
   const handleEdit = (user: User) => {
+    if (user.role === 'SUPERADMIN') {
+      alert("Süper Admin düzenlenemez!");
+      return;
+    }
     setSelectedUser(user);
     setShowEditModal(true);
   };
@@ -355,7 +364,7 @@ export default function AdminUsers() {
                         <IconBan size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(user.id, user.nickname)}
+                        onClick={() => handleDelete(user.id, user.nickname, user.role)}
                         disabled={actionLoading === user.id}
                         className="p-2 rounded-full hover:bg-[#f4212e]/10 text-[#71767b] hover:text-[#f4212e] transition-colors"
                         title="Sil"
@@ -384,18 +393,20 @@ export default function AdminUsers() {
       </div>
 
       {/* Düzenleme Modal */}
-      {showEditModal && selectedUser && (
-        <EditUserModal
-          user={selectedUser}
-          onSave={handleSaveEdit}
-          onCancel={() => {
-            setShowEditModal(false);
-            setSelectedUser(null);
-          }}
-          loading={actionLoading === selectedUser.id}
-        />
-      )}
-    </AdmStandardPageLayout>
+      {
+        showEditModal && selectedUser && (
+          <EditUserModal
+            user={selectedUser}
+            onSave={handleSaveEdit}
+            onCancel={() => {
+              setShowEditModal(false);
+              setSelectedUser(null);
+            }}
+            loading={actionLoading === selectedUser.id}
+          />
+        )
+      }
+    </AdmStandardPageLayout >
   );
 }
 

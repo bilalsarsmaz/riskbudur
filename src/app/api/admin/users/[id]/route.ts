@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
+import { verifyAdmin } from "@/lib/adminAuth";
 
 export async function DELETE(
   request: Request,
@@ -8,18 +8,23 @@ export async function DELETE(
 ) {
   try {
     const { id: targetUserId } = await params;
-    const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-      new URL(request.url).searchParams.get("token") ||
-      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
 
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Admin yetki kontrolü
+    const authResult = await verifyAdmin(request);
+    if (authResult.error) {
+      return authResult.error;
     }
+    // const userId = authResult.user.id;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    // const userId = decoded.userId;
-    // const userId = decoded.userId;
-    // const targetUserId = params.id; // Moved up
+    // Check if target user is SUPERADMIN
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { role: true }
+    });
+
+    if (targetUser?.role === 'SUPERADMIN') {
+      return NextResponse.json({ error: "Süper Admin silinemez!" }, { status: 403 });
+    }
 
     // İlişkili verileri sil
     await prisma.comment.deleteMany({
@@ -72,18 +77,24 @@ export async function PATCH(
 ) {
   try {
     const { id: targetUserId } = await params;
-    const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-      new URL(request.url).searchParams.get("token") ||
-      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
 
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Admin yetki kontrolü
+    const authResult = await verifyAdmin(request);
+    if (authResult.error) {
+      return authResult.error;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    // const userId = decoded.userId;
-    // const userId = decoded.userId;
-    // const targetUserId = params.id; // Moved up
+    // Check if target user is SUPERADMIN
+
+    // Check if target user is SUPERADMIN
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { role: true }
+    });
+
+    if (targetUser?.role === 'SUPERADMIN') {
+      return NextResponse.json({ error: "Süper Admin düzenlenemez!" }, { status: 403 });
+    }
 
     const body = await request.json();
     const { fullName, nickname, email, verificationTier, role } = body;
@@ -157,6 +168,9 @@ export async function PATCH(
       updateData.hasBlueTick = verificationTier !== 'NONE';
     }
     if (role !== undefined) {
+      if (role === 'SUPERADMIN') {
+        return NextResponse.json({ error: "Süper Admin rolü atanamaz!" }, { status: 403 });
+      }
       updateData.role = role;
     }
 

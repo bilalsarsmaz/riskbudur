@@ -24,13 +24,15 @@ enum VerificationTier {
 model User {
   id               String           @id @default(cuid())
   email            String           @unique
-  password         String
+  password         String?
   nickname         String           @unique
   fullName         String?
   bio              String?
   website          String?
   profileImage     String?
   coverImage       String?
+  gender           String?   // "male", "female", "other", or custom
+  birthday         DateTime?
   role             Role             @default(USER)
   isBanned         Boolean          @default(false)
   verificationTier VerificationTier @default(NONE)
@@ -45,8 +47,11 @@ model User {
   announcements    Announcement[]
   createdAt        DateTime?        @default(now())
   updatedAt        DateTime?        @updatedAt
+  lastSeen         DateTime?        @default(now())
   receivedNotifications Notification[] @relation("receivedNotifications")
   sentNotifications     Notification[] @relation("sentNotifications")
+  isSetupComplete       Boolean        @default(false)
+  verificationRequests  VerificationRequest[]
 }
 
 model Post {
@@ -128,6 +133,7 @@ model Hashtag {
   name      String   @unique
   posts     Post[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 model Follow {
@@ -144,6 +150,7 @@ enum Role {
   USER
   MODERATOR
   ADMIN
+  SUPERADMIN
 }
 
 enum NotificationType {
@@ -152,6 +159,7 @@ enum NotificationType {
   MENTION
   QUOTE
   FOLLOW
+  SYSTEM
 }
 
 model Notification {
@@ -182,4 +190,17 @@ model Announcement {
   author    User     @relation(fields: [authorId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model VerificationRequest {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  fullName        String
+  category        String
+  description     String
+  identityImageUrl String?
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

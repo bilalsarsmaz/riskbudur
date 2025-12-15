@@ -21,8 +21,10 @@ export async function GET(req: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
+    // Kullanıcıya giriş yapıldığı anda lastSeen güncelle
+    const user = await prisma.user.update({
       where: { id: decoded.userId },
+      data: { lastSeen: new Date() },
       select: {
         fullName: true,
         bio: true,
@@ -32,10 +34,13 @@ export async function GET(req: Request) {
         id: true,
         email: true,
         nickname: true,
+        gender: true,
+        birthday: true,
         hasBlueTick: true,
         verificationTier: true,
         createdAt: true,
         updatedAt: true,
+        role: true,
         _count: {
           select: {
             posts: true,
@@ -82,37 +87,21 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { nickname: rawNickname, fullName, bio, website, email, currentPassword, newPassword } = await req.json();
+    const { nickname: rawNickname, fullName, bio, website, email, currentPassword, newPassword, profileImage, gender, birthday } = await req.json();
     const nickname = rawNickname ? rawNickname.trim() : undefined;
 
 
-    // Kullanıcıyı bul
-
-    // Nickname validasyonu: sadece İngilizce karakterler, sayılar ve alt çizgi, max 15 karakter, admin/ultraswall içeremez
+    // Nickname validasyonu
     if (nickname) {
-      // Maksimum 15 karakter kontrolü
       if (nickname.length > 15) {
-        return NextResponse.json(
-          { error: "Kullanıcı adı en fazla 15 karakter olabilir" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Kullanıcı adı en fazla 15 karakter olabilir" }, { status: 400 });
       }
-
-      // Sadece İngilizce karakterler, sayılar ve alt çizgi kontrolü
       if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
-        return NextResponse.json(
-          { error: "Kullanıcı adı sadece İngilizce karakterler, rakamlar ve alt çizgi içerebilir" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Kullanıcı adı geçersiz karakterler içeriyor" }, { status: 400 });
       }
-
-      // admin veya ultraswall içeremez kontrolü
       const lowerNickname = nickname.toLowerCase();
       if (lowerNickname.includes("admin") || lowerNickname.includes("riskbudur")) {
-        return NextResponse.json(
-          { error: "Kullanıcı adı 'admin' veya 'riskbudur' içeremez" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Bu kullanıcı adı alınamaz" }, { status: 400 });
       }
     }
 
@@ -121,58 +110,35 @@ export async function PUT(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { message: "Kullanıcı bulunamadı" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "Kullanıcı bulunamadı" }, { status: 404 });
     }
 
-    // Şifre değişikliği istenmişse
+    // Şifre hashleme
     let hashedPassword;
     if (currentPassword && newPassword) {
       const isValidPassword = await bcrypt.compare(currentPassword, user.password);
       if (!isValidPassword) {
-        return NextResponse.json(
-          { message: "Mevcut şifre yanlış" },
-          { status: 400 }
-        );
+        return NextResponse.json({ message: "Mevcut şifre yanlış" }, { status: 400 });
       }
       hashedPassword = await bcrypt.hash(newPassword, 10);
     }
 
-    // Kullanıcı adı değişikliği istenmişse ve bu kullanıcı adı başkası tarafından kullanılıyorsa
+    // Benzersizlik Kontrolleri
     if (nickname && nickname !== user.nickname) {
       const existingUser = await prisma.user.findFirst({
-        where: {
-          nickname: {
-            mode: "insensitive"
-          }
-        }
+        where: { nickname: { equals: nickname, mode: "insensitive" } }
       });
-
       if (existingUser) {
-        return NextResponse.json(
-          { message: "Bu kullanıcı adı zaten kullanılıyor" },
-          { status: 400 }
-        );
+        return NextResponse.json({ message: "Bu kullanıcı adı kullanımda" }, { status: 400 });
       }
     }
 
-    // Email değişikliği istenmişse ve bu email başkası tarafından kullanılıyorsa
     if (email && email !== user.email) {
-      const existingUser = await prisma.user.findUnique({
-        where: { email },
-      });
-
+      const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) {
-        return NextResponse.json(
-          { message: "Bu e-posta zaten kullanılıyor" },
-          { status: 400 }
-        );
+        return NextResponse.json({ message: "Bu e-posta kullanımda" }, { status: 400 });
       }
     }
-
-    // Kullanıcıyı güncelle
     const updatedUser = await prisma.user.update({
       where: { id: decoded.userId },
       data: {
@@ -181,6 +147,9 @@ export async function PUT(req: Request) {
         ...(bio !== undefined && { bio }),
         ...(website !== undefined && { website }),
         ...(email && { email }),
+        ...(gender !== undefined && { gender }),
+        ...(birthday !== undefined && { birthday: birthday ? new Date(birthday) : null }),
+        ...(profileImage && { profileImage }), // Allow profileImage update
         ...(hashedPassword && { password: hashedPassword }),
       },
       select: {
@@ -191,6 +160,8 @@ export async function PUT(req: Request) {
         website: true,
         profileImage: true,
         coverImage: true,
+        gender: true,
+        birthday: true,
         role: true,
         hasBlueTick: true,
         verificationTier: true,

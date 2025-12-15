@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
 import MobileHeader from "@/components/mobile/MobileHeader";
@@ -24,9 +25,14 @@ interface UserPreview {
     hasBlueTick: boolean;
 }
 
-export default function ExplorePage() {
+interface ExploreFeedProps {
+    activeTab: "gundem" | "kisiler";
+}
+
+export default function ExploreFeed({ activeTab }: ExploreFeedProps) {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<"gundem" | "kisiler">("gundem");
+    // activeTab is now controlled by prop (URL), not local state
+
     const [hashtags, setHashtags] = useState<Hashtag[]>([]);
     const [users, setUsers] = useState<UserPreview[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,7 +64,7 @@ export default function ExplorePage() {
             const fetchUsers = async () => {
                 setUsersLoading(true);
                 try {
-                    const data = await fetchApi("/users?limit=40"); // Enough for 5 rows of 8
+                    const data = await fetchApi("/users?limit=40");
                     setUsers(data.users || []);
                 } catch (err) {
                     console.error("Kullanıcı listesi hatası:", err);
@@ -127,7 +133,6 @@ export default function ExplorePage() {
                         {/* Timeline - Hashtag Listesi */}
                         <section className="timeline flex-1 w-full lg:max-w-[600px] flex flex-col items-stretch lg:border-l lg:border-r border-[#222222]">
                             {/* Başlık */}
-                            {/* Başlık */}
                             <GlobalHeader
                                 title="Keşfet"
                                 subtitle="Mevzu ne tatlım?"
@@ -136,24 +141,24 @@ export default function ExplorePage() {
 
                             {/* Tabs */}
                             <div className="flex border-b border-[#222222]">
-                                <button
-                                    onClick={() => setActiveTab("gundem")}
+                                <Link
+                                    href="/i/explore/tabs/trending"
                                     className={`flex-1 py-4 text-center font-medium relative ${activeTab === "gundem" ? "font-bold text-[var(--app-body-text)]" : "text-[#71767b]"}`}
                                 >
                                     Gündem
                                     {activeTab === "gundem" && (
                                         <div className="absolute bottom-0 left-0 right-0 h-1 rounded-t-full bg-[var(--app-global-link-color)]"></div>
                                     )}
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("kisiler")}
+                                </Link>
+                                <Link
+                                    href="/i/explore/tabs/online"
                                     className={`flex-1 py-4 text-center font-medium relative ${activeTab === "kisiler" ? "font-bold text-[var(--app-body-text)]" : "text-[#71767b]"}`}
                                 >
                                     Kişiler
                                     {activeTab === "kisiler" && (
                                         <div className="absolute bottom-0 left-0 right-0 h-1 rounded-t-full bg-[var(--app-global-link-color)]"></div>
                                     )}
-                                </button>
+                                </Link>
                             </div>
 
                             {/* İçerik Alanı */}
@@ -219,7 +224,7 @@ export default function ExplorePage() {
                             </div>
                         </section>
 
-                        {/* Sağ Sidebar - Popüler Postlar + Footer */}
+                        {/* Sağ Sidebar */}
                         <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
                             <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
                                 <RightSidebar hideHashtags={true} />
@@ -243,24 +248,24 @@ export default function ExplorePage() {
 
                         {/* Mobile Tabs */}
                         <div className="flex border-b border-[#222222]">
-                            <button
-                                onClick={() => setActiveTab("gundem")}
+                            <Link
+                                href="/i/explore/tabs/trending"
                                 className={`flex-1 py-4 text-center font-medium relative ${activeTab === "gundem" ? "font-bold text-[var(--app-body-text)]" : "text-[#71767b]"}`}
                             >
                                 Gündem
                                 {activeTab === "gundem" && (
                                     <div className="absolute bottom-0 left-0 right-0 h-1 rounded-t-full bg-[var(--app-global-link-color)]"></div>
                                 )}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("kisiler")}
+                            </Link>
+                            <Link
+                                href="/i/explore/tabs/online"
                                 className={`flex-1 py-4 text-center font-medium relative ${activeTab === "kisiler" ? "font-bold text-[var(--app-body-text)]" : "text-[#71767b]"}`}
                             >
                                 Kişiler
                                 {activeTab === "kisiler" && (
                                     <div className="absolute bottom-0 left-0 right-0 h-1 rounded-t-full bg-[var(--app-global-link-color)]"></div>
                                 )}
-                            </button>
+                            </Link>
                         </div>
 
                         {/* Mobile Content */}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNowStrict } from "date-fns";
 import { tr } from "date-fns/locale";
-import { IconHeartFilled, IconMessageCircle, IconRepeat, IconAt, IconUserFilled } from "@tabler/icons-react";
+import { IconHeartFilled, IconMessageCircle, IconRepeat, IconAt, IconUserFilled, IconInfoCircle } from "@tabler/icons-react";
 
 import GlobalHeader from "@/components/GlobalHeader";
 import VerificationBadge from "@/components/VerificationBadge";
@@ -23,7 +23,7 @@ interface Actor {
 
 interface Notification {
     id: string;
-    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW';
+    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW' | 'SYSTEM';
     read: boolean;
     createdAt: string;
     actor: Actor;
@@ -54,7 +54,7 @@ interface Notification {
 
 interface GroupedNotification {
     id: string;
-    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW';
+    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW' | 'SYSTEM';
     read: boolean;
     createdAt: string;
     actors: Actor[];
@@ -200,6 +200,9 @@ export default function Notifications() {
                                 case 'MENTION':
                                     unreadClass = 'bg-[#1d9bf0]/10 border-l-4 border-l-[#1d9bf0]';
                                     break;
+                                case 'SYSTEM':
+                                    unreadClass = 'bg-[#1d9bf0]/10 border-l-4 border-l-gray-500'; // Gray/Default for System?
+                                    break;
                             }
                         }
 
@@ -221,6 +224,17 @@ export default function Notifications() {
                             case 'FOLLOW':
                                 icon = <IconUserFilled className="w-7 h-7 text-[#1d9bf0]" />;
                                 actionText = 'seni takip etti';
+                                break;
+                            case 'SYSTEM':
+                                icon = (
+                                    <VerificationBadge
+                                        tier="GREEN"
+                                        hasBlueTick={true}
+                                        className="w-7 h-7"
+                                        style={{ color: 'inherit' }} // Let it handle its own color 
+                                    />
+                                );
+                                actionText = 'başvurunuz Riskbudur Özel Tim tarafından imha edildi.';
                                 break;
                             case 'REPLY':
                                 icon = <IconMessageCircle className="w-7 h-7 text-[#1d9bf0]" />;
@@ -394,7 +408,52 @@ export default function Notifications() {
 
                                     {/* Main Content */}
                                     <div className="flex-1 min-w-0">
-                                        {group.actors.length === 1 ? (
+                                        {group.type === 'SYSTEM' ? (
+                                            /* SYSTEM Notification Layout */
+                                            <div className="flex flex-col gap-1">
+                                                {/* Header: Badge + Info + System Notification + Date */}
+                                                <div className="flex items-center justify-between text-theme-subtitle text-sm">
+                                                    <div className="flex items-center gap-2">
+                                                        <IconInfoCircle className="w-4 h-4 text-theme-subtitle" />
+                                                        <span className="font-medium">Sistem Bildirimi</span>
+                                                    </div>
+                                                    <span className="text-sm whitespace-nowrap" style={{ color: "var(--app-subtitle)" }}>
+                                                        {formatDate(group.createdAt)}
+                                                    </span>
+                                                </div>
+
+                                                {/* Content: Avatar + Text */}
+                                                <div className="flex items-start gap-3 mt-1">
+                                                    {/* Profile Photo */}
+                                                    <div className="flex-shrink-0">
+                                                        <div className="w-9 h-9 rounded-full border border-black bg-gray-800">
+                                                            {group.actors[0].profileImage ? (
+                                                                <img src={group.actors[0].profileImage} alt={group.actors[0].nickname} className="w-full h-full object-cover rounded-full" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-gray-700">
+                                                                    {group.actors[0].nickname[0].toUpperCase()}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Message Body */}
+                                                    <div className="flex-1 text-[15px] leading-5 text-theme-text">
+                                                        <span className="font-bold">
+                                                            {group.actors[0].fullName || group.actors[0].nickname}
+                                                        </span>
+                                                        <VerificationBadge
+                                                            tier={group.actors[0].verificationTier}
+                                                            hasBlueTick={group.actors[0].hasBlueTick}
+                                                            username={group.actors[0].nickname}
+                                                            className="ml-0.5 inline-block align-bottom"
+                                                            style={{ width: '18px', height: '18px', marginBottom: '1px' }}
+                                                        />
+                                                        <span> Riskbudur Özel Tim'i tarafından profil onay rozeti başvurunuz {group.actors[0].verificationTier !== 'NONE' ? 'kabul edildi.' : 'imha edildi.'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : group.actors.length === 1 ? (
                                             /* Single Actor: Everything on one line */
                                             <div className="flex items-center gap-2">
                                                 {/* Profile Photo */}
@@ -426,7 +485,7 @@ export default function Notifications() {
                                                 </div>
 
                                                 {/* Date */}
-                                                <span className="text-sm text-theme-subtitle whitespace-nowrap flex-shrink-0">
+                                                <span className="text-sm text-theme-subtitle whitespace-nowrap flex-shrink-0" style={{ color: "var(--app-subtitle)" }}>
                                                     {formatDate(group.createdAt)}
                                                 </span>
                                             </div>
@@ -459,7 +518,7 @@ export default function Notifications() {
                                                     <div className="flex-1"></div>
 
                                                     {/* Date */}
-                                                    <span className="text-sm text-theme-subtitle whitespace-nowrap flex-shrink-0">
+                                                    <span className="text-sm text-theme-subtitle whitespace-nowrap flex-shrink-0" style={{ color: "var(--app-subtitle)" }}>
                                                         {formatDate(group.createdAt)}
                                                     </span>
                                                 </div>

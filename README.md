@@ -1,6 +1,6 @@
 # 🚀 Ultraswall - Anonim Mikroblog Platformu
 
-Ultraswall, kullanıcıların anonim olarak düşüncelerini paylaşabilecekleri modern bir mikroblog platformudur.
+Riskbudur, kullanıcıların anonim olarak düşüncelerini paylaşabilecekleri modern bir mikroblog platformudur.
 
 ## ✨ Teknolojiler
 

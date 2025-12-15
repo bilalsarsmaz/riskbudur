@@ -10,6 +10,7 @@ import {
     IconUserFilled,
     IconTargetArrow,
     IconEdit,
+    IconHomeCog,
 } from "@tabler/icons-react";
 
 export interface MenuItem {
@@ -20,6 +21,7 @@ export interface MenuItem {
     href: string | ((nickname?: string) => string);
     hasFilled: boolean;
     showInMobile: boolean;
+    isAdmin?: boolean;
 }
 
 export const menuItems: MenuItem[] = [
@@ -37,7 +39,7 @@ export const menuItems: MenuItem[] = [
         label: "Keşfet",
         icon: IconSearch,
         iconFilled: IconSearch,
-        href: "/explore",
+        href: "/i/explore/tabs/trending", // Direct link to default tab
         hasFilled: false,
         showInMobile: true,
     },
@@ -73,7 +75,7 @@ export const menuItems: MenuItem[] = [
         label: "Çivilenenler",
         icon: IconTargetArrow,
         iconFilled: IconTargetArrow,
-        href: "/bookmarks",
+        href: "/i/bookmarks",
         hasFilled: false,
         showInMobile: false,
     },
@@ -85,5 +87,15 @@ export const menuItems: MenuItem[] = [
         href: (nickname?: string) => nickname ? `/${nickname}` : "/profile",
         hasFilled: true,
         showInMobile: false, // Removed from bottom nav
+    },
+    {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: IconHomeCog,
+        iconFilled: IconHomeCog,
+        href: "/admincp",
+        hasFilled: false,
+        showInMobile: false, // Not in bottom nav, but in drawer
+        isAdmin: true,
     },
 ];

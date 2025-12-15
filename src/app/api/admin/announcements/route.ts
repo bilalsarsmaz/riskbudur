@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { verifyAdmin } from "@/lib/adminAuth";
 
 export async function GET(request: Request) {
     try {
-        const authHeader = request.headers.get("Authorization");
-        const token = authHeader?.split(" ")[1] ?? "";
-        const payload = await verifyToken(token);
-
-        if (!payload || payload.role !== "ADMIN") {
-            return NextResponse.json({ error: "Yetkisiz işlem" }, { status: 403 });
+        // Admin yetki kontrolü
+        const authResult = await verifyAdmin(request);
+        if (authResult.error) {
+            return authResult.error;
         }
 
         const announcements = await prisma.announcement.findMany({
@@ -35,13 +33,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const authHeader = request.headers.get("Authorization");
-        const token = authHeader?.split(" ")[1] ?? "";
-        const payload = await verifyToken(token);
-
-        if (!payload || payload.role !== "ADMIN") {
-            return NextResponse.json({ error: "Yetkisiz işlem" }, { status: 403 });
+        // Admin yetki kontrolü
+        const authResult = await verifyAdmin(request);
+        if (authResult.error) {
+            return authResult.error;
         }
+        const userId = authResult.user!.id;
 
         const { content, isActive } = await request.json();
 
@@ -61,7 +58,7 @@ export async function POST(request: Request) {
             data: {
                 content,
                 isActive: isActive || false,
-                authorId: payload.userId,
+                authorId: userId,
             },
         });
 

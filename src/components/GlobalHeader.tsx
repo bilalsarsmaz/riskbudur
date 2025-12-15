@@ -28,7 +28,7 @@ export default function GlobalHeader({ title, subtitle, className = "", onBack, 
 
     return (
         <div
-            className={`sticky top-0 z-10 bg-theme-bg/80 backdrop-blur-md px-4 border-b border-theme-border h-[60px] flex items-center ${className}`}
+            className={`sticky top-0 z-50 bg-theme-bg/80 backdrop-blur-md px-4 border-b border-theme-border h-[60px] flex items-center ${className}`}
             style={style}
         >
             {(showBackButton || onBack) && (

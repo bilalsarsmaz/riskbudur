@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
+import { verifyAdmin } from "@/lib/adminAuth";
 
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-      new URL(request.url).searchParams.get("token") ||
-      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+    const { id: targetUserId } = await params;
 
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Admin yetki kontrolü
+    const authResult = await verifyAdmin(request);
+    if (authResult.error) {
+      return authResult.error;
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    // const userId = decoded.userId; // userId unused
-    const targetUserId = params.id;
 
     // Kullanıcıyı banla
     await prisma.user.update({
@@ -43,17 +39,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const token = request.headers.get("authorization")?.replace("Bearer ", "") ||
-      new URL(request.url).searchParams.get("token") ||
-      request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+    const { id: targetUserId } = await params;
 
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Admin yetki kontrolü
+    const authResult = await verifyAdmin(request);
+    if (authResult.error) {
+      return authResult.error;
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    // const userId = decoded.userId; // userId unused
-    const targetUserId = params.id;
 
     // Banı kaldır
     await prisma.user.update({

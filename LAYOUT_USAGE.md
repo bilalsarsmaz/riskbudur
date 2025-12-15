@@ -1,6 +1,6 @@
 # Layout Kullanım Kılavuzu
 
-Ultraswall projesi için standartlaştırılmış sayfa layout sistemleri.
+Riskbudur projesi için standartlaştırılmış sayfa layout sistemleri.
 
 ## 📐 Layout Tipleri
 

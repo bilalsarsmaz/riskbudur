@@ -97,8 +97,8 @@ export default function ComposeBox({
   // URL algılama ve link preview
   useEffect(() => {
     const detectAndFetchLinkPreview = async () => {
-      // URL pattern
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      // URL pattern - https, http veya www ile başlayanlar
+      const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
       const urls = content.match(urlRegex);
 
       if (!urls || urls.length === 0) {
@@ -106,8 +106,12 @@ export default function ComposeBox({
         return;
       }
 
-      const url = urls[0]; // İlk URL'yi al
+      let url = urls[0]; // İlk URL'yi al
 
+      // Protokol yoksa ekle
+      if (url.startsWith('www.')) {
+        url = 'https://' + url;
+      }
 
       // ultraswall.com/status linkleri için önizleme yapma, sadece alıntı olarak göster
       if (url.includes('riskbudur.com/status')) {
@@ -140,7 +144,7 @@ export default function ComposeBox({
             setLinkPreview(data);
             // YouTube linki ise content'ten kaldır
             if (data.type === 'youtube') {
-              setContent(prev => prev.replace(url, '').trim());
+              setContent(prev => prev.replace(urls[0], '').trim());
             }
           }
         }
@@ -337,65 +341,72 @@ export default function ComposeBox({
             </div>
           )}
 
-          {linkPreview && !linkPreviewLoading && !previewUrl && (
-            <div className="mt-2 relative border border-theme-border rounded-lg overflow-hidden">
-              <button
-                type="button"
-                className="absolute top-2 right-2 bg-black bg-opacity-70 text-white rounded-full p-1 z-10 hover:bg-opacity-90"
-                onClick={removeLinkPreview}
-              >
-                <IconX className="h-4 w-4" />
-              </button>
+          {linkPreview && !linkPreviewLoading && !previewUrl && (() => {
+            const getYoutubeThumbnail = (url: string) => {
+              const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+              const match = url.match(regex);
+              return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
+            };
 
-              {linkPreview.type === 'youtube' && linkPreview.thumbnail && (
-                <div className="flex">
-                  <div className="relative flex-shrink-0" style={{ width: '130px', height: '130px' }}>
-                    <img
-                      src={linkPreview.thumbnail}
-                      alt={linkPreview.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const img = e.target as HTMLImageElement;
-                        if (img.src.includes('maxresdefault')) {
-                          img.src = img.src.replace('maxresdefault', 'hqdefault');
-                        }
-                      }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-black bg-opacity-80 rounded-full p-2">
-                        <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+            const thumbnail = linkPreview.thumbnail ||
+              ((linkPreview.type === 'youtube' || linkPreview.url.includes('youtube') || linkPreview.url.includes('youtu.be'))
+                ? getYoutubeThumbnail(linkPreview.url)
+                : null);
+
+            return (
+              <div className="mt-2 relative border border-theme-border rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  className="absolute top-2 right-2 bg-black bg-opacity-70 text-white rounded-full p-1 z-10 hover:bg-opacity-90"
+                  onClick={removeLinkPreview}
+                >
+                  <IconX className="h-4 w-4" />
+                </button>
+
+                {(linkPreview.type === 'youtube' || linkPreview.url.includes('youtube') || linkPreview.url.includes('youtu.be')) && thumbnail && (
+                  <div className="flex">
+                    <div className="relative flex-shrink-0" style={{ width: '130px', height: '130px' }}>
+                      <img
+                        src={thumbnail}
+                        alt={linkPreview.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black bg-opacity-80 rounded-full p-2">
+                          <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                        </div>
                       </div>
                     </div>
+                    <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                      <div className="text-xs mb-1" style={{ color: "var(--app-subtitle)" }}>{linkPreview.siteName || 'youtube.com'}</div>
+                      <div className="text-sm font-medium line-clamp-2 mb-1" style={{ color: "var(--app-subtitle)" }}>{linkPreview.title}</div>
+                      {linkPreview.description && (
+                        <div className="text-xs line-clamp-2" style={{ color: "var(--app-subtitle)" }}>{linkPreview.description}</div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
-                    <div className="text-xs text-gray-500 mb-1">{linkPreview.siteName}</div>
-                    <div className="text-sm font-medium text-white line-clamp-2 mb-1">{linkPreview.title}</div>
+                )}
+
+                {linkPreview.type !== 'youtube' && thumbnail && (
+                  <img
+                    src={thumbnail}
+                    alt={linkPreview.title}
+                    className="w-full h-32 object-cover"
+                  />
+                )}
+
+                {linkPreview.type !== 'youtube' && (
+                  <div className="p-3 bg-[#181818]">
+                    <div className="text-xs mb-1" style={{ color: "var(--app-subtitle)" }}>{linkPreview.siteName}</div>
+                    <div className="text-sm font-medium line-clamp-2" style={{ color: "var(--app-subtitle)" }}>{linkPreview.title}</div>
                     {linkPreview.description && (
-                      <div className="text-xs text-gray-400 line-clamp-2">{linkPreview.description}</div>
+                      <div className="text-xs mt-1 line-clamp-2" style={{ color: "var(--app-subtitle)" }}>{linkPreview.description}</div>
                     )}
                   </div>
-                </div>
-              )}
-
-              {linkPreview.type !== 'youtube' && linkPreview.thumbnail && (
-                <img
-                  src={linkPreview.thumbnail}
-                  alt={linkPreview.title}
-                  className="w-full h-32 object-cover"
-                />
-              )}
-
-              {linkPreview.type !== 'youtube' && (
-                <div className="p-3 bg-[#181818]">
-                  <div className="text-xs text-gray-500 mb-1">{linkPreview.siteName}</div>
-                  <div className="text-sm font-medium text-white line-clamp-2">{linkPreview.title}</div>
-                  {linkPreview.description && (
-                    <div className="text-xs text-gray-400 mt-1 line-clamp-2">{linkPreview.description}</div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {error && (

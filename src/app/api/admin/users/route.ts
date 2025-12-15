@@ -1,29 +1,19 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
+import { verifyAdmin } from "@/lib/adminAuth";
 
 
 
 export async function GET(req: Request) {
   try {
-    // Token kontrolü
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "") || authHeader?.split(" ")[1];
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Admin yetki kontrolü
+    const authResult = await verifyAdmin(req);
+    if (authResult.error) {
+      return authResult.error;
     }
+    // const user = authResult.user; // Authorized user if needed
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-
-    // Kullanıcı kontrolü
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    // Tüm kullanıcıları getir
 
     // Tüm kullanıcıları getir
     const users = await prisma.user.findMany({
