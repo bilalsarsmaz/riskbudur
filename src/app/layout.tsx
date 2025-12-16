@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: "underground sosyal medya",
 };
 
+import ApprovalGuard from "@/components/ApprovalGuard";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={`${inter.variable} font-sans antialiased`}>
-        {children}
+        <ApprovalGuard>
+          {children}
+        </ApprovalGuard>
       </body>
     </html>
   );

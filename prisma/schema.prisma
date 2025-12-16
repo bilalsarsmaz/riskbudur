@@ -35,6 +35,7 @@ model User {
   birthday         DateTime?
   role             Role             @default(USER)
   isBanned         Boolean          @default(false)
+  isApproved       Boolean          @default(false)
   verificationTier VerificationTier @default(NONE)
   hasBlueTick      Boolean          @default(false) // Deprecated, kept for backward compatibility
   posts            Post[]

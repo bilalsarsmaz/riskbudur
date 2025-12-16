@@ -48,7 +48,7 @@ export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsPro
           onClick={() => onTabChange("all")}
           className={`flex-1 h-full flex items-center justify-center relative transition-colors ${activeTab === "all"
             ? "text-[var(--app-global-link-color)] font-bold"
-            : "text-theme-text font-medium hover:text-gray-200"
+            : "text-theme-text font-medium"
             }`}
         >
           Herkes
@@ -60,7 +60,7 @@ export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsPro
           onClick={() => onTabChange("following")}
           className={`flex-1 h-full flex items-center justify-center relative transition-colors ${activeTab === "following"
             ? "text-[var(--app-global-link-color)] font-bold"
-            : "text-theme-text font-medium hover:text-gray-200"
+            : "text-theme-text font-medium"
             }`}
         >
           Kovaladıklarım

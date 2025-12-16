@@ -38,6 +38,11 @@ export async function POST(request: Request) {
         if (authResult.error) {
             return authResult.error;
         }
+
+        // Kısıtlama: Sadece ADMIN ve SUPERADMIN erişebilir (Moderatör erişemez)
+        if (authResult.user?.role === 'MODERATOR') {
+            return NextResponse.json({ error: "Erişim reddedildi: Duyuru oluşturma yetkiniz yok." }, { status: 403 });
+        }
         const userId = authResult.user!.id;
 
         const { content, isActive } = await request.json();

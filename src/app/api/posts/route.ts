@@ -10,6 +10,14 @@ function extractHashtags(content: string): string[] {
   return [...new Set(matches.map(tag => tag.slice(1).toLowerCase()))];
 }
 
+// Mention'lari cikar
+function extractMentions(content: string): string[] {
+  const mentionRegex = /@[\w_]+/g;
+  const matches = content.match(mentionRegex);
+  if (!matches) return [];
+  return [...new Set(matches.map(tag => tag.slice(1)))];
+}
+
 export async function GET(req: NextRequest) {
   try {
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -105,6 +113,23 @@ export async function GET(req: NextRequest) {
         },
       },
     });
+
+    // Mention validasyonu
+    const allMentions = new Set<string>();
+    posts.forEach(p => {
+      extractMentions(p.content).forEach(m => allMentions.add(m));
+    });
+
+    const mentionList = Array.from(allMentions);
+    let validMentions = new Set<string>();
+
+    if (mentionList.length > 0) {
+      const existingUsers = await prisma.user.findMany({
+        where: { nickname: { in: mentionList } },
+        select: { nickname: true }
+      });
+      existingUsers.forEach(u => validMentions.add(u.nickname));
+    }
 
     // Kullanicinin begendigi postlari ayri sorgu ile al
     let likedPostIds: string[] = [];
@@ -250,6 +275,7 @@ export async function GET(req: NextRequest) {
         isPopular: (post._count?.likes || 0) > 30 || (post._count?.comments || 0) > 10,
         isThread: isThread,
         threadRepliesCount: threadRepliesCount,
+        mentionedUsers: extractMentions(post.content).filter(m => validMentions.has(m)),
       };
 
       // Eger alinti varsa, alintilanan postu ekle

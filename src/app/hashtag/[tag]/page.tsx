@@ -46,7 +46,7 @@ export default function HashtagPage() {
   }, [tag, router]);
 
   const headerTitle = (
-    <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1DCD9F] to-[#d9dadd] leading-tight">
+    <span style={{ color: 'var(--app-body-text)' }} className="leading-tight">
       #{hashtagInfo?.name || tag}
     </span>
   );

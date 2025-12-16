@@ -13,6 +13,8 @@ import {
   IconUserCheck
 } from "@tabler/icons-react";
 
+import { fetchApi } from "@/lib/api";
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,14 +40,8 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      // Mock data for demo
-      setStats({
-        totalUsers: 12543,
-        totalPosts: 45230,
-        totalReports: 12,
-        activeUsers: 843,
-        pendingUsers: 5
-      });
+      const data = await fetchApi("/admin/stats");
+      setStats(data);
     } catch (error) {
       console.error("Error fetching stats:", error);
     } finally {

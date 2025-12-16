@@ -25,6 +25,7 @@ export async function GET(
         hasBlueTick: true,
         verificationTier: true,
         createdAt: true,
+        isBanned: true,
         _count: {
           select: {
             posts: true,
@@ -84,7 +85,8 @@ export async function GET(
       verificationTier: user.verificationTier,
       coverImage: user.coverImage,
       profileImage: user.profileImage,
-      isFollowing // Add isFollowing
+      isFollowing, // Add isFollowing
+      isBanned: user.isBanned // Add isBanned
     });
   } catch (error) {
     console.error("Kullanıcı bilgisi getirme hatası:", error);

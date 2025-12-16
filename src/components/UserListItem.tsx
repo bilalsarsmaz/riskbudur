@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import VerificationBadge from "./VerificationBadge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface UserListItemProps {
     user: {
@@ -28,6 +28,11 @@ export default function UserListItem({
     const [isFollowing, setIsFollowing] = useState(user.isFollowing);
     const [isLoading, setIsLoading] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
+
+    // Sync state with props
+    useEffect(() => {
+        setIsFollowing(user.isFollowing);
+    }, [user.isFollowing]);
 
     const handleFollowClick = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -104,11 +109,13 @@ export default function UserListItem({
                     onMouseLeave={() => setIsHovering(false)}
                     disabled={isLoading || !currentUserId}
                     className={`ml-3 px-4 py-1.5 rounded-full font-bold text-[15px] transition-colors flex-shrink-0 ${isFollowing
-                            ? "border border-[#1DCD9F] text-[#1DCD9F] hover:bg-[#1DCD9F]/10 min-w-[120px]"
-                            : "border border-theme-border hover:bg-white/10"
+                        ? "border min-w-[120px]"
+                        : "border border-theme-border hover:bg-white/10"
                         }`}
                     style={{
-                        color: isFollowing ? "#1DCD9F" : "var(--app-body-text)",
+                        color: isFollowing ? "var(--app-global-link-color)" : "var(--app-body-text)",
+                        borderColor: isFollowing ? "var(--app-global-link-color)" : undefined,
+                        backgroundColor: isFollowing && isHovering ? "rgba(220, 95, 0, 0.1)" : "transparent"
                     }}
                 >
                     {isLoading ? (

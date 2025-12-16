@@ -46,6 +46,7 @@ export interface EnrichedPost {
 
     // Rich content
     linkPreview?: LinkPreview;
+    mentionedUsers?: string[];
 
     // Threading / Relations
     parentPostId?: string;

@@ -11,6 +11,11 @@ export async function GET(req: Request) {
             return authResult.error;
         }
 
+        // Kısıtlama: Sadece ADMIN ve SUPERADMIN erişebilir (Moderatör erişemez)
+        if (authResult.user?.role === 'MODERATOR') {
+            return NextResponse.json({ message: "Erişim reddedildi: Bu işlem için yetkiniz yok." }, { status: 403 });
+        }
+
         const requests = await prisma.verificationRequest.findMany({
             where: { status: "PENDING" },
             include: { user: { select: { nickname: true, email: true, profileImage: true, fullName: true } } },
@@ -32,6 +37,11 @@ export async function PUT(req: Request) {
         const authResult = await verifyAdmin(req);
         if (authResult.error) {
             return authResult.error;
+        }
+
+        // Kısıtlama: Sadece ADMIN ve SUPERADMIN erişebilir (Moderatör erişemez)
+        if (authResult.user?.role === 'MODERATOR') {
+            return NextResponse.json({ message: "Erişim reddedildi: Bu işlem için yetkiniz yok." }, { status: 403 });
         }
 
         const body = await req.json();

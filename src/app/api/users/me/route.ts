@@ -41,6 +41,8 @@ export async function GET(req: Request) {
         createdAt: true,
         updatedAt: true,
         role: true,
+        isSetupComplete: true,
+        isApproved: true,
         _count: {
           select: {
             posts: true,
@@ -53,12 +55,15 @@ export async function GET(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { message: "Kullanıcı bulunamadı" },
+        { error: "Kullanıcı bulunamadı" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json({
+      ...user,
+      active: true // Kullanıcı aktif
+    });
   } catch (error) {
     console.error("Kullanıcı bilgisi getirme hatası:", error);
     return NextResponse.json(
@@ -87,9 +92,8 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { nickname: rawNickname, fullName, bio, website, email, currentPassword, newPassword, profileImage, gender, birthday } = await req.json();
+    const { nickname: rawNickname, fullName, bio, website, email, currentPassword, newPassword, profileImage, coverImage, gender, birthday } = await req.json();
     const nickname = rawNickname ? rawNickname.trim() : undefined;
-
 
     // Nickname validasyonu
     if (nickname) {
@@ -116,7 +120,7 @@ export async function PUT(req: Request) {
     // Şifre hashleme
     let hashedPassword;
     if (currentPassword && newPassword) {
-      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password || "");
       if (!isValidPassword) {
         return NextResponse.json({ message: "Mevcut şifre yanlış" }, { status: 400 });
       }
@@ -139,6 +143,7 @@ export async function PUT(req: Request) {
         return NextResponse.json({ message: "Bu e-posta kullanımda" }, { status: 400 });
       }
     }
+
     const updatedUser = await prisma.user.update({
       where: { id: decoded.userId },
       data: {
@@ -149,7 +154,8 @@ export async function PUT(req: Request) {
         ...(email && { email }),
         ...(gender !== undefined && { gender }),
         ...(birthday !== undefined && { birthday: birthday ? new Date(birthday) : null }),
-        ...(profileImage && { profileImage }), // Allow profileImage update
+        ...(profileImage !== undefined && { profileImage }), // Allow null to delete
+        ...(coverImage !== undefined && { coverImage }), // Allow null to delete
         ...(hashedPassword && { password: hashedPassword }),
       },
       select: {

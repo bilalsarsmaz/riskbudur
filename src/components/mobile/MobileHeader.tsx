@@ -20,7 +20,11 @@ import {
   IconRosetteDiscountCheckFilled,
 
   IconSettings,
-  IconSparkles
+  IconSparkles,
+  IconSun,
+  IconMoon,
+  IconSunFilled,
+  IconMoonFilled,
 } from "@tabler/icons-react";
 import VerificationBadge from "@/components/VerificationBadge";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
@@ -191,7 +195,7 @@ export default function MobileHeader() {
           className="p-2 rounded-full hover:bg-[#151515] transition-colors"
           aria-label="Menü"
         >
-          <Bars3Icon className="w-6 h-6 text-gray-200" />
+          <Bars3Icon className="w-6 h-6" style={{ color: 'var(--app-icon-nav)' }} />
         </button>
       </header>
     );
@@ -220,7 +224,7 @@ export default function MobileHeader() {
           className="p-2 rounded-full hover:bg-[#151515] transition-colors"
           aria-label="Menü"
         >
-          <Bars3Icon className="w-6 h-6 text-gray-200" />
+          <Bars3Icon className="w-6 h-6" style={{ color: 'var(--app-icon-nav)' }} />
         </button>
       </header>
 
@@ -236,9 +240,9 @@ export default function MobileHeader() {
       {/* Sidebar Menu */}
       <div
         ref={menuRef}
-        className={`fixed top-14 right-0 bottom-0 bg-black/70 backdrop-blur-md border-l border-theme-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${isMenuOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-14 right-0 bottom-0 backdrop-blur-md border-l border-theme-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${isMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
-        style={{ width: "300px", paddingBottom: "60px" }}
+        style={{ width: "300px", paddingBottom: "60px", backgroundColor: "var(--app-body-bg)" }}
 
       >
         <div className="flex flex-col h-full">
@@ -250,17 +254,17 @@ export default function MobileHeader() {
                 <img
                   src={userInfo.profileImage}
                   alt={userInfo.nickname}
-                  className="w-10 h-10 rounded-full object-cover mr-3"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover mr-3"
                   style={{ border: '0.5px solid #222222' }}
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3" style={{ border: '0.5px solid #222222', color: '#d9dadd' }}>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3" style={{ border: '0.5px solid #222222', color: 'var(--app-body-text)' }}>
                   {userInfo.nickname?.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <div className="text-[15px] font-bold" style={{ color: '#d9dadd' }}>
+                  <div className="text-sm sm:text-[15px] font-bold" style={{ color: 'var(--app-body-text)' }}>
                     {userInfo.fullName || userInfo.nickname}
                   </div>
                   <VerificationBadge
@@ -279,12 +283,12 @@ export default function MobileHeader() {
             {/* Takip edilenler ve takipçi */}
             <div className="flex items-center gap-4 mb-4 px-2">
               <div className="flex items-center gap-1">
-                <div className="text-base font-bold" style={{ color: '#d9dadd' }}>{userInfo.following || 0}</div>
-                <div className="text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalanan</div>
+                <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.following || 0}</div>
+                <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalanan</div>
               </div>
               <div className="flex items-center gap-1">
-                <div className="text-base font-bold" style={{ color: '#d9dadd' }}>{userInfo.followers || 0}</div>
-                <div className="text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalayan</div>
+                <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.followers || 0}</div>
+                <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalayan</div>
               </div>
             </div>
 
@@ -297,56 +301,83 @@ export default function MobileHeader() {
                 <li>
                   <Link
                     href={userInfo ? `/${userInfo.nickname}` : "/profile"}
-                    className="flex items-center p-3 hover:bg-[#151515] rounded-lg"
-                    style={{ color: '#d9dadd' }}
+                    className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base"
+                    style={{ color: 'var(--app-body-text)' }}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <IconUser className="h-5 w-5 mr-3" />
+                    <IconUser className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
                     <span>Profilim</span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/bookmarks"
-                    className="flex items-center p-3 rounded-lg transition-colors"
+                    className="flex items-center p-3 rounded-lg transition-colors text-sm sm:text-base"
                     style={{ color: 'var(--app-body-text)' }}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <IconTargetArrow className="h-5 w-5 mr-3" />
-                    <span>Kaydedilenler</span>
+                    <IconTargetArrow className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
+                    <span>Çivilenenler</span>
                   </Link>
-                </li>
-
-                <li>
-                  <button
-                    onClick={toggleTheme}
-                    className="w-full flex items-center p-3 rounded-lg text-left transition-colors"
-                    style={{ color: 'var(--app-body-text)' }}
-                  >
-                    <IconSparkles className="h-5 w-5 mr-3" style={{ color: theme === 'dark' ? '#1DCD9F' : '#DC5F00' }} />
-                    <span>{theme === 'dark' ? 'Gündüz Teması' : 'Gece Teması'}</span>
-                  </button>
                 </li>
 
                 <li>
                   <Link
                     href="/settings"
-                    className="flex items-center p-3 hover:bg-[#151515] rounded-lg"
-                    style={{ color: '#d9dadd' }}
+                    className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base"
+                    style={{ color: 'var(--app-body-text)' }}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <IconSettings className="h-5 w-5 mr-3" />
+                    <IconSettings className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
                     <span>Ayarlar</span>
                   </Link>
                 </li>
                 <li>
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center p-3 hover:bg-[#151515] rounded-lg text-left"
-                    style={{ color: '#d9dadd' }}
+                    className="w-full flex items-center p-3 hover:bg-[#151515] rounded-lg text-left text-sm sm:text-base"
+                    style={{ color: 'var(--app-body-text)' }}
                   >
-                    <IconLogout className="h-5 w-5 mr-3" />
+                    <IconLogout className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
                     <span>Çıkış</span>
+                  </button>
+                </li>
+              </ul>
+
+              <hr className="border-theme-border my-4" />
+
+              <ul className="space-y-1">
+                <li>
+                  <button
+                    onClick={toggleTheme}
+                    className="w-full flex items-center p-3 rounded-lg text-left transition-colors"
+                  >
+                    {/* Custom Toggle Switch */}
+                    <div
+                      className={`relative w-[48px] h-[26px] rounded-full transition-colors duration-300 mr-3 flex-shrink-0 border ${theme === 'dark' ? 'bg-black border-gray-700' : 'bg-gray-200 border-gray-300'}`}
+                    >
+                      {/* Sun Icon (Left Background - Visible when Dark) */}
+                      <div className={`absolute left-1.5 top-1 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
+                        <IconSun className="w-4 h-4 text-gray-500" />
+                      </div>
+
+                      {/* Moon Icon (Right Background - Visible when Light) */}
+                      <div className={`absolute right-1.5 top-1 transition-opacity duration-300 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
+                        <IconMoon className="w-4 h-4 text-gray-400" />
+                      </div>
+
+                      {/* Sliding Circle */}
+                      <div
+                        className={`absolute top-[2px] w-[20px] h-[20px] rounded-full shadow-sm flex items-center justify-center transition-transform duration-300 bg-[#f97316] ${theme === 'dark' ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}
+                      >
+                        {theme === 'dark' ? (
+                          <IconMoonFilled className="w-3 h-3 text-white" />
+                        ) : (
+                          <IconSunFilled className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                    </div>
+                    <span style={{ color: 'var(--app-body-text)' }} className="text-xs sm:text-sm">Platform Temasını Değiştir</span>
                   </button>
                 </li>
               </ul>

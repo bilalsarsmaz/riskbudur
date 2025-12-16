@@ -8,6 +8,8 @@ export const metadata: Metadata = {
     description: "Riskbudur Kullanım Şartları",
 };
 
+import { sanitizeHtml } from "@/lib/sanitize";
+
 export default async function TermsPage() {
     const page = await getPage('terms');
 
@@ -16,7 +18,7 @@ export default async function TermsPage() {
             <GlobalHeader title={page?.title || 'Kullanım Şartları'} subtitle={page?.subtitle} showBackButton={true} />
             <div className="p-4 static-page-content">
                 {page ? (
-                    <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }} />
                 ) : (
                     <p>İçerik bulunamadı.</p>
                 )}

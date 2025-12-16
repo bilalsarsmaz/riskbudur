@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth";
+
+export async function GET(req: NextRequest) {
+    try {
+        const token = req.headers.get("Authorization")?.split(" ")[1];
+        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const decoded = await verifyToken(token);
+        if (!decoded || (decoded.role !== "ADMIN" && decoded.role !== "SUPERADMIN")) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const [totalUsers, totalPosts, activeUsers, pendingVerificationRequests] = await Promise.all([
+            prisma.user.count(),
+            prisma.post.count(),
+            prisma.user.count({
+                where: {
+                    lastSeen: {
+                        gte: yesterday
+                    }
+                }
+            }),
+            prisma.verificationRequest.count({
+                where: {
+                    status: "PENDING"
+                }
+            })
+        ]);
+
+        return NextResponse.json({
+            totalUsers,
+            totalPosts,
+            totalReports: 0, // No Report model yet
+            activeUsers,
+            pendingUsers: pendingVerificationRequests
+        });
+    } catch (error) {
+        console.error("Error fetching admin stats:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

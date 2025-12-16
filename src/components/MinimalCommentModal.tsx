@@ -154,16 +154,16 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
         <div className="p-4 pb-0 relative" ref={containerRef}>
           <div className="flex items-start">
             <div className="relative flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-[#151515] border border-theme-border flex items-center justify-center text-gray-400 mr-3 relative">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#151515] border border-theme-border flex items-center justify-center text-gray-400 mr-3 relative">
                 {post.isAnonymous ?
                   "A" :
                   (post.author.profileImage ?
-                    <img src={post.author.profileImage} alt={post.author.nickname} className="w-10 h-10 rounded-full object-cover" /> :
+                    <img src={post.author.profileImage} alt={post.author.nickname} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover" /> :
                     post.author.nickname.charAt(0).toUpperCase())
                 }
               </div>
               <div
-                className="absolute left-5 top-[2.5rem] w-0.5 bg-[var(--app-global-link-color)]"
+                className="absolute left-4 sm:left-5 top-[2.5rem] w-0.5 bg-[var(--app-global-link-color)]"
                 style={{
                   height: threadLineHeight,
                   transform: 'translateX(-50%)'
@@ -172,7 +172,7 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
             </div>
             <div className="flex-1" ref={contentRef}>
               <div className="flex flex-wrap items-center mb-1">
-                <span className="font-bold mr-1" style={{ color: "var(--app-body-text)" }}>
+                <span className="font-bold mr-1 text-sm sm:text-base" style={{ color: "var(--app-body-text)" }}>
                   {post.author.fullName || post.author.nickname}
                 </span>
                 {!post.isAnonymous && post.author.hasBlueTick && (
@@ -181,18 +181,18 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
                 {isPopular && (
                   <IconRosetteDiscountCheckFilled className="w-5 h-5 ml-0.5 text-orange-500" />
                 )}
-                <span className="ml-1" style={{ color: "var(--app-subtitle)" }}>@{post.author.nickname}</span>
+                <span className="ml-1 text-xs sm:text-sm" style={{ color: "var(--app-subtitle)" }}>@{post.author.nickname}</span>
                 <span className="mx-1" style={{ color: "var(--app-subtitle)" }}>·</span>
-                <span className="text-sm" style={{ color: "var(--app-subtitle)" }}>{formattedDate}</span>
+                <span className="text-xs sm:text-sm" style={{ color: "var(--app-subtitle)" }}>{formattedDate}</span>
               </div>
-              <p className="mb-2" style={{ color: 'var(--app-body-text)' }}>
+              <p className="mb-2 text-sm sm:text-base" style={{ color: 'var(--app-body-text)' }}>
                 {post.content}
               </p>
             </div>
           </div>
         </div>
         <div className="px-4 pb-4 pt-2">
-          <div className="mb-2" style={{ marginLeft: 50 }}>
+          <div className="mb-2 ml-[40px] sm:ml-[50px]">
             {getReplyingToText()}
           </div>
           <ComposeBox

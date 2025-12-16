@@ -92,14 +92,14 @@ export default function PostHeader({
 
     return (
         <div className="post-header flex items-center justify-between mb-1">
-            <div className="flex items-center mr-1">
+            <div className="flex items-center mr-1 min-w-0">
                 {isAnonymous ? (
-                    <span className="post-author-name font-bold">
+                    <span className="post-author-name font-bold whitespace-nowrap truncate text-sm sm:text-[15px]">
                         Anonim Kullanıcı
                     </span>
                 ) : (
-                    <Link href={`/${post.author.nickname}`} className="">
-                        <span className="post-author-name font-bold">
+                    <Link href={`/${post.author.nickname}`} className="min-w-0 truncate">
+                        <span className="post-author-name font-bold whitespace-nowrap truncate text-sm sm:text-[15px]">
                             {post.author.fullName || post.author.nickname}
                         </span>
                     </Link>
@@ -109,20 +109,20 @@ export default function PostHeader({
                         tier={post.author.verificationTier}
                         hasBlueTick={post.author.hasBlueTick}
                         username={post.author.nickname}
-                        className="post-badge w-5 h-5 ml-0.5"
+                        className="post-badge w-4 h-4 sm:w-5 sm:h-5 ml-0.5"
                     />
                 )}
                 {isPopular && (
-                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-orange w-5 h-5 ml-0.5 verified-icon" />
+                    <IconRosetteDiscountCheckFilled className="post-badge post-badge-orange w-4 h-4 sm:w-5 sm:h-5 ml-0.5 verified-icon" />
                 )}
-                <span className="post-author-username ml-1 font-normal" style={{ color: "var(--app-subtitle)" }}>
+                <span className="post-author-username ml-1 font-normal whitespace-nowrap truncate text-xs sm:text-[15px]" style={{ color: "var(--app-subtitle)" }}>
                     @{isAnonymous ? 'anonimkullanici' : post.author.nickname}
                 </span>
                 <span className="post-separator mx-1" style={{ color: "var(--app-subtitle)" }}>·</span>
-                <span className="post-date text-sm" style={{ color: "var(--app-subtitle)" }}>{formattedDate}</span>
+                <span className="post-date text-xs sm:text-sm whitespace-nowrap flex-shrink-0" style={{ color: "var(--app-subtitle)" }}>{formattedDate}</span>
 
                 {post.isThread && (
-                    <span className="ml-2 text-[10px] bg-black border px-1 py-0 rounded-full font-medium" style={{ color: "var(--app-global-link-color)", borderColor: "var(--app-global-link-color)" }}>
+                    <span className="ml-2 text-[9px] sm:text-[10px] bg-black border px-1 py-0 rounded-full font-medium" style={{ color: "var(--app-global-link-color)", borderColor: "var(--app-global-link-color)" }}>
                         Thread
                     </span>
                 )}
@@ -137,7 +137,7 @@ export default function PostHeader({
                     }}
                     className="p-1 hover:bg-gray-700 rounded-full"
                 >
-                    <IconDots className="w-5 h-5" style={{ color: "var(--app-subtitle)" }} />
+                    <IconDots className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "var(--app-subtitle)" }} />
                 </button>
 
                 {showMenu && (

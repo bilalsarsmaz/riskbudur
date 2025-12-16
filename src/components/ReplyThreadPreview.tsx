@@ -56,39 +56,43 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
 
       <div className="relative" style={{ height: '48px' }}>
         <div
-          className="absolute bg-[#1DCD9F]"
+          className="absolute"
           style={{
             left: '35px',
             top: '0',
             height: '12px',
             width: '2px',
+            backgroundColor: 'var(--app-icon-verified)',
           }}
         />
         <div
-          className="absolute bg-[#1DCD9F]"
+          className="absolute"
           style={{
             left: '35px',
             top: '16px',
             height: '6px',
             width: '2px',
+            backgroundColor: 'var(--app-icon-verified)',
           }}
         />
         <div
-          className="absolute bg-[#1DCD9F]"
+          className="absolute"
           style={{
             left: '35px',
             top: '26px',
             height: '6px',
             width: '2px',
+            backgroundColor: 'var(--app-icon-verified)',
           }}
         />
         <div
-          className="absolute bg-[#1DCD9F]"
+          className="absolute"
           style={{
             left: '35px',
             top: '36px',
             height: '12px',
             width: '2px',
+            backgroundColor: 'var(--app-icon-verified)',
           }}
         />
       </div>
@@ -111,7 +115,8 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
       <div className="px-4 py-3 border-b border-theme-border flex justify-center">
         <Link
           href={`/${threadRoot.author.nickname}/status/${threadRoot.id}`}
-          className="inline-flex items-center gap-2 text-[#1DCD9F] hover:opacity-80"
+          className="inline-flex items-center gap-2 hover:opacity-80"
+          style={{ color: 'var(--app-global-link-color)' }}
         >
           <span className="text-xs">Tümünü gör</span>
           <IconTimelineEventText size={14} />

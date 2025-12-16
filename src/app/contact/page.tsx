@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     title: "İletişim | Riskbudur",
 };
 
+import { sanitizeHtml } from "@/lib/sanitize";
+import ContactHelpButton from "@/components/ContactHelpButton";
+
 export default async function ContactPage() {
     const page = await getPage("contact");
 
@@ -19,7 +22,8 @@ export default async function ContactPage() {
         <StandardPageLayout>
             <GlobalHeader title={page.title} subtitle={page.subtitle} showBackButton={true} />
             <div className="p-4 static-page-content max-w-none text-[15px] leading-relaxed">
-                <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }} />
+                <ContactHelpButton />
             </div>
         </StandardPageLayout>
     );

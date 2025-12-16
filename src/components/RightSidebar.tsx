@@ -85,7 +85,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
 
               {/* Daha fazla göster */}
               <Link
-                href="/explore"
+                href="/i/explore"
                 className="flex items-center gap-1 pt-3"
                 style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
               >

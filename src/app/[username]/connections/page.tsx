@@ -56,7 +56,7 @@ export default function ConnectionsPage() {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-            fetchApi("/auth/me")
+            fetchApi("/users/me")
                 .then((data) => setCurrentUserId(data.id))
                 .catch(() => { });
         }

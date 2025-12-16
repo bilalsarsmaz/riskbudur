@@ -223,11 +223,11 @@ export default function PostDetailPage() {
                                 <img
                                     src={currentUser.profileImage}
                                     alt={currentUser.nickname}
-                                    className="w-10 h-10 rounded-full object-cover mr-3"
+                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-3"
                                     onError={() => setImageError(true)}
                                 />
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3">
                                     {currentUser?.nickname?.charAt(0).toUpperCase() || "U"}
                                 </div>
                             )}

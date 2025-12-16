@@ -24,7 +24,14 @@ import {
   IconTimelineEventText,
   IconShare3,
   IconPlayerPlay,
-  IconLibraryPlusFilled
+  IconLibraryPlusFilled,
+  IconTrash,
+  IconChartBar,
+  IconCode,
+  IconUserPlus,
+  IconUserMinus,
+  IconBan,
+  IconFlag
 } from "@tabler/icons-react";
 
 interface PostItemProps {
@@ -97,6 +104,8 @@ export default function PostItem({
 
   const shareMenuRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
+  const heroMenuRef = useRef<HTMLDivElement>(null);
+  const heroMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
@@ -113,6 +122,7 @@ export default function PostItem({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Share Menu
       if (
         shareMenuRef.current &&
         !shareMenuRef.current.contains(event.target as Node) &&
@@ -120,16 +130,25 @@ export default function PostItem({
       ) {
         setShowShareMenu(false);
       }
+
+      // Hero Menu
+      if (
+        heroMenuRef.current &&
+        !heroMenuRef.current.contains(event.target as Node) &&
+        !heroMenuButtonRef.current?.contains(event.target as Node)
+      ) {
+        setHeaderMenuOpen(false);
+      }
     };
 
-    if (showShareMenu) {
+    if (showShareMenu || headerMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showShareMenu]);
+  }, [showShareMenu, headerMenuOpen]);
 
   useEffect(() => {
     const extractPostLinks = (content: string): string[] => {
@@ -403,16 +422,29 @@ export default function PostItem({
         lastIndex = match.end;
       } else if (match.type === 'mention') {
         const username = match.text.slice(1);
-        parts.push(
-          <Link
-            key={`mention-${index}`}
-            href={`/${username}`}
-            className="text-[var(--app-global-link-color)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {match.text}
-          </Link>
-        );
+        const isValidMention = post.mentionedUsers ? post.mentionedUsers.includes(username) : true;
+
+        if (isValidMention) {
+          parts.push(
+            <Link
+              key={`mention-${index}`}
+              href={`/${username}`}
+              className="text-[var(--app-global-link-color)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {match.text}
+            </Link>
+          );
+        } else {
+          parts.push(
+            <span
+              key={`mention-${index}`}
+              className="text-[var(--app-body-text)]"
+            >
+              {match.text}
+            </span>
+          );
+        }
         lastIndex = match.end;
       } else if (match.type === 'link') {
         let url = match.text;
@@ -427,7 +459,7 @@ export default function PostItem({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500"
+            className="text-[var(--app-global-link-color)] hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             {match.text}
@@ -477,9 +509,14 @@ export default function PostItem({
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-[#151515] flex items-center justify-center border border-theme-border overflow-hidden">
                     {post.author.profileImage ? (
-                      <img src={post.author.profileImage} alt={post.author.nickname} className="w-full h-full object-cover" />
+                      <img
+                        src={post.author.profileImage}
+                        alt={post.author.nickname}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/Riskbudur-first.png'; }}
+                      />
                     ) : (
-                      <span className="text-xl text-gray-500">{post.author.nickname[0].toUpperCase()}</span>
+                      <img src="/Riskbudur-first.png" alt={post.author.nickname} className="w-full h-full object-cover" />
                     )}
                   </div>
                 )}
@@ -507,11 +544,76 @@ export default function PostItem({
             {/* Menu (3 dots) */}
             <div className="relative">
               <button
-                onClick={(e) => { e.stopPropagation(); setHeaderMenuOpen(true); }}
-                className="text-theme-subtitle p-2 rounded-full transition-colors"
+                ref={heroMenuButtonRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHeaderMenuOpen(!headerMenuOpen);
+                }}
+                className="p-1 rounded-full transition-colors"
               >
-                <IconDots size={20} />
+                <IconDots size={20} className="text-theme-subtitle" />
               </button>
+
+              {headerMenuOpen && (
+                <div
+                  ref={heroMenuRef}
+                  className="absolute right-0 mt-2 rounded-xl border border-theme-border overflow-hidden"
+                  style={{
+                    width: "300px",
+                    backgroundColor: "var(--app-body-bg)",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                    zIndex: 99999,
+                    borderColor: "var(--app-border)"
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {(currentUserId && post.author.id === currentUserId) ? (
+                    <>
+                      <button
+                        onClick={() => { handleDelete(); setHeaderMenuOpen(false); }}
+                        className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
+                      >
+                        <IconTrash className="w-5 h-5 mr-3" />
+                        Gönderiyi sil
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { handleFollowToggle(); setHeaderMenuOpen(false); }}
+                        className="w-full text-left px-4 py-3 flex items-center transition-colors"
+                        style={{ color: "var(--app-body-text)" }}
+                      >
+                        {isFollowing ? (
+                          <>
+                            <IconUserMinus className="w-5 h-5 mr-3" />
+                            @{post.author.nickname} adlı kişiyi takipten çıkar
+                          </>
+                        ) : (
+                          <>
+                            <IconUserPlus className="w-5 h-5 mr-3" />
+                            @{post.author.nickname} adlı kişiyi takip et
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => { handleBlock(); setHeaderMenuOpen(false); }}
+                        className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
+                      >
+                        <IconBan className="w-5 h-5 mr-3" />
+                        @{post.author.nickname} adlı kişiyi engelle
+                      </button>
+                      <button
+                        onClick={() => { handleReport(); setHeaderMenuOpen(false); }}
+                        className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
+                      >
+                        <IconFlag className="w-5 h-5 mr-3" />
+                        Gönderiyi bildir
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -557,11 +659,14 @@ export default function PostItem({
                         src={post.quotedPost.author.profileImage}
                         alt={post.quotedPost.author.nickname}
                         className="w-5 h-5 rounded-full object-cover mr-2"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/Riskbudur-first.png'; }}
                       />
                     ) : (
-                      <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-2 text-[10px]">
-                        {post.quotedPost.author.nickname.charAt(0).toUpperCase()}
-                      </div>
+                      <img
+                        src="/Riskbudur-first.png"
+                        alt={post.quotedPost.author.nickname}
+                        className="w-5 h-5 rounded-full object-cover mr-2"
+                      />
                     )}
 
                     {quotedPostIsAnonymous ? (
@@ -606,6 +711,92 @@ export default function PostItem({
                         setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
                       }}
                     />
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* YouTube/Link Preview for Hero Layout */}
+            {post.linkPreview && (() => {
+              const getYoutubeId = (url: string) => {
+                const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+                const match = url.match(regex);
+                return match ? match[1] : null;
+              };
+
+              const isYoutube = post.linkPreview.type === 'youtube' || post.linkPreview.url.includes('youtube') || post.linkPreview.url.includes('youtu.be');
+              const videoId = post.linkPreview.videoId || (isYoutube ? getYoutubeId(post.linkPreview.url) : null);
+              const thumbnail = post.linkPreview.thumbnail || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null);
+
+              return (
+                <div className="mt-3 mb-3">
+                  {isYoutube && videoId ? (
+                    youtubeEmbedOpen ? (
+                      <div className="relative w-full rounded-xl overflow-hidden border border-theme-border" style={{ paddingBottom: '56.25%' }}>
+                        <iframe
+                          className="absolute top-0 left-0 w-full h-full"
+                          src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                          title={post.linkPreview.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex rounded-xl overflow-hidden border border-theme-border cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setYoutubeEmbedOpen(true);
+                        }}
+                      >
+                        <div className="relative flex-shrink-0" style={{ width: "130px", height: "130px", minWidth: "130px" }}>
+                          <img
+                            src={thumbnail || ''}
+                            alt={post.linkPreview.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-black bg-opacity-80 rounded-full p-2">
+                              <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                          <div className="text-xs mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.siteName || 'youtube.com'}</div>
+                          <div className="text-sm font-medium line-clamp-2 mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.title}</div>
+                          {post.linkPreview.description && (
+                            <div className="text-xs line-clamp-2" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.description}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <a
+                      href={post.linkPreview.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex rounded-xl overflow-hidden border border-theme-border transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {thumbnail && (
+                        <div className="relative flex-shrink-0" style={{ width: "130px", height: "130px", minWidth: "130px" }}>
+                          <img
+                            src={thumbnail}
+                            alt={post.linkPreview.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex flex-col justify-center p-3 flex-1 min-w-0">
+                        <div className="text-xs mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.siteName}</div>
+                        <div className="text-sm font-medium line-clamp-2 mb-1" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.title}</div>
+                        {post.linkPreview.description && (
+                          <div className="text-xs line-clamp-2" style={{ color: "var(--app-subtitle)" }}>{post.linkPreview.description}</div>
+                        )}
+                      </div>
+                    </a>
                   )}
                 </div>
               );
@@ -689,7 +880,7 @@ export default function PostItem({
           </div>
 
 
-        </div>
+        </div >
 
         <MinimalCommentModal
           post={post}
@@ -716,7 +907,7 @@ export default function PostItem({
   return (
     <>
       <div
-        className={`post p-4 relative cursor-pointer transition-colors ${isThread ? "" : "border-b border-theme-border"} ${className}`}
+        className={`post p-3 sm:p-4 relative cursor-pointer transition-colors ${isThread ? "" : "border-b border-theme-border"} ${className}`}
         style={{ zIndex: (showShareMenu || headerMenuOpen) ? 9999 : 'auto' }}
         onClick={handlePostClick}
       >
@@ -726,38 +917,34 @@ export default function PostItem({
             {isFirstInThread && !isLastInThread && (
               <div
                 className="absolute bg-[var(--app-global-link-color)]"
-                style={{ left: '35px', top: '56px', bottom: '0', width: '2px', zIndex: 0 }}
+                style={{ left: '28px', top: '48px', bottom: '0', width: '2px', zIndex: 0 }}
               />
             )}
             {!isFirstInThread && !isLastInThread && (
               <div
                 className="absolute bg-[var(--app-global-link-color)]"
-                style={{ left: '35px', top: '0', bottom: '0', width: '2px', zIndex: 0 }}
+                style={{ left: '28px', top: '0', bottom: '0', width: '2px', zIndex: 0 }}
               />
             )}
             {isLastInThread && !isFirstInThread && (
               <div
                 className="absolute bg-[var(--app-global-link-color)]"
-                style={{ left: '35px', top: '0', height: '36px', width: '2px', zIndex: 0 }}
+                style={{ left: '28px', top: '0', height: '36px', width: '2px', zIndex: 0 }}
               />
             )}
           </>
         )}
         <div className="post-container flex items-start relative z-10">
-          <div className="post-avatar relative">
+          <div className="post-avatar relative flex-shrink-0">
             {isAnonymous ? (
-              <div className="w-10 h-10 rounded-full mr-3 relative z-10 flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-2 sm:mr-3 relative z-10 flex items-center justify-center">
                 <img
                   src="/Riskbudur-pp.png"
                   alt="Anonim"
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.innerHTML = '<div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">A</div>';
-                    }
+                    target.src = '/Riskbudur-first.png';
                   }}
                 />
               </div>
@@ -767,18 +954,20 @@ export default function PostItem({
                   <img
                     src={post.author.profileImage}
                     alt={post.author.nickname}
-                    className="w-10 h-10 rounded-full object-cover mr-3 relative z-10 cursor-pointer hover:opacity-80"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-2 sm:mr-3 relative z-10 cursor-pointer hover:opacity-80"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3 relative z-10 cursor-pointer hover:opacity-80">
-                    {post.author.nickname.charAt(0).toUpperCase()}
-                  </div>
+                  <img
+                    src="/Riskbudur-first.png"
+                    alt={post.author.nickname}
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-2 sm:mr-3 relative z-10 cursor-pointer hover:opacity-80"
+                  />
                 )}
               </Link>
             )}
           </div>
 
-          <div className="post-content-wrapper flex-1">
+          <div className="post-content-wrapper flex-1 min-w-0">
             <PostHeader
               post={post}
               currentUserId={currentUserId}
@@ -792,7 +981,7 @@ export default function PostItem({
             />
 
             <div className="block">
-              <p className="post-content mb-3">{parseContent(post.content)}</p>
+              <p className="post-content mb-3 whitespace-pre-wrap break-words text-sm sm:text-[15px]">{parseContent(post.content)}</p>
 
               {(post.mediaUrl || post.imageUrl) && (
                 <div className="post-media mb-3 rounded-lg overflow-hidden flex justify-center cursor-pointer" style={{ border: "0.4px solid #2a2a2a" }} onClick={(e) => {
@@ -909,11 +1098,7 @@ export default function PostItem({
                           className="w-5 h-5 rounded-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = '<div class="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-[10px]">A</div>';
-                            }
+                            target.src = '/Riskbudur-first.png';
                           }}
                         />
                       </div>
@@ -922,11 +1107,14 @@ export default function PostItem({
                         src={post.quotedPost.author.profileImage}
                         alt={post.quotedPost.author.nickname}
                         className="w-5 h-5 rounded-full object-cover mr-2"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/Riskbudur-first.png'; }}
                       />
                     ) : (
-                      <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-2 text-[10px]">
-                        {post.quotedPost.author.nickname.charAt(0).toUpperCase()}
-                      </div>
+                      <img
+                        src="/Riskbudur-first.png"
+                        alt={post.quotedPost.author.nickname}
+                        className="w-5 h-5 rounded-full object-cover mr-2"
+                      />
                     )}
 
                     {quotedPostIsAnonymous ? (
@@ -1058,11 +1246,14 @@ export default function PostItem({
                           src={linkedPost.author.profileImage}
                           alt={linkedPost.author.nickname}
                           className="w-5 h-5 rounded-full object-cover mr-2"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/Riskbudur-first.png'; }}
                         />
                       ) : (
-                        <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-2 text-[10px]">
-                          {linkedPost.author?.nickname?.charAt(0).toUpperCase() || 'U'}
-                        </div>
+                        <img
+                          src="/Riskbudur-first.png"
+                          alt={linkedPost.author?.nickname || 'Bilinmeyen'}
+                          className="w-5 h-5 rounded-full object-cover mr-2"
+                        />
                       )}
                     </div>
 

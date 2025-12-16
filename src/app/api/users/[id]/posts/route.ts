@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+// Mention'lari cikar
+function extractMentions(content: string): string[] {
+  const mentionRegex = /@[\w_]+/g;
+  const matches = content.match(mentionRegex);
+  if (!matches) return [];
+  return [...new Set(matches.map(tag => tag.slice(1)))];
+}
+
 export async function GET(
   req: Request,
   props: { params: Promise<{ id: string }> }
@@ -62,6 +70,23 @@ export async function GET(
       },
     });
 
+    // Mention validasyonu
+    const allMentions = new Set<string>();
+    posts.forEach(p => {
+      extractMentions(p.content).forEach(m => allMentions.add(m));
+    });
+
+    const mentionList = Array.from(allMentions);
+    let validMentions = new Set<string>();
+
+    if (mentionList.length > 0) {
+      const existingUsers = await prisma.user.findMany({
+        where: { nickname: { in: mentionList } },
+        select: { nickname: true }
+      });
+      existingUsers.forEach(u => validMentions.add(u.nickname));
+    }
+
     const formattedPosts = await Promise.all(posts.map(async (post) => {
       const quote = await prisma.quote.findFirst({
         where: {
@@ -120,6 +145,7 @@ export async function GET(
         },
         isThread: isThread,
         threadRepliesCount: threadRepliesCount,
+        mentionedUsers: extractMentions(post.content).filter(m => validMentions.has(m)),
       };
 
       if (quote && quote.quotedPost) {

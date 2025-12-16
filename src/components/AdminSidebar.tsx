@@ -14,7 +14,8 @@ import {
   IconSettings,
   IconLogout,
   IconDots,
-  IconArrowLeftToArc
+  IconArrowLeftToArc,
+  IconUserCheck
 } from "@tabler/icons-react";
 
 export default function AdminSidebar() {
@@ -61,6 +62,12 @@ export default function AdminSidebar() {
       label: "Şikayetler",
       icon: IconMessageReport,
       href: "/admincp/reports"
+    },
+    {
+      id: "approve-users",
+      label: "Üyeleri Onayla",
+      icon: IconUserCheck,
+      href: "/admincp/approveuser"
     },
     {
       id: "badges",

@@ -4,7 +4,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import StandardPageLayout from "@/components/StandardPageLayout";
+import GlobalHeader from "@/components/GlobalHeader";
 import EditProfileModal from "@/components/EditProfileModal";
+import ImageModal from "@/components/ImageModal";
 import { LinkIcon, CalendarIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
 import {
   IconArrowLeft,
@@ -18,7 +20,8 @@ import {
   IconChartBar,
   IconShare,
   IconArrowUp,
-  IconRosetteDiscountCheckFilled
+  IconRosetteDiscountCheckFilled,
+  IconUserCancel
 } from "@tabler/icons-react";
 import { fetchApi, postApi, deleteApi } from "@/lib/api";
 import PostList from "@/components/PostList";
@@ -41,6 +44,7 @@ interface Profile {
   postsCount?: number;
   isFollowing?: boolean;
   id?: string;
+  isBanned?: boolean;
 }
 
 export default function UserProfilePage() {
@@ -62,6 +66,7 @@ export default function UserProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isHoveringFollow, setIsHoveringFollow] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
 
   // Pagination state'leri
@@ -475,7 +480,7 @@ export default function UserProfilePage() {
     <>
 
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 bg-theme-bg/80 backdrop-blur-md flex items-center px-4 h-[60px] border-b border-theme-border">
+      <div className="sticky top-0 z-20 bg-theme-bg/80 backdrop-blur-md flex items-center px-4 h-[50px] sm:h-[60px] border-b border-theme-border">
         <button
           onClick={() => {
             if (window.history.length > 1) {
@@ -491,7 +496,7 @@ export default function UserProfilePage() {
         </button>
         <div className="flex flex-col">
           <div className="flex items-center gap-1">
-            <h2 className="font-bold text-lg leading-5" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h2>
+            <h2 className="font-bold text-base sm:text-lg leading-5" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h2>
             <VerificationBadge
               tier={profile!.verificationTier}
               hasBlueTick={profile!.hasBlueTick}
@@ -506,7 +511,7 @@ export default function UserProfilePage() {
 
       <div className="border-b border-theme-border overflow-hidden">
         {profile!.coverImage ? (
-          <div className="w-full h-48">
+          <div className="w-full h-32 sm:h-48">
             <img
               src={profile!.coverImage}
               alt="Cover"
@@ -514,23 +519,28 @@ export default function UserProfilePage() {
             />
           </div>
         ) : (
-          <div className="w-full h-48 bg-[#333]"></div>
+          <div className="w-full h-32 sm:h-48 bg-[#333]"></div>
         )}
 
         <div className="p-4">
           <div className="flex items-start justify-between">
-            <div className="relative" style={{ marginTop: "-80px" }}>
-              {profile!.profileImage ? (
-                <img
-                  src={profile!.profileImage}
-                  alt={profile!.username}
-                  className="w-32 h-32 rounded-full profile-circle object-cover"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full profile-circle bg-gray-300 flex items-center justify-center text-gray-600 text-4xl">
-                  {profile!.username.charAt(0).toUpperCase()}
-                </div>
-              )}
+            <div className="relative -mt-[50px] sm:-mt-[80px]">
+              <div
+                className="cursor-pointer"
+                onClick={() => profile!.profileImage && setSelectedImage(profile!.profileImage)}
+              >
+                {profile!.profileImage ? (
+                  <img
+                    src={profile!.profileImage}
+                    alt={profile!.username}
+                    className="w-20 h-20 sm:w-32 sm:h-32 rounded-full profile-circle object-cover hover:opacity-90 transition-opacity"
+                  />
+                ) : (
+                  <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full profile-circle bg-gray-300 flex items-center justify-center text-gray-600 text-2xl sm:text-4xl">
+                    {profile!.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
             </div>
 
             <button
@@ -555,7 +565,7 @@ export default function UserProfilePage() {
 
           <div className="mt-4">
             <div className="flex items-center mb-1">
-              <h1 className="text-2xl font-bold" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h1>
               <VerificationBadge
                 tier={profile!.verificationTier}
                 hasBlueTick={profile!.hasBlueTick}
@@ -593,7 +603,7 @@ export default function UserProfilePage() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <span style={{ color: "var(--app-subtitle)" }}>
-                  <strong style={{ color: "var(--app-body-text)" }}>{profile!.following}</strong> Kovalanan
+                  <strong style={{ color: "var(--app-body-text)" }} className="text-sm sm:text-base">{profile!.following}</strong> Kovalanan
                 </span>
               </Link>
               <Link
@@ -805,8 +815,36 @@ export default function UserProfilePage() {
   if (error || !profile) {
     return (
       <StandardPageLayout>
-        <div className="p-8 text-center">
-          <p className="text-red-500">{error || "Profil bulunamadi"}</p>
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+          <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--app-body-text)" }}>
+            Böyle bir şey yok!
+          </h2>
+          <p className="text-[15px]" style={{ color: "var(--app-subtitle)" }}>
+            Belki aradığın farklı bir şeydir...
+          </p>
+        </div>
+      </StandardPageLayout>
+    );
+  }
+
+  if (profile?.isBanned) {
+    return (
+      <StandardPageLayout>
+        <GlobalHeader
+          title="Hesap Askıya Alındı"
+          subtitle={`@${username}`}
+          showBackButton={true}
+        />
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+          <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+            <IconUserCancel size={40} className="text-gray-500" />
+          </div>
+          <h2 className="text-xl font-bold mb-1" style={{ color: "var(--app-body-text)" }}>
+            Bu hesap sınır dışı edildi!
+          </h2>
+          <p className="text-[15px] max-w-md" style={{ color: "var(--app-subtitle)" }}>
+            Kuralla uymadığı için RiskBudur Özel Tim'i tarafından yaka paça sınır dışı edildi.
+          </p>
         </div>
       </StandardPageLayout>
     );
@@ -832,6 +870,12 @@ export default function UserProfilePage() {
           onProfileUpdated={handleProfileUpdated}
         />
       )}
+
+      {/* Image Preview Modal */}
+      <ImageModal
+        imageUrl={selectedImage}
+        onClose={() => setSelectedImage(null)}
+      />
     </>
   );
 }

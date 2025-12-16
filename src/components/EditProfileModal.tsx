@@ -121,10 +121,10 @@ export default function EditProfileModal({
       const response = await fetch(croppedImageUrl);
       const blob = await response.blob();
       const file = new File([blob], "cropped-image.jpg", { type: "image/jpeg" });
-      
+
       // Compress et
       const compressed = await compressImage(file);
-      
+
       if (cropType === "profile") {
         setProfileImage(compressed);
         setProfileImagePreview(croppedImageUrl);
@@ -132,7 +132,7 @@ export default function EditProfileModal({
         setCoverImage(compressed);
         setCoverImagePreview(croppedImageUrl);
       }
-      
+
       setMessage("");
     } catch (err) {
       setMessage("Fotoğraf işlenemedi.");
@@ -159,7 +159,7 @@ export default function EditProfileModal({
           formData.append("image", profileImage);
           const profileResult = await postApi("/users/me/profile-image", formData);
           console.log("Profile image upload result:", profileResult);
-          
+
           if (profileResult && typeof profileResult === 'object' && 'imageUrl' in profileResult) {
             profileImageUrl = profileResult.imageUrl as string;
             setProfileImagePreview(profileImageUrl);
@@ -175,7 +175,7 @@ export default function EditProfileModal({
           formData.append("image", coverImage);
           const coverResult = await postApi("/users/me/cover-image", formData);
           console.log("Cover image upload result:", coverResult);
-          
+
           if (coverResult && typeof coverResult === 'object' && 'imageUrl' in coverResult) {
             coverImageUrl = coverResult.imageUrl as string;
             setCoverImagePreview(coverImageUrl);
@@ -190,6 +190,10 @@ export default function EditProfileModal({
         bio,
         website,
         location,
+        // Send null if image was removed (preview is null but original existed)
+        // If a new image was uploaded separately, we don't need to send it here as the upload endpoint handles it
+        ...(profileImagePreview === null && currentProfile.profileImage ? { profileImage: null } : {}),
+        ...(coverImagePreview === null && currentProfile.coverImage ? { coverImage: null } : {}),
       });
 
       setMessage("Profil başarıyla güncellendi!");
@@ -202,7 +206,7 @@ export default function EditProfileModal({
         if (coverImageUrl) userData.coverImage = coverImageUrl;
         localStorage.setItem("userInfo", JSON.stringify(userData));
       }
-      
+
       setTimeout(() => {
         onProfileUpdated();
         onClose();
@@ -218,171 +222,174 @@ export default function EditProfileModal({
 
   return (
     <>
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30 px-4">
-      <div
-        className="w-full mx-4 max-w-[600px] max-h-[85vh] lg:max-h-[90vh] rounded-2xl overflow-hidden flex flex-col bg-black border border-theme-border"
-        
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center">
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-[#151515] rounded-full mr-4"
-            >
-              <XMarkIcon className="w-5 h-5 text-white" />
-            </button>
-            <h2 className="text-xl font-bold text-white">Profili düzenle</h2>
-          </div>
-          <button
-            onClick={() => handleSubmit()}
-            disabled={loading}
-            className="px-4 py-1.5 rounded-full font-bold text-black bg-white hover:bg-gray-200 disabled:opacity-50"
-          >
-            {loading ? "..." : "Kaydet"}
-          </button>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Cover Image Section */}
-          <div className="relative">
-            <div className="w-full h-48 bg-[#333] relative">
-              {coverImagePreview ? (
-                <img
-                  src={coverImagePreview}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-[#333]"></div>
-              )}
-              
-              {/* Cover Image Buttons */}
-              <div className="absolute inset-0 flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => coverInputRef.current?.click()}
-                  className="p-3 bg-[#00000069] hover:bg-opacity-60 rounded-full transition-all"
-                >
-                  <CameraIcon className="w-5 h-5 text-white" />
-                </button>
-                {coverImagePreview && (
-                  <button
-                    type="button"
-                    onClick={removeCoverImage}
-                    className="p-3 bg-[#00000069] hover:bg-opacity-60 rounded-full transition-all"
-                  >
-                    <XMarkIcon className="w-5 h-5 text-white" />
-                  </button>
-                )}
-              </div>
-              <input
-                ref={coverInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleCoverImageChange}
-                className="hidden"
-              />
+      <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30 px-4">
+        <div
+          className="w-full mx-4 max-w-[600px] max-h-[85vh] lg:max-h-[90vh] rounded-2xl overflow-hidden flex flex-col border border-theme-border"
+          style={{ backgroundColor: 'var(--app-body-bg)' }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center">
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-[#151515] rounded-full mr-4"
+              >
+                <XMarkIcon className="w-5 h-5" style={{ color: 'var(--app-body-text)' }} />
+              </button>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--app-body-text)' }}>Profili düzenle</h2>
             </div>
+            <button
+              onClick={() => handleSubmit()}
+              disabled={loading}
+              className="px-4 py-1.5 rounded-full font-bold text-black bg-white hover:bg-gray-200 disabled:opacity-50"
+            >
+              {loading ? "..." : "Kaydet"}
+            </button>
+          </div>
 
-            {/* Profile Image - Positioned at bottom of cover */}
-            <div className="absolute left-4" style={{ bottom: "-48px" }}>
-              <div className="relative">
-                {profileImagePreview ? (
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Cover Image Section */}
+            <div className="relative">
+              <div className="w-full h-48 bg-[#333] relative">
+                {coverImagePreview ? (
                   <img
-                    src={profileImagePreview}
-                    alt="Profile"
-                    className="w-28 h-28 rounded-full border-4 border-black object-cover"
+                    src={coverImagePreview}
+                    alt="Cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-28 h-28 rounded-full border-4 border-black bg-[#333] flex items-center justify-center">
-                    <span className="text-4xl text-gray-500">
-                      {fullName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  <div className="w-full h-full bg-[#333]"></div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => profileInputRef.current?.click()}
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] flex items-center justify-center bg-[#00000069] hover:bg-opacity-40 rounded-full transition-all"
-                >
-                  <CameraIcon className="w-6 h-6 text-white" />
-                </button>
+
+                {/* Cover Image Buttons */}
+                <div className="absolute inset-0 flex items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => coverInputRef.current?.click()}
+                    className="p-3 bg-[#00000069] hover:bg-opacity-60 rounded-full transition-all"
+                  >
+                    <CameraIcon className="w-5 h-5 text-white" />
+                  </button>
+                  {coverImagePreview && (
+                    <button
+                      type="button"
+                      onClick={removeCoverImage}
+                      className="p-3 bg-[#00000069] hover:bg-opacity-60 rounded-full transition-all"
+                    >
+                      <XMarkIcon className="w-5 h-5 text-white" />
+                    </button>
+                  )}
+                </div>
                 <input
-                  ref={profileInputRef}
+                  ref={coverInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleProfileImageChange}
+                  onChange={handleCoverImageChange}
                   className="hidden"
                 />
               </div>
-            </div>
-          </div>
 
-          {/* Form Fields */}
-          <div className="px-4 pt-16 pb-4 space-y-6">
-            {/* İsim */}
-            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
-              <label className="block text-xs text-gray-500 mb-1">İsim</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-transparent text-white outline-none"
-                placeholder="İsminiz"
-              />
-            </div>
-
-            {/* Kişisel bilgiler (Bio) */}
-            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
-              <label className="block text-xs text-gray-500 mb-1">Kişisel bilgiler</label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                className="w-full bg-transparent text-white outline-none resize-none"
-                rows={3}
-                placeholder="Kendiniz hakkında birkaç kelime"
-              />
-            </div>
-
-            {/* Konum */}
-            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
-              <label className="block text-xs text-gray-500 mb-1">Konum</label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-transparent text-white outline-none"
-                placeholder="Konumunuz"
-              />
+              {/* Profile Image - Positioned at bottom of cover */}
+              <div className="absolute left-4" style={{ bottom: "-48px" }}>
+                <div className="relative">
+                  {profileImagePreview ? (
+                    <img
+                      src={profileImagePreview}
+                      alt="Profile"
+                      className="w-28 h-28 rounded-full border-4 border-black object-cover"
+                    />
+                  ) : (
+                    <div className="w-28 h-28 rounded-full border-4 border-black bg-[#333] flex items-center justify-center">
+                      <span className="text-4xl text-gray-500">
+                        {fullName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => profileInputRef.current?.click()}
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] flex items-center justify-center bg-[#00000069] hover:bg-opacity-40 rounded-full transition-all"
+                  >
+                    <CameraIcon className="w-6 h-6 text-white" />
+                  </button>
+                  <input
+                    ref={profileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfileImageChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Web Sitesi */}
-            <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
-              <label className="block text-xs text-gray-500 mb-1">Web sitesi</label>
-              <input
-                type="url"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                className="w-full bg-transparent text-white outline-none"
-                placeholder="https://example.com"
-              />
-            </div>
+            {/* Form Fields */}
+            <div className="px-4 pt-16 pb-4 space-y-6">
+              {/* İsim */}
+              <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+                <label className="block text-xs mb-1" style={{ color: 'var(--app-subtitle)' }}>İsim</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full bg-transparent outline-none"
+                  style={{ color: 'var(--app-body-text)' }}
+                  placeholder="İsminiz"
+                />
+              </div>
 
-            {message && (
-              <p
-                className={`text-center text-sm ${
-                  message.includes("başarıyla") ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {message}
-              </p>
-            )}
+              {/* Kişisel bilgiler (Bio) */}
+              <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+                <label className="block text-xs mb-1" style={{ color: 'var(--app-subtitle)' }}>Kişisel bilgiler</label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="w-full bg-transparent outline-none resize-none"
+                  style={{ color: 'var(--app-body-text)' }}
+                  rows={3}
+                  placeholder="Kendiniz hakkında birkaç kelime"
+                />
+              </div>
+
+              {/* Konum */}
+              <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+                <label className="block text-xs mb-1" style={{ color: 'var(--app-subtitle)' }}>Konum</label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full bg-transparent outline-none"
+                  style={{ color: 'var(--app-body-text)' }}
+                  placeholder="Konumunuz"
+                />
+              </div>
+
+              {/* Web Sitesi */}
+              <div className="border border-theme-border rounded-md px-3 py-2 focus-within:border-[#1d9bf0]">
+                <label className="block text-xs mb-1" style={{ color: 'var(--app-subtitle)' }}>Web sitesi</label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  className="w-full bg-transparent outline-none"
+                  style={{ color: 'var(--app-body-text)' }}
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              {message && (
+                <p
+                  className={`text-center text-sm ${message.includes("başarıyla") ? "text-green-500" : "text-red-500"
+                    }`}
+                >
+                  {message}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
       {/* Image Crop Modal */}
       <ImageCropModal
@@ -394,7 +401,7 @@ export default function EditProfileModal({
           setCropImageSrc("");
         }}
         onCropComplete={handleCropComplete}
-        aspect={cropType === "profile" ? 1 : 16/9}
+        aspect={cropType === "profile" ? 1 : 16 / 9}
         cropShape={cropType === "profile" ? "round" : "rect"}
       />
     </>

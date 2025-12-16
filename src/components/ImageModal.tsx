@@ -36,21 +36,21 @@ export default function ImageModal({ imageUrl, onClose }: ImageModalProps) {
             {/* Close button */}
             <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-all text-white z-[10000]"
+                className="absolute top-4 right-4 p-2 rounded-full cursor-pointer transition-all z-[10000] hover:bg-white/10"
                 aria-label="Close"
             >
-                <IconX size={24} />
+                <IconX size={24} style={{ color: "var(--app-icon-nav)" }} />
             </button>
 
             {/* Image */}
             <div
-                className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center"
+                className="relative max-w-[95vw] max-h-[80vh] flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
             >
                 <img
                     src={imageUrl}
                     alt="Full size preview"
-                    className="max-w-full max-h-[95vh] object-contain rounded-lg shadow-2xl"
+                    className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
                 />
             </div>
         </div>

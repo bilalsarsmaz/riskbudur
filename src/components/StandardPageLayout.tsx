@@ -27,9 +27,6 @@ export default function StandardPageLayout({
 }: StandardPageLayoutProps) {
     return (
         <>
-            {/* Mobile Header */}
-            <MobileHeader />
-
             <div className="flex justify-center w-full min-h-screen" style={{ backgroundColor: 'var(--app-body-bg)' }}>
                 <div className="flex w-full max-w-[1310px]">
                     {/* Left Sidebar */}
@@ -54,6 +51,9 @@ export default function StandardPageLayout({
                     )}
                 </div>
             </div>
+
+            {/* Mobile Header moved to bottom for auto-scroll fix */}
+            <MobileHeader />
 
             {/* Mobile Bottom Navigation */}
             <MobileBottomNav />
