@@ -225,9 +225,35 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
         const repliesWithQuotes = await addQuotedPostToReplies(replies);
 
+        // Format helper to ensure fields are explicitly included
+        const formatPost = (post: any) => ({
+            id: post.id.toString(),
+            content: post.content,
+            createdAt: post.createdAt,
+            mediaUrl: post.mediaUrl,
+            imageUrl: post.imageUrl,
+            linkPreview: post.linkPreview,
+            isAnonymous: post.isAnonymous,
+            author: post.author,
+            _count: post._count,
+            likes: post.likes,
+            bookmarks: post.bookmarks,
+            quotedPost: post.quotedPost ? {
+                id: post.quotedPost.id.toString(),
+                content: post.quotedPost.content,
+                createdAt: post.quotedPost.createdAt,
+                imageUrl: post.quotedPost.imageUrl,
+                mediaUrl: post.quotedPost.mediaUrl,
+                linkPreview: post.quotedPost.linkPreview,
+                isAnonymous: post.quotedPost.isAnonymous,
+                author: post.quotedPost.author,
+                _count: post.quotedPost._count,
+            } : null,
+        });
+
         return NextResponse.json(toJson({
-            mainPost: mainPostWithQuote,
-            ancestors: ancestorsWithQuotes,
+            mainPost: formatPost(mainPostWithQuote),
+            ancestors: ancestorsWithQuotes.map(formatPost),
             replies: repliesWithQuotes
         }));
 
