@@ -124,13 +124,14 @@ export default function EditProfileModal({
 
       // Compress et
       const compressed = await compressImage(file);
+      const previewUrl = URL.createObjectURL(compressed);
 
       if (cropType === "profile") {
         setProfileImage(compressed);
-        setProfileImagePreview(croppedImageUrl);
+        setProfileImagePreview(previewUrl);
       } else {
         setCoverImage(compressed);
-        setCoverImagePreview(croppedImageUrl);
+        setCoverImagePreview(previewUrl);
       }
 
       setMessage("");

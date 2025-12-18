@@ -16,7 +16,6 @@ import {
   IconHeart,
   IconDots,
   IconHeartFilled,
-  IconMessageCircle,
   IconMessage2,
   IconRepeat,
   IconRosetteDiscountCheckFilled,
@@ -820,7 +819,7 @@ export default function PostItem({
               className="post-action post-action-comment flex items-center mr-6"
               style={{ color: isCommented ? "#1d9bf0" : undefined }}
             >
-              <IconMessageCircle className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
+              <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
               {commentCount > 0 && (
                 <span className={`post-action-count ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
               )}
@@ -866,9 +865,8 @@ export default function PostItem({
                 <button
                   onClick={handleCopyLink}
                   className="post-action post-action-share p-1 rounded-full transition-colors relative"
-                  style={{ color: "var(--app-subtitle)" }}
                 >
-                  <IconLibraryPlusFilled className="w-5 h-5" style={{ color: "var(--app-subtitle)" }} />
+                  <IconLibraryPlusFilled className="interaction-icon w-5 h-5" />
                   {showCopiedToast && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#1DCD9F] text-black text-xs font-bold rounded shadow-lg whitespace-nowrap z-50 animate-fade-in-out">
                       Kopyalandı!
@@ -916,20 +914,17 @@ export default function PostItem({
           <>
             {isFirstInThread && !isLastInThread && (
               <div
-                className="absolute bg-[var(--app-global-link-color)]"
-                style={{ left: '28px', top: '48px', bottom: '0', width: '2px', zIndex: 0 }}
+                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[28px] sm:left-[36px] top-[44px] sm:top-[56px] bottom-0"
               />
             )}
             {!isFirstInThread && !isLastInThread && (
               <div
-                className="absolute bg-[var(--app-global-link-color)]"
-                style={{ left: '28px', top: '0', bottom: '0', width: '2px', zIndex: 0 }}
+                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[28px] sm:left-[36px] top-0 bottom-0"
               />
             )}
             {isLastInThread && !isFirstInThread && (
               <div
-                className="absolute bg-[var(--app-global-link-color)]"
-                style={{ left: '28px', top: '0', height: '36px', width: '2px', zIndex: 0 }}
+                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[28px] sm:left-[36px] top-0 h-[28px] sm:h-[36px]"
               />
             )}
           </>

@@ -1,108 +1,156 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-//   directUrl = env("DIRECT_URL")
-}
-
-enum VerificationTier {
-  NONE
-  GREEN
-  GOLD
-  GRAY
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id               String           @id @default(cuid())
-  email            String           @unique
-  password         String?
-  nickname         String           @unique
-  fullName         String?
-  bio              String?
-  website          String?
-  profileImage     String?
-  coverImage       String?
-  gender           String?   // "male", "female", "other", or custom
-  birthday         DateTime?
-  role             Role             @default(USER)
-  isBanned         Boolean          @default(false)
-  isApproved       Boolean          @default(false)
-  verificationTier VerificationTier @default(NONE)
-  hasBlueTick      Boolean          @default(false) // Deprecated, kept for backward compatibility
-  posts            Post[]
-  likes            Like[]
-  bookmarks        Bookmark[]
-  comments         Comment[]
-  quotes           Quote[]
-  followers        Follow[]         @relation("followers")
-  following        Follow[]         @relation("following")
-  announcements    Announcement[]
-  createdAt        DateTime?        @default(now())
-  updatedAt        DateTime?        @updatedAt
-  lastSeen         DateTime?        @default(now())
-  receivedNotifications Notification[] @relation("receivedNotifications")
-  sentNotifications     Notification[] @relation("sentNotifications")
-  isSetupComplete       Boolean        @default(false)
+  id                    String                @id @default(cuid())
+  email                 String                @unique
+  password              String?
+  nickname              String                @unique
+  bio                   String?
+  website               String?
+  role                  Role                  @default(USER)
+  isBanned              Boolean               @default(false)
+  hasBlueTick           Boolean               @default(false)
+  coverImage            String?               @default("/rb-cover.png")
+  fullName              String?
+  profileImage          String?
+  verificationTier      VerificationTier      @default(NONE)
+  createdAt             DateTime?             @default(now())
+  updatedAt             DateTime?             @updatedAt
+  isSetupComplete       Boolean               @default(false)
+  birthday              DateTime?
+  gender                String?
+  lastSeen              DateTime?             @default(now())
+  isApproved            Boolean               @default(false)
+  announcements         Announcement[]
+  bookmarks             Bookmark[]
+  comments              Comment[]
+  following             Follow[]              @relation("following")
+  followers             Follow[]              @relation("followers")
+  likes                 Like[]
+  sentNotifications     Notification[]        @relation("sentNotifications")
+  receivedNotifications Notification[]        @relation("receivedNotifications")
+  posts                 Post[]
+  quotes                Quote[]
   verificationRequests  VerificationRequest[]
+  visited           ProfileVisit[]        @relation("visited")
+  visitors          ProfileVisit[]        @relation("visitor")
+
+  // Messaging relations
+  conversations     ConversationParticipant[]
+  sentMessages      Message[]
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime  @default(now())
+  
+  participants  ConversationParticipant[]
+  messages      Message[]
+
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  userId         String
+  conversationId String
+  joinedAt       DateTime     @default(now())
+  lastReadAt     DateTime     @default(now()) // For unread count
+  
+  user           User         @relation(fields: [userId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  content        String
+  imageUrl       String?
+  createdAt      DateTime     @default(now())
+  conversationId String
+  senderId       String
+  isRead         Boolean      @default(false)
+  
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model ProfileVisit {
+  id        String   @id @default(cuid())
+  visitorId String
+  visitedId String
+  visitedAt DateTime @default(now())
+
+  visitor   User     @relation("visitor", fields: [visitorId], references: [id], onDelete: Cascade)
+  visited   User     @relation("visited", fields: [visitedId], references: [id], onDelete: Cascade)
+
+  @@unique([visitorId, visitedId])
+  @@index([visitedId, visitedAt])
 }
 
 model Post {
-  id            BigInt    @id @default(autoincrement())
   content       String
   mediaUrl      String?
   imageUrl      String?
-  linkPreview   Json?
+  isAnonymous   Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   authorId      String
+  id            BigInt         @id @default(autoincrement())
+  linkPreview   Json?
   parentPostId  BigInt?
   threadRootId  BigInt?
-  isAnonymous   Boolean   @default(false)
-  author        User      @relation(fields: [authorId], references: [id])
-  parentPost    Post?     @relation("PostReplies", fields: [parentPostId], references: [id])
-  replies       Post[]    @relation("PostReplies")
-  threadRoot    Post?     @relation("ThreadPosts", fields: [threadRootId], references: [id])
-  threadPosts   Post[]    @relation("ThreadPosts")
-  notifications Notification[]
+  bookmarks     Bookmark[]
+  comments      Comment[]
   likes         Like[]
+  notifications Notification[]
+  author        User           @relation(fields: [authorId], references: [id])
+  parentPost    Post?          @relation("PostReplies", fields: [parentPostId], references: [id])
+  replies       Post[]         @relation("PostReplies")
+  threadRoot    Post?          @relation("ThreadPosts", fields: [threadRootId], references: [id])
+  threadPosts   Post[]         @relation("ThreadPosts")
+  quotes        Quote[]
+  hashtags      Hashtag[]      @relation("HashtagToPost")
 
   @@index([parentPostId])
   @@index([threadRootId])
   @@index([authorId, createdAt])
-  bookmarks     Bookmark[]
-  comments      Comment[]
-  quotes        Quote[]
-  hashtags      Hashtag[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
 }
 
 model Like {
   id        String   @id @default(cuid())
   userId    String
-  postId    BigInt
-  user      User     @relation(fields: [userId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
   createdAt DateTime @default(now())
+  postId    BigInt
+  post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, postId])
 }
-
 
 model Bookmark {
   id        String   @id @default(cuid())
   userId    String
   postId    BigInt
-  user      User     @relation(fields: [userId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, postId])
 }
@@ -113,38 +161,84 @@ model Comment {
   authorId    String
   postId      BigInt
   isAnonymous Boolean  @default(false)
+  createdAt   DateTime @default(now())
   author      User     @relation(fields: [authorId], references: [id])
   post        Post     @relation(fields: [postId], references: [id])
-  createdAt   DateTime @default(now())
 }
 
 model Quote {
-  id             String   @id @default(cuid())
-  content        String
-  authorId       String
-  quotedPostId   BigInt
-  isAnonymous    Boolean  @default(false)
-  author         User     @relation(fields: [authorId], references: [id])
-  quotedPost     Post     @relation(fields: [quotedPostId], references: [id])
-  createdAt      DateTime @default(now())
+  id           String   @id @default(cuid())
+  content      String
+  createdAt    DateTime @default(now())
+  authorId     String
+  isAnonymous  Boolean  @default(false)
+  quotedPostId BigInt
+  author       User     @relation(fields: [authorId], references: [id])
+  quotedPost   Post     @relation(fields: [quotedPostId], references: [id])
 }
 
 model Hashtag {
   id        String   @id @default(cuid())
   name      String   @unique
-  posts     Post[]
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  posts     Post[]   @relation("HashtagToPost")
 }
 
 model Follow {
   followerId  String
   followingId String
+  createdAt   DateTime @default(now())
   follower    User     @relation("following", fields: [followerId], references: [id])
   following   User     @relation("followers", fields: [followingId], references: [id])
-  createdAt   DateTime @default(now())
 
   @@id([followerId, followingId])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  read        Boolean          @default(false)
+  recipientId String
+  actorId     String
+  postId      BigInt?
+  createdAt   DateTime         @default(now())
+  actor       User             @relation("sentNotifications", fields: [actorId], references: [id])
+  post        Post?            @relation(fields: [postId], references: [id])
+  recipient   User             @relation("receivedNotifications", fields: [recipientId], references: [id])
+
+  @@index([recipientId])
+  @@index([createdAt])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  content   String
+  isActive  Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model VerificationRequest {
+  id               String   @id @default(cuid())
+  userId           String
+  fullName         String
+  category         String
+  description      String
+  identityImageUrl String?
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id])
+}
+
+enum VerificationTier {
+  NONE
+  GREEN
+  GOLD
+  GRAY
 }
 
 enum Role {
@@ -161,47 +255,4 @@ enum NotificationType {
   QUOTE
   FOLLOW
   SYSTEM
-}
-
-model Notification {
-  id        String           @id @default(cuid())
-  type      NotificationType
-  read      Boolean          @default(false)
-  
-  recipientId String
-  recipient   User           @relation("receivedNotifications", fields: [recipientId], references: [id])
-  
-  actorId     String
-  actor       User           @relation("sentNotifications", fields: [actorId], references: [id])
-  
-  postId      BigInt?
-  post        Post?          @relation(fields: [postId], references: [id])
-  
-  createdAt   DateTime       @default(now())
-
-  @@index([recipientId])
-  @@index([createdAt])
-}
-
-model Announcement {
-  id        String   @id @default(cuid())
-  content   String
-  isActive  Boolean  @default(false)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model VerificationRequest {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  fullName        String
-  category        String
-  description     String
-  identityImageUrl String?
-  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
 }

@@ -184,7 +184,7 @@ export default function ComposeBox({
       }
 
       const postData: Record<string, unknown> = {
-        content,
+        content: content,
         isAnonymous
       };
 
@@ -292,27 +292,42 @@ export default function ComposeBox({
     <div className={`composebox text-white w-full ${(isReply || quotedPostId) ? 'bg-transparent' : 'bg-black p-4 border-t border-b border-theme-border lg:w-[598px]'} ${className || ''}`}>
       <form onSubmit={handleSubmit} className="relative">
         <div className="mb-3">
-          <textarea
-            ref={textareaRef}
-            className="w-full p-1 border-none rounded-lg resize-none focus:outline-none transition-all duration-200 placeholder-[var(--app-icon-interaction)]"
-            placeholder={placeholder}
-            rows={isTextareaActive ? 3 : 1}
-            style={{
-              backgroundColor: 'transparent',
-              height: isTextareaActive ? 'auto' : '30px',
-              overflow: isTextareaActive ? 'auto' : 'hidden'
-            }}
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              if (e.target.value.trim() !== "") {
-                setIsTextareaActive(true);
-              }
-            }}
-            disabled={isLoading}
-            onFocus={() => setIsTextareaActive(true)}
-            onClick={() => setIsTextareaActive(true)}
-          />
+          {/* Standard Textarea */}
+          <div className="w-full relative">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                if (e.target.value.trim() !== "") {
+                  setIsTextareaActive(true);
+                }
+              }}
+              onClick={() => setIsTextareaActive(true)}
+              placeholder={placeholder}
+              disabled={isLoading}
+              className={`w-full bg-transparent text-white text-xl placeholder-gray-500 resize-none outline-none ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
+              onPaste={(e) => {
+                if (e.clipboardData && e.clipboardData.items) {
+                  const items = e.clipboardData.items;
+                  for (let i = 0; i < items.length; i++) {
+                    if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                      const file = items[i].getAsFile();
+                      if (file) {
+                        e.preventDefault();
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setPreviewUrl(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                        return;
+                      }
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
 
           {previewUrl && (
             <div className="mt-2 relative">

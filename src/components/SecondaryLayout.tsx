@@ -9,6 +9,7 @@ interface SecondaryLayoutProps {
     className?: string;
     maxWidth?: string;
     sidebarContent?: React.ReactNode; // New prop for custom sidebar
+    hideMobileElements?: boolean;
 }
 
 // Update function signature and render logic
@@ -17,7 +18,8 @@ export default function SecondaryLayout({
     showLeftSidebar = true,
     className = "",
     maxWidth = "900px",
-    sidebarContent
+    sidebarContent,
+    hideMobileElements = false
 }: SecondaryLayoutProps) {
     return (
         <>
@@ -34,7 +36,7 @@ export default function SecondaryLayout({
 
                     {/* Wide Content Area (Middle + Right merged) */}
                     <section
-                        className={`flex-1 w-full flex flex-col items-stretch lg:border-x border-theme-border pt-14 lg:pt-0 pb-16 lg:pb-0 relative ${className}`}
+                        className={`flex-1 w-full flex flex-col items-stretch lg:border-x border-theme-border ${hideMobileElements ? '' : 'pt-14 pb-16'} lg:pt-0 lg:pb-0 relative ${className}`}
                         style={{ maxWidth }}
                     >
                         {children}
@@ -43,10 +45,10 @@ export default function SecondaryLayout({
             </div>
 
             {/* Mobile Header moved to bottom for auto-scroll fix */}
-            <MobileHeader />
+            {!hideMobileElements && <MobileHeader />}
 
             {/* Mobile Bottom Navigation */}
-            <MobileBottomNav />
+            {!hideMobileElements && <MobileBottomNav />}
         </>
     );
 }

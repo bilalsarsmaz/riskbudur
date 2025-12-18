@@ -128,7 +128,7 @@ export default function CommentComposeBox({
       } else {
         const response = await postApi("/comments", {
           postId,
-          content: content.trim(),
+          content: content,
           imageUrl: previewUrl || undefined,
           linkPreview: linkPreview || undefined
         });
@@ -166,16 +166,34 @@ export default function CommentComposeBox({
     <form onSubmit={handleSubmit}>
       <div className="flex">
         <div className="flex-1">
-          <textarea
-            ref={textareaRef}
-            className={`w-full p-3 border border-theme-border rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-[var(--app-global-link-color)] ${textareaClassName}`}
-            style={{ backgroundColor: "transparent", color: "var(--app-body-text)" }}
-            placeholder="Yanıtını yaz..."
-            rows={3}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            disabled={isLoading}
-          />
+          <div className="w-full relative">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Yanıtını yaz..."
+              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none min-h-[80px]"
+              onPaste={(e) => {
+                if (e.clipboardData && e.clipboardData.items) {
+                  const items = e.clipboardData.items;
+                  for (let i = 0; i < items.length; i++) {
+                    if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                      const file = items[i].getAsFile();
+                      if (file) {
+                        e.preventDefault();
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setPreviewUrl(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                        return;
+                      }
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
 
           {previewUrl && (
             <div className="mt-2 relative">

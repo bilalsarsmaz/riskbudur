@@ -13,9 +13,9 @@ interface PostListProps {
 export default function PostList({ posts, currentUserId, onPostDeleted, onPostCreated }: PostListProps) {
   if (posts.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <p className="text-gray-500">Henüz hiç post yok.</p>
-        <p className="mt-2 text-sm text-gray-400">İlk postu paylaşan sen ol!</p>
+      <div className="p-8 text-center">
+        <p className="text-gray-500">Henüz hiç gönderi yok.</p>
+        <p className="mt-2 text-sm text-gray-400">İlk gönderiyi paylaşan sen ol!</p>
       </div>
     );
   }

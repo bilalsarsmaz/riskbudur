@@ -449,7 +449,7 @@ export default function Notifications() {
                                                             className="ml-0.5 inline-block align-bottom"
                                                             style={{ width: '18px', height: '18px', marginBottom: '1px' }}
                                                         />
-                                                        <span> Riskbudur Özel Tim'i tarafından profil onay rozeti başvurunuz {group.actors[0].verificationTier !== 'NONE' ? 'kabul edildi.' : 'imha edildi.'}</span>
+                                                        <span> profil onay rozeti başvurunuz Riskbudur Özel Timi tarafından {group.actors[0].verificationTier !== 'NONE' ? 'kabul edildi.' : 'imha edildi.'}</span>
                                                     </div>
                                                 </div>
                                             </div>

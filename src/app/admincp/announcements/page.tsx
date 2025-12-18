@@ -302,9 +302,9 @@ export default function AnnouncementsPage() {
                                         </button>
                                     </div>
                                 </div>
-                                <p className="text-[#d9d9d9] whitespace-pre-wrap mb-3 text-[15px]">{announcement.content}</p>
-                                <div className="flex items-center justify-between text-xs text-[#71767b]">
-                                    <span>Yazan: <span className="text-[#d9d9d9]">@{announcement.author.nickname || "admin"}</span></span>
+                                <p className="whitespace-pre-wrap mb-3 text-[15px]" style={{ color: 'var(--app-body-text)' }}>{announcement.content}</p>
+                                <div className="flex items-center justify-between text-xs" style={{ color: 'var(--app-subtitle)' }}>
+                                    <span>Yazan: <span>@{announcement.author.nickname || "admin"}</span></span>
                                     <span>{new Date(announcement.createdAt).toLocaleString("tr-TR")}</span>
                                 </div>
                             </div>

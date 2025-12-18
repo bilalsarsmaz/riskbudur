@@ -10,6 +10,7 @@ import {
   IconUserSearch,
   IconMessageReport,
   IconRosetteDiscountCheckFilled,
+  IconRosetteDiscountCheck,
   IconSitemap,
   IconSettings,
   IconLogout,
@@ -72,7 +73,7 @@ export default function AdminSidebar() {
     {
       id: "badges",
       label: "Rozet Talepleri",
-      icon: IconRosetteDiscountCheckFilled,
+      icon: IconRosetteDiscountCheck,
       href: "/admincp/badges"
     },
     {

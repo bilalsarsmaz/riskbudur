@@ -21,10 +21,11 @@
   --app-accent: var(--app-global-link-color);
   --app-icon-compose: var(--app-global-link-color);
   --app-icon-nav: #EEEEEE;
-  /* Nav iconları */
   --app-icon-verified: #dc5f00;
   --app-icon-interaction: #373A40;
-  /* Post kart iconları (passive) */
+  /* Card States (Hover & Active) */
+  --app-card-hover: #0D0D0D;
+  --app-card-active: #16181c;
   --font-montserrat: "Montserrat", sans-serif;
 }
 
@@ -37,6 +38,9 @@
   --app-header-hover: #D0D0D0;
   --app-right-bg: #EEEEEE;
   --app-footer-bg: #EEEEEE;
+
+  --app-card-hover: #E5E5E5;
+  --app-card-active: #DCDCDC;
 
   --app-subtitle: #686D76;
   --app-border: #686D76;
@@ -139,6 +143,23 @@ body {
   background-color: var(--app-surface) !important;
   border-color: var(--app-border) !important;
   color: var(--app-body-text) !important;
+}
+
+.app-card-item {
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.app-card-item:hover {
+  background-color: var(--app-card-hover) !important;
+}
+
+.app-card-item.active {
+  background-color: var(--app-card-active) !important;
+}
+
+.app-active-border {
+  border-right-color: var(--app-global-link-color) !important;
 }
 
 /* Layout */

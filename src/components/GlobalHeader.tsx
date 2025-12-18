@@ -10,9 +10,10 @@ interface GlobalHeaderProps {
     onBack?: () => void;
     showBackButton?: boolean;
     style?: React.CSSProperties;
+    rightContent?: React.ReactNode;
 }
 
-export default function GlobalHeader({ title, subtitle, className = "", onBack, showBackButton, style }: GlobalHeaderProps) {
+export default function GlobalHeader({ title, subtitle, className = "", onBack, showBackButton, style, rightContent }: GlobalHeaderProps) {
     const router = useRouter();
 
     const handleBack = () => {
@@ -28,21 +29,24 @@ export default function GlobalHeader({ title, subtitle, className = "", onBack, 
 
     return (
         <div
-            className={`sticky top-0 z-50 bg-theme-bg/80 backdrop-blur-md px-4 border-b border-theme-border h-[60px] flex items-center ${className}`}
+            className={`sticky top-0 z-50 bg-theme-bg/80 backdrop-blur-md px-3 sm:px-4 border-b border-theme-border h-[56px] sm:h-[60px] flex items-center justify-between ${className}`}
             style={style}
         >
-            {(showBackButton || onBack) && (
-                <button
-                    onClick={handleBack}
-                    className="mr-6 p-2 rounded-full hover:bg-[#181818] transition-colors"
-                >
-                    <ArrowLeftIcon className="w-5 h-5" style={{ color: "var(--app-body-text)" }} />
-                </button>
-            )}
-            <div className="flex flex-col justify-center">
-                <h1 className="text-xl font-bold leading-[22px]" style={{ color: "var(--app-body-text)" }}>{title}</h1>
-                {subtitle && <p className="text-xs leading-[14px]" style={{ color: 'var(--app-subtitle)' }}>{subtitle}</p>}
+            <div className="flex items-center flex-1 min-w-0">
+                {(showBackButton || onBack) && (
+                    <button
+                        onClick={handleBack}
+                        className="mr-3 sm:mr-6 p-2 rounded-full hover:bg-[#181818] transition-colors flex-shrink-0"
+                    >
+                        <ArrowLeftIcon className="w-5 h-5" style={{ color: "var(--app-body-text)" }} />
+                    </button>
+                )}
+                <div className="flex flex-col justify-center min-w-0 flex-1">
+                    <h1 className="text-base sm:text-xl font-bold leading-tight truncate" style={{ color: "var(--app-body-text)" }}>{title}</h1>
+                    {subtitle && <p className="text-[10px] sm:text-xs truncate leading-tight" style={{ color: 'var(--app-subtitle)' }}>{subtitle}</p>}
+                </div>
             </div>
+            {rightContent && <div className="ml-2 flex-shrink-0">{rightContent}</div>}
         </div>
     );
 }

@@ -21,8 +21,10 @@ import {
   IconShare,
   IconArrowUp,
   IconRosetteDiscountCheckFilled,
-  IconUserCancel
+  IconUserCancel,
+  IconMail
 } from "@tabler/icons-react";
+// import DirectMessageModal from "@/components/DirectMessageModal";
 import { fetchApi, postApi, deleteApi } from "@/lib/api";
 import PostList from "@/components/PostList";
 import { EnrichedPost } from "@/types/post";
@@ -47,6 +49,12 @@ interface Profile {
   isBanned?: boolean;
 }
 
+interface Visitor {
+  nickname: string;
+  fullName: string;
+  profileImage: string | null;
+}
+
 export default function UserProfilePage() {
   // ... existing code ...
 
@@ -61,12 +69,14 @@ export default function UserProfilePage() {
   const [likedPosts, setLikedPosts] = useState<EnrichedPost[]>([]);
   const [replyPosts, setReplyPosts] = useState<EnrichedPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isHoveringFollow, setIsHoveringFollow] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  // const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
 
   // Pagination state'leri
@@ -398,6 +408,20 @@ export default function UserProfilePage() {
     fetchUserReplies();
   }, [username]);
 
+  // Record profile visit using API and fetch visitors for mobile view
+  useEffect(() => {
+    if (currentUser && currentUser.nickname !== username) {
+      postApi(`/users/${username}/visit`, {}).catch(err => console.error("Visit record failed", err));
+    }
+
+    // Fetch visitors for mobile view
+    fetchApi(`/users/${username}/visitors`)
+      .then((data: any) => {
+        setVisitors(data.visitors || []);
+      })
+      .catch(console.error);
+  }, [currentUser, username]);
+
   // Scroll event listener
   useEffect(() => {
     if (!profile) return;
@@ -543,24 +567,39 @@ export default function UserProfilePage() {
               </div>
             </div>
 
-            <button
-              onClick={() => isOwnProfile ? setIsEditModalOpen(true) : handleFollow()}
-              onMouseEnter={() => setIsHoveringFollow(true)}
-              onMouseLeave={() => setIsHoveringFollow(false)}
-              className={`px-3 py-2 rounded-full font-bold border transition-colors ${isOwnProfile
-                ? "border-theme-border hover:bg-[#151515]"
-                : isFollowing
-                  ? "border-[#1DCD9F] text-[#1DCD9F] hover:bg-[#1DCD9F]/10 min-w-[140px]"
-                  : "border-theme-border text-theme-text hover:bg-white/10"
-                }`}
-            >
-              {isOwnProfile
-                ? "Profili Düzenle"
-                : isFollowing
-                  ? (isHoveringFollow ? "Kovalama" : "Kovalanıyor")
-                  : "Kovala"
-              }
-            </button>
+            <div className="flex items-center gap-2">
+              {!isOwnProfile && (
+                <button
+                  onClick={() => router.push(`/messages?user=${profile!.username}`)}
+                  className="w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors"
+                >
+                  <IconMail className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={() => isOwnProfile ? setIsEditModalOpen(true) : handleFollow()}
+                onMouseEnter={() => setIsHoveringFollow(true)}
+                onMouseLeave={() => setIsHoveringFollow(false)}
+                className={`px-3 py-2 rounded-full font-bold border transition-colors ${isOwnProfile
+                  ? "border-theme-border hover:bg-[#151515]"
+                  : isFollowing
+                    ? "hover:bg-opacity-10 min-w-[140px]"
+                    : "border-theme-border text-theme-text hover:bg-white/10"
+                  }`}
+                style={!isOwnProfile && isFollowing ? {
+                  borderColor: 'var(--app-accent)',
+                  color: 'var(--app-accent)',
+                  backgroundColor: isHoveringFollow ? 'rgba(255, 0, 0, 0.1)' : 'transparent'
+                } : {}}
+              >
+                {isOwnProfile
+                  ? "Profili Düzenle"
+                  : isFollowing
+                    ? (isHoveringFollow ? <span className="text-[#f4212e]">Kovalama</span> : "Kovalanıyor")
+                    : "Kovala"
+                }
+              </button>
+            </div>
           </div>
 
           <div className="mt-4">
@@ -616,8 +655,30 @@ export default function UserProfilePage() {
                 </span>
               </Link>
             </div>
+            {/* Mobile Visitors (Dikizleyenler) Section */}
+            <div className="lg:hidden mt-4 border-t border-theme-border pt-4">
+              {visitors.length > 0 && (
+                <div className="flex flex-col">
+                  <div className="flex overflow-x-auto gap-3 scrollbar-hide -mx-4 px-4">
+                    {visitors.map((visitor, idx) => (
+                      <Link key={idx} href={`/${visitor.nickname}`} className="flex-shrink-0 flex flex-col items-center gap-1 w-[50px]">
+                        <div className="w-[40px] h-[40px] relative rounded-lg overflow-hidden border border-theme-border">
+                          {visitor.profileImage ? (
+                            <img src={visitor.profileImage} alt={visitor.nickname} className="w-full h-full object-cover" />) : (
+                            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                              <span className="text-sm font-bold text-gray-400">{visitor.nickname[0].toUpperCase()}</span>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
 
         <div className="flex border-t border-theme-border">
           <button
@@ -876,6 +937,19 @@ export default function UserProfilePage() {
         imageUrl={selectedImage}
         onClose={() => setSelectedImage(null)}
       />
+
+      {/* {profile && (
+        <DirectMessageModal
+          isOpen={isMessageModalOpen}
+          onClose={() => setIsMessageModalOpen(false)}
+          recipient={{
+            id: profile.id!,
+            fullName: profile.fullName,
+            username: profile.username,
+            profileImage: profile.profileImage
+          }}
+        />
+      )} */}
     </>
   );
 }

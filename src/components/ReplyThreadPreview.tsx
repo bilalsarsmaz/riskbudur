@@ -18,7 +18,7 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
 
   if (!isThread) {
     return (
-      <div className="single-reply-preview">
+      <div className="single-reply-preview border-b border-theme-border">
         <div className="[&_.post]:border-b-0 [&_.post]:pb-0">
           <PostItem
             post={threadRoot}
@@ -30,19 +30,21 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
           />
         </div>
 
-        <PostItem
-          post={userReply}
-          showThreadLine={true}
-          isFirstInThread={false}
-          isLastInThread={true}
-          showThreadFooter={false}
-        />
+        <div className="[&_.post]:border-b-0">
+          <PostItem
+            post={userReply}
+            showThreadLine={true}
+            isFirstInThread={false}
+            isLastInThread={true}
+            showThreadFooter={false}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="reply-thread-preview">
+    <div className="reply-thread-preview border-b border-theme-border">
       <div className="[&_.post]:border-b-0 [&_.post]:pb-0">
         <PostItem
           post={threadRoot}
@@ -54,47 +56,36 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
         />
       </div>
 
-      <div className="relative" style={{ height: '48px' }}>
+      <div className="relative group cursor-pointer" style={{ height: '48px' }}>
+        <Link href={`/${threadRoot.author.nickname}/status/${threadRoot.id}`} className="absolute inset-0 z-10" />
+
+        {/* Dashed Lines */}
         <div
-          className="absolute"
-          style={{
-            left: '35px',
-            top: '0',
-            height: '12px',
-            width: '2px',
-            backgroundColor: 'var(--app-icon-verified)',
-          }}
+          className="absolute bg-[var(--app-icon-verified)] w-[2px] left-[28px] sm:left-[36px]"
+          style={{ top: '0', height: '12px' }}
         />
         <div
-          className="absolute"
-          style={{
-            left: '35px',
-            top: '16px',
-            height: '6px',
-            width: '2px',
-            backgroundColor: 'var(--app-icon-verified)',
-          }}
+          className="absolute bg-[var(--app-icon-verified)] w-[2px] left-[28px] sm:left-[36px]"
+          style={{ top: '16px', height: '6px' }}
         />
         <div
-          className="absolute"
-          style={{
-            left: '35px',
-            top: '26px',
-            height: '6px',
-            width: '2px',
-            backgroundColor: 'var(--app-icon-verified)',
-          }}
+          className="absolute bg-[var(--app-icon-verified)] w-[2px] left-[28px] sm:left-[36px]"
+          style={{ top: '26px', height: '6px' }}
         />
         <div
-          className="absolute"
-          style={{
-            left: '35px',
-            top: '36px',
-            height: '12px',
-            width: '2px',
-            backgroundColor: 'var(--app-icon-verified)',
-          }}
+          className="absolute bg-[var(--app-icon-verified)] w-[2px] left-[28px] sm:left-[36px]"
+          style={{ top: '36px', height: '12px' }}
         />
+
+        {/* Text */}
+        <div className="absolute top-0 bottom-0 left-[48px] sm:left-[56px] flex items-center">
+          <span
+            className="text-sm font-medium hover:underline transition-all"
+            style={{ color: 'var(--app-global-link-color)' }}
+          >
+            Daha fazla göster
+          </span>
+        </div>
       </div>
 
       {/* Son post - border yok */}
@@ -108,20 +99,6 @@ export default function ReplyThreadPreview({ threadRoot, userReply, middlePostsC
         />
       </div>
 
-      {/* HR cizgisi */}
-      <hr className="border-theme-border mx-4" />
-
-      {/* Sadece yazi ve icona tiklaninca yonlendirme */}
-      <div className="px-4 py-3 border-b border-theme-border flex justify-center">
-        <Link
-          href={`/${threadRoot.author.nickname}/status/${threadRoot.id}`}
-          className="inline-flex items-center gap-2 hover:opacity-80"
-          style={{ color: 'var(--app-global-link-color)' }}
-        >
-          <span className="text-xs">Tümünü gör</span>
-          <IconTimelineEventText size={14} />
-        </Link>
-      </div>
     </div>
   );
 }

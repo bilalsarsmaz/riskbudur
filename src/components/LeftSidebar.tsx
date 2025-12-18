@@ -34,6 +34,7 @@ export default function LeftSidebar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   // Load theme from localStorage on mount
@@ -95,12 +96,42 @@ export default function LeftSidebar() {
       }
     };
 
+    const fetchUnreadMessagesCount = async () => {
+      try {
+        const res = await fetchApi("/conversations/unread-count");
+        if (res && typeof res.count === 'number') {
+          setUnreadMessagesCount(res.count);
+        }
+      } catch (error) {
+        console.error("Okunmamış mesaj sayısı alınamadı:", error);
+      }
+    };
+
     fetchUserData();
     fetchNotificationCount();
+    fetchUnreadMessagesCount();
 
     // Basit bir polling (her 30 saniyede bir güncelle)
-    const interval = setInterval(fetchNotificationCount, 30000);
+    const interval = setInterval(() => {
+      fetchNotificationCount();
+      fetchUnreadMessagesCount();
+    }, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleMessagesRead = () => {
+      // Re-fetch count when a message is read
+      fetchApi("/conversations/unread-count")
+        .then(res => {
+          if (res && typeof res.count === 'number') {
+            setUnreadMessagesCount(res.count);
+          }
+        })
+        .catch(console.error);
+    };
+    window.addEventListener('messagesRead', handleMessagesRead);
+    return () => window.removeEventListener('messagesRead', handleMessagesRead);
   }, []);
 
   // Map menu items with dynamic href for profile
@@ -184,6 +215,11 @@ export default function LeftSidebar() {
                     {item.id === 'notifications' && notificationCount > 0 && (
                       <div className="absolute -top-1 right-2 text-black text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center" style={{ backgroundColor: 'var(--app-global-link-color)' }}>
                         {notificationCount > 9 ? '9+' : notificationCount}
+                      </div>
+                    )}
+                    {item.id === 'messages' && unreadMessagesCount > 0 && (
+                      <div className="absolute -top-1 right-2 text-black text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center" style={{ backgroundColor: 'var(--app-global-link-color)' }}>
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
                       </div>
                     )}
                   </div>
