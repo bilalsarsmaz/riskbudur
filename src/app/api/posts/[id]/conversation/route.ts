@@ -30,38 +30,55 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     try {
+        const postSelect = {
+            id: true,
+            content: true,
+            mediaUrl: true,
+            imageUrl: true,
+            linkPreview: true,
+            isAnonymous: true,
+            createdAt: true,
+            authorId: true,
+            parentPostId: true,
+            author: {
+                select: {
+                    id: true,
+                    nickname: true,
+                    fullName: true,
+                    profileImage: true,
+                    hasBlueTick: true,
+                    verificationTier: true,
+                }
+            },
+            _count: {
+                select: {
+                    likes: true,
+                    comments: true,
+                    quotes: true,
+                    replies: true,
+                }
+            },
+            likes: { select: { userId: true } },
+            bookmarks: { select: { userId: true } },
+        };
+
         // 1. Fetch Main Post
         const mainPost = await prisma.post.findUnique({
             where: { id: BigInt(postId) },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        nickname: true,
-                        fullName: true,
-                        profileImage: true,
-                        hasBlueTick: true,
-                        verificationTier: true,
-                    }
-                },
-                _count: {
-                    select: {
-                        likes: true,
-                        comments: true,
-                        quotes: true,
-                        replies: true,
-                    }
-                },
-                likes: { select: { userId: true } },
-                bookmarks: { select: { userId: true } },
-            }
+            select: postSelect
         });
 
         if (!mainPost) {
             return NextResponse.json({ error: "Post bulunamadi" }, { status: 404 });
         }
 
-        // 2. Fetch Ancestors (Recursive Backend Loop)
+        console.log(`[DEBUG] Post ${postId} fetched:`, {
+            contentLength: mainPost.content?.length,
+            hasMedia: !!mainPost.mediaUrl,
+            hasImage: !!mainPost.imageUrl
+        });
+
+        // 2. Fetch Ancestors (Recursive)
         const ancestors: any[] = [];
         let currentParentId = mainPost.parentPostId;
         const visitedIds = new Set<string>();
@@ -69,46 +86,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
         while (currentParentId) {
             const parentIdStr = currentParentId.toString();
-            if (visitedIds.has(parentIdStr)) break; // Cycle prevention
+            if (visitedIds.has(parentIdStr)) break;
             visitedIds.add(parentIdStr);
 
             const parent = await prisma.post.findUnique({
                 where: { id: currentParentId },
-                include: {
-                    author: {
-                        select: {
-                            id: true,
-                            nickname: true,
-                            fullName: true,
-                            profileImage: true,
-                            hasBlueTick: true,
-                            verificationTier: true,
-                        }
-                    },
-                    _count: {
-                        select: {
-                            likes: true,
-                            comments: true,
-                            quotes: true,
-                            replies: true,
-                        }
-                    }
-                }
+                select: postSelect
             });
 
             if (parent) {
-                ancestors.unshift(parent); // Add to beginning (Root -> Parent)
+                ancestors.unshift(parent);
                 currentParentId = parent.parentPostId;
             } else {
                 break;
             }
         }
 
-
-        // Helper function to fetch quoted post for a post (with proper BigInt handling)
+        // Helper function for quotes
         const fetchQuotedPost = async (post: any) => {
             if (!post) return null;
-
             const quote = await prisma.quote.findFirst({
                 where: {
                     authorId: post.authorId,
@@ -121,45 +117,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 include: {
                     quotedPost: {
                         include: {
-                            author: {
-                                select: {
-                                    id: true,
-                                    nickname: true,
-                                    fullName: true,
-                                    profileImage: true,
-                                    hasBlueTick: true,
-                                    verificationTier: true,
-                                },
-                            },
-                            _count: {
-                                select: {
-                                    likes: true,
-                                    comments: true,
-                                    quotes: true,
-                                    replies: true,
-                                },
-                            },
-                        },
-                    },
-                },
+                            author: { select: { id: true, nickname: true, fullName: true, profileImage: true, hasBlueTick: true, verificationTier: true } },
+                            _count: { select: { likes: true, comments: true, quotes: true, replies: true } }
+                        }
+                    }
+                }
             });
-
-            if (quote && quote.quotedPost) {
-                return {
-                    ...post,
-                    quotedPost: quote.quotedPost
-                };
-            }
-            return post;
+            return quote?.quotedPost ? { ...post, quotedPost: quote.quotedPost } : post;
         };
 
-        // Format helper to ensure fields are explicitly included and consistent
-        const formatPost = (postRaw: any) => {
-            if (!postRaw) return null;
+        // Format helper
+        const formatPost = (post: any) => {
+            if (!post) return null;
             const userId = decodedUserId;
-
-            // Handle if it's already formatted partly or raw prisma
-            const post = postRaw;
 
             return {
                 id: post.id.toString(),
@@ -170,8 +140,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 linkPreview: post.linkPreview,
                 isAnonymous: post.isAnonymous || false,
                 author: post.author,
-                isLiked: userId ? (post.likes?.some((l: any) => l.userId === userId) || post.isLiked) : (post.isLiked || false),
-                isBookmarked: userId ? (post.bookmarks?.some((b: any) => b.userId === userId) || post.isBookmarked) : (post.isBookmarked || false),
+                isLiked: userId ? post.likes?.some((l: any) => l.userId === userId) : false,
+                isBookmarked: userId ? post.bookmarks?.some((b: any) => b.userId === userId) : false,
                 _count: {
                     likes: post._count?.likes || 0,
                     comments: (post._count?.comments || 0) + (post._count?.replies || 0),
@@ -193,7 +163,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             };
         };
 
-        // 3. Fetch ALL Replies (Recursive - get entire thread)
+        // 3. Fetch Replies recursively
         const fetchRepliesRecursive = async (parentId: bigint): Promise<any[]> => {
             const directReplies = await prisma.post.findMany({
                 where: { parentPostId: parentId },
@@ -239,8 +209,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         const mainPostWithQuote = await fetchQuotedPost(mainPost);
         const ancestorsWithQuotes = await Promise.all(ancestors.map(fetchQuotedPost));
 
+        const finalMainPost = formatPost(mainPostWithQuote);
+        console.log(`[DEBUG] finalMainPost:`, {
+            id: finalMainPost?.id,
+            content: finalMainPost?.content,
+            mediaUrl: finalMainPost?.mediaUrl
+        });
+
         return NextResponse.json(toJson({
-            mainPost: formatPost(mainPostWithQuote),
+            mainPost: finalMainPost,
             ancestors: ancestorsWithQuotes.map(formatPost),
             replies: replies
         }));

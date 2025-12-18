@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { content, postId, isAnonymous, linkPreview } = await req.json();
+    const { content, postId, isAnonymous, linkPreview, imageUrl, mediaUrl } = await req.json();
 
     // Parent post'un var olup olmadigini kontrol et
     const parentPost = await prisma.post.findUnique({
@@ -73,6 +73,8 @@ export async function POST(req: Request) {
         parentPostId: BigInt(postId),
         threadRootId: threadRootId,
         linkPreview: linkPreview || undefined,
+        imageUrl: imageUrl || null,
+        mediaUrl: mediaUrl || null,
       },
       include: {
         author: {
@@ -134,6 +136,8 @@ export async function POST(req: Request) {
         comments: reply._count.replies,
       },
       isLiked: false,
+      imageUrl: reply.imageUrl,
+      mediaUrl: reply.mediaUrl,
     };
 
     return NextResponse.json(formattedReply, { status: 201 });

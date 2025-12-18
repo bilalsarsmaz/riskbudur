@@ -190,6 +190,7 @@ export default function ComposeBox({
 
       if (previewUrl) {
         postData.imageUrl = previewUrl;
+        postData.mediaUrl = previewUrl;
       }
 
       if (linkPreview) {

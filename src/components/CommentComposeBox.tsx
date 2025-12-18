@@ -131,6 +131,7 @@ export default function CommentComposeBox({
           postId,
           content: content,
           imageUrl: previewUrl || undefined,
+          mediaUrl: previewUrl || undefined,
           linkPreview: linkPreview || undefined
         });
         setContent("");
