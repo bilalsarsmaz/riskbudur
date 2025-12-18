@@ -74,7 +74,8 @@ export default function CommentComposeBox({
       if (!urls || urls.length === 0) return;
 
       const url = urls[0];
-      if (url.includes('riskbudur.com/status')) {
+      // riskbudur.net/username/status/[id] linkleri için önizleme yapma
+      if (url.includes('riskbudur.net') && url.includes('/status/')) {
         setLinkPreview(null);
         return;
       }

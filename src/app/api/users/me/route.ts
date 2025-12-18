@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { verifyTokenAndUpdateActivity } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function GET(req: Request) {
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
       );
     }
 
-    const decoded = await verifyToken(token);
+    const decoded = await verifyTokenAndUpdateActivity(token);
     if (!decoded) {
       return NextResponse.json(
         { message: "Geçersiz token" },
@@ -21,10 +21,9 @@ export async function GET(req: Request) {
       );
     }
 
-    // Kullanıcıya giriş yapıldığı anda lastSeen güncelle
-    const user = await prisma.user.update({
+    // lastSeen is now automatically updated by verifyTokenAndUpdateActivity
+    const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      data: { lastSeen: new Date() },
       select: {
         fullName: true,
         bio: true,
@@ -84,7 +83,7 @@ export async function PUT(req: Request) {
       );
     }
 
-    const decoded = await verifyToken(token);
+    const decoded = await verifyTokenAndUpdateActivity(token);
     if (!decoded) {
       return NextResponse.json(
         { message: "Geçersiz token" },

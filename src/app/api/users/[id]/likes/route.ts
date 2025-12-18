@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
 export async function GET(
   req: Request,
@@ -12,6 +13,18 @@ export async function GET(
     const take = parseInt(searchParams.get("take") || "20");
 
     const username = params.id;
+
+    // Extract current user ID from token (the logged-in user viewing this page)
+    let currentUserId: string | null = null;
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+        currentUserId = decoded.userId;
+      } catch {
+        // Token invalid or missing, continue without user context
+      }
+    }
 
     const user = await prisma.user.findFirst({
       where: {
@@ -29,9 +42,10 @@ export async function GET(
       );
     }
 
+    // Get the profile user's likes (the user whose profile we're viewing)
     const likes = await prisma.like.findMany({
       where: {
-        userId: user.id,
+        userId: user.id,  // Profile owner's likes
       },
       skip,
       take,
@@ -63,8 +77,23 @@ export async function GET(
       },
     });
 
+    // Get current user's likes (to determine isLiked status)
+    let currentUserLikedPostIds: string[] = [];
+    if (currentUserId) {
+      const postIds = likes.map(like => like.post.id);
+      const currentUserLikes = await prisma.like.findMany({
+        where: {
+          userId: currentUserId,  // Current logged-in user
+          postId: { in: postIds }
+        },
+        select: { postId: true }
+      });
+      currentUserLikedPostIds = currentUserLikes.map(like => like.postId.toString());
+    }
+
     const formattedPosts = await Promise.all(likes.map(async (like) => {
       const post = like.post;
+      const postIdStr = post.id.toString();
 
       const quote = await prisma.quote.findFirst({
         where: {
@@ -94,14 +123,15 @@ export async function GET(
       });
 
       const basePost = {
-        id: post.id.toString(),
+        id: postIdStr,
         content: post.content,
         createdAt: post.createdAt.toISOString(),
         mediaUrl: post.mediaUrl,
         imageUrl: post.imageUrl,
         linkPreview: post.linkPreview,
         isAnonymous: post.isAnonymous,
-        isLiked: true,
+        // Check if CURRENT USER has liked this post (not the profile owner)
+        isLiked: currentUserId ? currentUserLikedPostIds.includes(postIdStr) : false,
         author: {
           id: post.author.id,
           nickname: post.author.nickname,

@@ -6,17 +6,17 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const origin = request.headers.get('origin');
     const allowedOrigins = [
-      'https://ultraswall.com',
-      'https://www.ultraswall.com'
+      'https://riskbudur.net',
+      'https://www.riskbudur.net'
     ];
 
     // Origin kontrolü
-    const responseOrigin = origin && allowedOrigins.includes(origin) 
-      ? origin 
+    const responseOrigin = origin && allowedOrigins.includes(origin)
+      ? origin
       : allowedOrigins[0];
 
     const response = NextResponse.next();
-    
+
     // CORS header'larını ekle
     response.headers.set('Access-Control-Allow-Origin', responseOrigin);
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');

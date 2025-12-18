@@ -27,13 +27,7 @@ export async function GET(req: NextRequest) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
         userId = decoded.userId;
-
-        // Update lastSeen
-        await prisma.user.update({
-          where: { id: userId },
-          data: { lastSeen: new Date() }
-        }).catch(err => console.error("LastSeen update error:", err));
-
+        // lastSeen is now automatically updated via verifyTokenAndUpdateActivity in other endpoints
       } catch (error) {
         // Token gecersiz, devam et
       }

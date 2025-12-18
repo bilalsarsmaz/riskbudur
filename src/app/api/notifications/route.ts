@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
+import { verifyTokenAndUpdateActivity } from "@/lib/auth";
 
 const NOTIFICATIONS_PER_PAGE = 20;
 
@@ -37,13 +37,12 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        let userId: string;
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-            userId = decoded.userId;
-        } catch {
+        const decoded = await verifyTokenAndUpdateActivity(token);
+        if (!decoded) {
             return NextResponse.json({ message: "Invalid token" }, { status: 401 });
         }
+
+        const userId = decoded.userId;
 
         const { searchParams } = new URL(req.url);
         const page = parseInt(searchParams.get("page") || "1");

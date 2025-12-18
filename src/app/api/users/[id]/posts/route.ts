@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
 // Mention'lari cikar
 function extractMentions(content: string): string[] {
@@ -20,6 +21,18 @@ export async function GET(
     const take = parseInt(searchParams.get("take") || "20");
 
     const username = params.id;
+
+    // Extract current user ID from token (optional - user might not be logged in)
+    let currentUserId: string | null = null;
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+        currentUserId = decoded.userId;
+      } catch {
+        // Token invalid or missing, continue without user context
+      }
+    }
 
     const user = await prisma.user.findFirst({
       where: {
@@ -69,6 +82,56 @@ export async function GET(
         },
       },
     });
+
+    // Fetch user's interactions if logged in
+    let likedPostIds: string[] = [];
+    let commentedPostIds: string[] = [];
+    let quotedPostIds: string[] = [];
+    let bookmarkedPostIds: string[] = [];
+
+    if (currentUserId) {
+      const postIds = posts.map(p => p.id);
+
+      // Fetch likes
+      const userLikes = await prisma.like.findMany({
+        where: {
+          userId: currentUserId,
+          postId: { in: postIds }
+        },
+        select: { postId: true }
+      });
+      likedPostIds = userLikes.map(like => like.postId.toString());
+
+      // Fetch comments
+      const userComments = await prisma.comment.findMany({
+        where: {
+          authorId: currentUserId,
+          postId: { in: postIds }
+        },
+        select: { postId: true }
+      });
+      commentedPostIds = userComments.map(comment => comment.postId.toString());
+
+      // Fetch quotes
+      const userQuotes = await prisma.quote.findMany({
+        where: {
+          authorId: currentUserId,
+          quotedPostId: { in: postIds }
+        },
+        select: { quotedPostId: true }
+      });
+      quotedPostIds = userQuotes.map(quote => quote.quotedPostId.toString());
+
+      // Fetch bookmarks
+      const userBookmarks = await prisma.bookmark.findMany({
+        where: {
+          userId: currentUserId,
+          postId: { in: postIds }
+        },
+        select: { postId: true }
+      });
+      bookmarkedPostIds = userBookmarks.map(bookmark => bookmark.postId.toString());
+    }
 
     // Mention validasyonu
     const allMentions = new Set<string>();
@@ -122,8 +185,9 @@ export async function GET(
       });
       const isThread = threadRepliesCount >= 4;
 
+      const postIdStr = post.id.toString();
       const basePost = {
-        id: post.id.toString(),
+        id: postIdStr,
         content: post.content,
         createdAt: post.createdAt.toISOString(),
         mediaUrl: post.mediaUrl,
@@ -146,6 +210,11 @@ export async function GET(
         isThread: isThread,
         threadRepliesCount: threadRepliesCount,
         mentionedUsers: extractMentions(post.content).filter(m => validMentions.has(m)),
+        // Add interaction states
+        isLiked: currentUserId ? likedPostIds.includes(postIdStr) : false,
+        isCommented: currentUserId ? commentedPostIds.includes(postIdStr) : false,
+        isQuoted: currentUserId ? quotedPostIds.includes(postIdStr) : false,
+        isBookmarked: currentUserId ? bookmarkedPostIds.includes(postIdStr) : false,
       };
 
       if (quote && quote.quotedPost) {

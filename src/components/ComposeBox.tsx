@@ -113,8 +113,8 @@ export default function ComposeBox({
         url = 'https://' + url;
       }
 
-      // ultraswall.com/status linkleri için önizleme yapma, sadece alıntı olarak göster
-      if (url.includes('riskbudur.com/status')) {
+      // riskbudur.net/username/status/[id] linkleri için önizleme yapma, sadece alıntı olarak göster
+      if (url.includes('riskbudur.net') && url.includes('/status/')) {
         setLinkPreview(null);
         return;
       }

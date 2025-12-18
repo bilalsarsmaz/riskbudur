@@ -329,7 +329,7 @@ export default function PostItem({
   // Post içeriğini parse edip hashtag ve linkleri tıklanabilir hale getir
   const parseContent = (content: string) => {
     if (!content) return null;
-    const postLinkRegex = /(?:https?:\/\/)?(?:www\.)?ultraswall\.com\/(?:[^\/]+\/)?status\/\d+/gi;
+    const postLinkRegex = /(?:https?:\/\/)?(?:www\.)?riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/gi;
 
     // Önce içeriğin sadece post linki(leri) ve boşluklardan oluşup oluşmadığını kontrol et
     const tempContent = content.trim();
@@ -385,7 +385,7 @@ export default function PostItem({
     // Diğer linkleri bul
     while ((match = linkRegex.exec(content)) !== null) {
       const m = match!;
-      const isPostLink = /ultraswall\.com\/(?:[^\/]+\/)?status\/\d+/i.test(m[0]);
+      const isPostLink = /riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/i.test(m[0]);
 
       // Çakışma kontrolü
       const isOverlapping = matches.some(existing =>
