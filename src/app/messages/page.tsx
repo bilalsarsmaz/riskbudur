@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SecondaryLayout from "@/components/SecondaryLayout";
 import ConversationList from "@/components/messages/ConversationList";
@@ -7,6 +7,20 @@ import MessageWindow from "@/components/messages/MessageWindow";
 import { fetchApi, postApi } from "@/lib/api";
 
 export default function MessagesPage() {
+    return (
+        <Suspense fallback={
+            <SecondaryLayout maxWidth="100%">
+                <div className="flex h-screen items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1DCD9F]"></div>
+                </div>
+            </SecondaryLayout>
+        }>
+            <MessagesContent />
+        </Suspense>
+    );
+}
+
+function MessagesContent() {
     const searchParams = useSearchParams();
     const selectedId = searchParams.get("id");
     const userParam = searchParams.get("user"); // New: user parameter for new conversations
