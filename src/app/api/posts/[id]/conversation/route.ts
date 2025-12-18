@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
+import jwt from "jsonwebtoken";
+
 // BigInt serialization helper
 function toJson(data: any): any {
     return JSON.parse(JSON.stringify(data, (key, value) =>
@@ -12,6 +14,16 @@ function toJson(data: any): any {
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id: postId } = await params;
+
+    // Auth check for interaction states
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    let decodedUserId: string | null = null;
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+            decodedUserId = decoded.userId;
+        } catch (e) { }
+    }
 
     if (!postId) {
         return NextResponse.json({ error: "Post ID gerekli" }, { status: 400 });
@@ -125,6 +137,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             const repliesWithNested = await Promise.all(
                 directReplies.map(async (reply) => {
                     const nestedReplies = await fetchRepliesRecursive(reply.id);
+                    const userId = decodedUserId;
+
+                    // Recursive like/bookmark check
+                    const userLikes = userId ? await prisma.like.findMany({
+                        where: { userId, postId: reply.id }
+                    }) : [];
+
+                    const isLiked = userLikes.length > 0;
+
                     return {
                         id: reply.id.toString(),
                         content: reply.content,
@@ -134,6 +155,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                         linkPreview: reply.linkPreview,
                         isAnonymous: reply.isAnonymous,
                         author: reply.author,
+                        isLiked: isLiked,
                         _count: {
                             likes: reply._count.likes,
                             comments: reply._count.replies,
@@ -226,30 +248,38 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         const repliesWithQuotes = await addQuotedPostToReplies(replies);
 
         // Format helper to ensure fields are explicitly included
-        const formatPost = (post: any) => ({
-            id: post.id.toString(),
-            content: post.content,
-            createdAt: post.createdAt,
-            mediaUrl: post.mediaUrl,
-            imageUrl: post.imageUrl,
-            linkPreview: post.linkPreview,
-            isAnonymous: post.isAnonymous,
-            author: post.author,
-            _count: post._count,
-            likes: post.likes,
-            bookmarks: post.bookmarks,
-            quotedPost: post.quotedPost ? {
-                id: post.quotedPost.id.toString(),
-                content: post.quotedPost.content,
-                createdAt: post.quotedPost.createdAt,
-                imageUrl: post.quotedPost.imageUrl,
-                mediaUrl: post.quotedPost.mediaUrl,
-                linkPreview: post.quotedPost.linkPreview,
-                isAnonymous: post.quotedPost.isAnonymous,
-                author: post.quotedPost.author,
-                _count: post.quotedPost._count,
-            } : null,
-        });
+        const formatPost = (post: any) => {
+            const userId = decodedUserId; // Use outer scope decodedUserId
+            return {
+                id: post.id.toString(),
+                content: post.content,
+                createdAt: post.createdAt,
+                mediaUrl: post.mediaUrl,
+                imageUrl: post.imageUrl,
+                linkPreview: post.linkPreview,
+                isAnonymous: post.isAnonymous,
+                author: post.author,
+                isLiked: userId ? post.likes?.some((l: any) => l.userId === userId) : false,
+                isBookmarked: userId ? post.bookmarks?.some((b: any) => b.userId === userId) : false,
+                _count: {
+                    likes: post._count.likes,
+                    comments: post._count.comments + post._count.replies,
+                    quotes: post._count.quotes,
+                    replies: post._count.replies,
+                },
+                quotedPost: post.quotedPost ? {
+                    id: post.quotedPost.id.toString(),
+                    content: post.quotedPost.content,
+                    createdAt: post.quotedPost.createdAt,
+                    imageUrl: post.quotedPost.imageUrl,
+                    mediaUrl: post.quotedPost.mediaUrl,
+                    linkPreview: post.quotedPost.linkPreview,
+                    isAnonymous: post.quotedPost.isAnonymous,
+                    author: post.quotedPost.author,
+                    _count: post.quotedPost._count,
+                } : null,
+            };
+        };
 
         return NextResponse.json(toJson({
             mainPost: formatPost(mainPostWithQuote),

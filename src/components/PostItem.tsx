@@ -891,7 +891,7 @@ export default function PostItem({
           post={post}
           isOpen={isQuoteModalOpen}
           onClose={() => setIsQuoteModalOpen(false)}
-          onQuoteAdded={onPostCreated || (() => { })}
+          onQuoteAdded={(newPost) => newPost && onPostCreated?.(newPost)}
         />
 
         <ImageModal
@@ -987,7 +987,7 @@ export default function PostItem({
                     src={post.imageUrl || post.mediaUrl}
                     alt="Post görseli"
                     className="w-full h-auto"
-                    style={{ maxWidth: "518px", maxHeight: "518px", objectFit: "contain", width: "auto", height: "auto" }}
+                    style={{ maxWidth: "518px", maxHeight: "518px", objectFit: "contain" }}
                   />
                 </div>
               )}
@@ -1143,7 +1143,9 @@ export default function PostItem({
                     className="post-quote-content cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/${post.quotedPost.author.nickname}/status/${post.quotedPost.id}`);
+                      if (post.quotedPost) {
+                        router.push(`/${post.quotedPost.author.nickname}/status/${post.quotedPost.id}`);
+                      }
                     }}
                   >
                     {post.quotedPost.content && (

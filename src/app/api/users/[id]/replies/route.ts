@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
 async function findThreadRoot(postId: bigint): Promise<any> {
   const post = await prisma.post.findUnique({
@@ -60,6 +61,16 @@ export async function GET(
 
     const params = await props.params;
     const username = params.id;
+
+    // Auth check for interaction states
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    let userId: string | null = null;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+        userId = decoded.userId;
+      } catch (e) { }
+    }
 
     const user = await prisma.user.findFirst({
       where: {
@@ -135,6 +146,21 @@ export async function GET(
         });
       }
 
+      // Interaction checks
+      let isLiked = false;
+      let isBookmarked = false;
+      if (userId) {
+        const like = await prisma.like.findFirst({
+          where: { userId, postId: reply.id }
+        });
+        isLiked = !!like;
+
+        const bookmark = await prisma.bookmark.findFirst({
+          where: { userId, postId: reply.id }
+        });
+        isBookmarked = !!bookmark;
+      }
+
       const baseReply = {
         id: reply.id.toString(),
         content: reply.content,
@@ -144,6 +170,8 @@ export async function GET(
         linkPreview: reply.linkPreview,
         isAnonymous: reply.isAnonymous,
         author: reply.author,
+        isLiked: isLiked,
+        isBookmarked: isBookmarked,
         threadRoot: threadRoot,
         middlePostsCount: middlePostsCount,
         threadRepliesCount: threadRepliesCount,
