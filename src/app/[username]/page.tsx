@@ -47,6 +47,7 @@ interface Profile {
   isFollowing?: boolean;
   id?: string;
   isBanned?: boolean;
+  followsYou?: boolean;
 }
 
 interface Visitor {
@@ -612,7 +613,14 @@ export default function UserProfilePage() {
                 className="w-6 h-6 ml-0.5"
               />
             </div>
-            <p className="text-gray-500">@{profile!.username}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-gray-500">@{profile!.username}</p>
+              {profile!.followsYou && (
+                <span className="bg-[#1e2732] text-[#71767b] text-[11px] px-1.5 py-0.5 rounded font-medium">
+                  Seni takip ediyor
+                </span>
+              )}
+            </div>
 
             {profile!.bio && <p className="mt-2" style={{ color: 'var(--app-body-text)' }}>{parseBioWithMentions(profile!.bio)}</p>}
 

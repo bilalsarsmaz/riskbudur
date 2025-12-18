@@ -46,22 +46,44 @@ export async function GET(
 
     // Token varsa takip durumunu kontrol et
     let isFollowing = false;
+    let followsYou = false;
+
     const authHeader = req.headers.get("authorization");
     if (authHeader) {
       const token = authHeader.split(" ")[1];
-      const { verifyToken } = await import("@/lib/auth");
-      const decoded: any = await verifyToken(token);
+      if (token) {
+        try {
+          const { verifyToken } = await import("@/lib/auth");
+          const decoded: any = await verifyToken(token);
 
-      if (decoded) {
-        const follow = await prisma.follow.findUnique({
-          where: {
-            followerId_followingId: {
-              followerId: decoded.userId,
-              followingId: user.id
+          if (decoded) {
+            // Oturum açan kullanıcının bu kişiyi takip edip etmediği
+            const follow = await prisma.follow.findUnique({
+              where: {
+                followerId_followingId: {
+                  followerId: decoded.userId,
+                  followingId: user.id
+                }
+              }
+            });
+            isFollowing = !!follow;
+
+            // Bu kişinin oturum açan kullanıcıyı takip edip etmediği (Seni takip ediyor)
+            if (decoded.userId !== user.id) {
+              const followsYouResult = await prisma.follow.findUnique({
+                where: {
+                  followerId_followingId: {
+                    followerId: user.id,
+                    followingId: decoded.userId
+                  }
+                }
+              });
+              followsYou = !!followsYouResult;
             }
           }
-        });
-        isFollowing = !!follow;
+        } catch (e) {
+          console.error("Token verify error:", e);
+        }
       }
     }
 
@@ -72,7 +94,7 @@ export async function GET(
     });
 
     return NextResponse.json({
-      id: user.id, // Add ID
+      id: user.id,
       username: user.nickname,
       fullName: user.fullName || user.nickname,
       bio: user.bio,
@@ -85,8 +107,9 @@ export async function GET(
       verificationTier: user.verificationTier,
       coverImage: user.coverImage,
       profileImage: user.profileImage,
-      isFollowing, // Add isFollowing
-      isBanned: user.isBanned // Add isBanned
+      isFollowing,
+      followsYou,
+      isBanned: user.isBanned
     });
   } catch (error) {
     console.error("Kullanıcı bilgisi getirme hatası:", error);
