@@ -616,8 +616,15 @@ export default function UserProfilePage() {
             <div className="flex items-center gap-2">
               <p className="text-gray-500">@{profile!.username}</p>
               {profile!.followsYou && (
-                <span className="bg-[#1e2732] text-[#71767b] text-[11px] px-1.5 py-0.5 rounded font-medium">
-                  Seni takip ediyor
+                <span
+                  className="text-[11px] px-1.5 py-0.5 rounded font-medium border"
+                  style={{
+                    backgroundColor: 'var(--app-body-bg)',
+                    borderColor: 'var(--app-border)',
+                    color: 'var(--app-subtitle)'
+                  }}
+                >
+                  Seni Kovalıyor
                 </span>
               )}
             </div>
