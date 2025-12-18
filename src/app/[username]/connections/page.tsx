@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import StandardPageLayout from "@/components/StandardPageLayout";
 import GlobalHeader from "@/components/GlobalHeader";
@@ -19,6 +19,20 @@ interface User {
 }
 
 export default function ConnectionsPage() {
+    return (
+        <Suspense fallback={
+            <StandardPageLayout>
+                <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1DCD9F]"></div>
+                </div>
+            </StandardPageLayout>
+        }>
+            <ConnectionsContent />
+        </Suspense>
+    );
+}
+
+function ConnectionsContent() {
     const params = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
