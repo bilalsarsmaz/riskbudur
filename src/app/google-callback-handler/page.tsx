@@ -1,10 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from 'js-cookie';
 
 export default function GoogleCallbackHandler() {
+    return (
+        <div className="min-h-screen bg-black flex items-center justify-center text-white">
+            <Suspense fallback={
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                    <p>Yükleniyor...</p>
+                </div>
+            }>
+                <GoogleCallbackContent />
+            </Suspense>
+        </div>
+    );
+}
+
+function GoogleCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -31,11 +46,9 @@ export default function GoogleCallbackHandler() {
     }, [router, searchParams]);
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center text-white">
-            <div className="flex flex-col items-center gap-4">
-                <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                <p>Giriş yapılıyor...</p>
-            </div>
+        <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+            <p>Giriş yapılıyor...</p>
         </div>
     );
 }
