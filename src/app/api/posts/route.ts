@@ -317,9 +317,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { content, imageUrl, mediaUrl, isAnonymous, linkPreview, parentPostId } = body;
 
-    if (!content || content.trim().length === 0) {
+    if ((!content || content.trim().length === 0) && !imageUrl && !mediaUrl) {
       return NextResponse.json(
-        { message: "Post icerigi bos olamaz" },
+        { message: "Post içeriği veya görsel boş olamaz" },
         { status: 400 }
       );
     }

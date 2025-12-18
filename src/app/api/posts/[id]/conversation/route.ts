@@ -126,7 +126,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 directReplies.map(async (reply) => {
                     const nestedReplies = await fetchRepliesRecursive(reply.id);
                     return {
-                        ...reply,
+                        id: reply.id.toString(),
+                        content: reply.content,
+                        createdAt: reply.createdAt,
+                        mediaUrl: reply.mediaUrl,
+                        imageUrl: reply.imageUrl,
+                        linkPreview: reply.linkPreview,
+                        isAnonymous: reply.isAnonymous,
+                        author: reply.author,
+                        _count: {
+                            likes: reply._count.likes,
+                            comments: reply._count.replies,
+                            quotes: reply._count.quotes,
+                            replies: reply._count.replies,
+                        },
                         comments: nestedReplies // Attach nested replies
                     };
                 })
