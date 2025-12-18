@@ -298,7 +298,7 @@ export default function MessageWindow({
                 {showGifPicker && (
                     <div ref={gifPickerRef} className="absolute bottom-full left-3 mb-2 z-50 shadow-2xl">
                         <ErrorBoundary fallback={<div className="p-4 text-center bg-[#16181c] rounded-lg border border-theme-border text-sm">GIF yüklenemedi.</div>}>
-                            <GifPicker tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || "LIVDSRZULELA"} onGifClick={handleGifClick} width={300} height={400} theme={window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' as any} />
+                            <GifPicker tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || "LIVDSRZULELA"} clientKey="riskbudur_web" onGifClick={handleGifClick} width={300} height={400} theme={window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' as any} />
                         </ErrorBoundary>
                     </div>
                 )}

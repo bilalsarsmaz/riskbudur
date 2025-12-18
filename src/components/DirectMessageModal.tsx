@@ -292,6 +292,7 @@ export default function DirectMessageModal({ isOpen, onClose, recipient }: Direc
                             <ErrorBoundary fallback={<div className="p-4 text-center text-gray-500">GIF yüklenemedi.</div>}>
                                 <GifPicker
                                     tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || "LIVDSRZULELA"}
+                                    clientKey="riskbudur_web"
                                     onGifClick={handleGifClick}
                                     width={320}
                                     height={450}
