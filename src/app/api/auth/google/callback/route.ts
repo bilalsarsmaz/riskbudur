@@ -91,7 +91,7 @@ export async function GET(req: Request) {
         // BUT our frontend `page.tsx` checks `localStorage`.
         // Strategy: We will redirect to `/google-callback?token=...` which is a temporary client page that saves token to localstorage and then redirects to home/setup.
 
-        const response = NextResponse.redirect(new URL("/google-callback-handler?token=" + token + "&setup=" + userAny.isSetupComplete, req.url));
+        const response = NextResponse.redirect(new URL(`${baseUrl}/google-callback-handler?token=${token}&setup=${userAny.isSetupComplete}`));
 
         response.cookies.set({
             name: 'token',
