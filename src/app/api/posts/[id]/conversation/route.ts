@@ -104,77 +104,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             }
         }
 
-        // 3. Fetch ALL Replies (Recursive - get entire thread)
-        const fetchRepliesRecursive = async (parentId: bigint): Promise<any[]> => {
-            const directReplies = await prisma.post.findMany({
-                where: {
-                    parentPostId: parentId
-                },
-                orderBy: { createdAt: 'asc' },
-                include: {
-                    author: {
-                        select: {
-                            id: true,
-                            nickname: true,
-                            fullName: true,
-                            profileImage: true,
-                            hasBlueTick: true,
-                            verificationTier: true,
-                        }
-                    },
-                    _count: {
-                        select: {
-                            likes: true,
-                            comments: true,
-                            quotes: true,
-                            replies: true,
-                        }
-                    }
-                }
-            });
 
-            // For each reply, recursively fetch its replies
-            const repliesWithNested = await Promise.all(
-                directReplies.map(async (reply) => {
-                    const nestedReplies = await fetchRepliesRecursive(reply.id);
-                    const userId = decodedUserId;
-
-                    // Recursive like/bookmark check
-                    const userLikes = userId ? await prisma.like.findMany({
-                        where: { userId, postId: reply.id }
-                    }) : [];
-
-                    const isLiked = userLikes.length > 0;
-
-                    return {
-                        id: reply.id.toString(),
-                        content: reply.content,
-                        createdAt: reply.createdAt,
-                        mediaUrl: reply.mediaUrl,
-                        imageUrl: reply.imageUrl,
-                        linkPreview: reply.linkPreview,
-                        isAnonymous: reply.isAnonymous,
-                        author: reply.author,
-                        isLiked: isLiked,
-                        _count: {
-                            likes: reply._count.likes,
-                            comments: reply._count.replies,
-                            quotes: reply._count.quotes,
-                            replies: reply._count.replies,
-                        },
-                        comments: nestedReplies // Attach nested replies
-                    };
-                })
-            );
-
-            return repliesWithNested;
-        };
-
-
-        const replies = await fetchRepliesRecursive(BigInt(postId));
-
-        // Helper function to fetch quoted post for a post
+        // Helper function to fetch quoted post for a post (with proper BigInt handling)
         const fetchQuotedPost = async (post: any) => {
+            if (!post) return null;
+
             const quote = await prisma.quote.findFirst({
                 where: {
                     authorId: post.authorId,
@@ -202,6 +136,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                                     likes: true,
                                     comments: true,
                                     quotes: true,
+                                    replies: true,
                                 },
                             },
                         },
@@ -212,79 +147,102 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             if (quote && quote.quotedPost) {
                 return {
                     ...post,
-                    quotedPost: {
-                        id: quote.quotedPost.id.toString(),
-                        content: quote.quotedPost.content,
-                        createdAt: quote.quotedPost.createdAt,
-                        imageUrl: quote.quotedPost.imageUrl,
-                        mediaUrl: quote.quotedPost.mediaUrl,
-                        linkPreview: quote.quotedPost.linkPreview,
-                        isAnonymous: quote.quotedPost.isAnonymous,
-                        author: quote.quotedPost.author,
-                        _count: quote.quotedPost._count,
-                    },
+                    quotedPost: quote.quotedPost
                 };
             }
             return post;
         };
 
-        // Fetch quoted posts for main post, ancestors, and replies
-        const mainPostWithQuote = await fetchQuotedPost(mainPost);
-        const ancestorsWithQuotes = await Promise.all(ancestors.map(fetchQuotedPost));
+        // Format helper to ensure fields are explicitly included and consistent
+        const formatPost = (postRaw: any) => {
+            if (!postRaw) return null;
+            const userId = decodedUserId;
 
-        // Recursively add quoted posts to replies
-        const addQuotedPostToReplies = async (replies: any[]): Promise<any[]> => {
+            // Handle if it's already formatted partly or raw prisma
+            const post = postRaw;
+
+            return {
+                id: post.id.toString(),
+                content: post.content || "",
+                createdAt: post.createdAt,
+                mediaUrl: post.mediaUrl || null,
+                imageUrl: post.imageUrl || null,
+                linkPreview: post.linkPreview,
+                isAnonymous: post.isAnonymous || false,
+                author: post.author,
+                isLiked: userId ? (post.likes?.some((l: any) => l.userId === userId) || post.isLiked) : (post.isLiked || false),
+                isBookmarked: userId ? (post.bookmarks?.some((b: any) => b.userId === userId) || post.isBookmarked) : (post.isBookmarked || false),
+                _count: {
+                    likes: post._count?.likes || 0,
+                    comments: (post._count?.comments || 0) + (post._count?.replies || 0),
+                    quotes: post._count?.quotes || 0,
+                    replies: post._count?.replies || 0,
+                },
+                quotedPost: post.quotedPost ? {
+                    id: post.quotedPost.id.toString(),
+                    content: post.quotedPost.content || "",
+                    createdAt: post.quotedPost.createdAt,
+                    imageUrl: post.quotedPost.imageUrl || null,
+                    mediaUrl: post.quotedPost.mediaUrl || null,
+                    linkPreview: post.quotedPost.linkPreview,
+                    isAnonymous: post.quotedPost.isAnonymous || false,
+                    author: post.quotedPost.author,
+                    _count: post.quotedPost._count,
+                } : null,
+                comments: post.comments || []
+            };
+        };
+
+        // 3. Fetch ALL Replies (Recursive - get entire thread)
+        const fetchRepliesRecursive = async (parentId: bigint): Promise<any[]> => {
+            const directReplies = await prisma.post.findMany({
+                where: { parentPostId: parentId },
+                orderBy: { createdAt: 'asc' },
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            nickname: true,
+                            fullName: true,
+                            profileImage: true,
+                            hasBlueTick: true,
+                            verificationTier: true,
+                        }
+                    },
+                    _count: {
+                        select: {
+                            likes: true,
+                            comments: true,
+                            quotes: true,
+                            replies: true,
+                        }
+                    },
+                    likes: { select: { userId: true } },
+                    bookmarks: { select: { userId: true } },
+                }
+            });
+
             return Promise.all(
-                replies.map(async (reply) => {
+                directReplies.map(async (reply) => {
+                    const nestedReplies = await fetchRepliesRecursive(reply.id);
                     const replyWithQuote = await fetchQuotedPost(reply);
-                    if (reply.comments && reply.comments.length > 0) {
-                        replyWithQuote.comments = await addQuotedPostToReplies(reply.comments);
+                    const formatted = formatPost(replyWithQuote);
+                    if (formatted) {
+                        formatted.comments = nestedReplies;
                     }
-                    return replyWithQuote;
+                    return formatted;
                 })
             );
         };
 
-        const repliesWithQuotes = await addQuotedPostToReplies(replies);
-
-        // Format helper to ensure fields are explicitly included
-        const formatPost = (post: any) => {
-            const userId = decodedUserId; // Use outer scope decodedUserId
-            return {
-                id: post.id.toString(),
-                content: post.content,
-                createdAt: post.createdAt,
-                mediaUrl: post.mediaUrl,
-                imageUrl: post.imageUrl,
-                linkPreview: post.linkPreview,
-                isAnonymous: post.isAnonymous,
-                author: post.author,
-                isLiked: userId ? post.likes?.some((l: any) => l.userId === userId) : false,
-                isBookmarked: userId ? post.bookmarks?.some((b: any) => b.userId === userId) : false,
-                _count: {
-                    likes: post._count.likes,
-                    comments: post._count.comments + post._count.replies,
-                    quotes: post._count.quotes,
-                    replies: post._count.replies,
-                },
-                quotedPost: post.quotedPost ? {
-                    id: post.quotedPost.id.toString(),
-                    content: post.quotedPost.content,
-                    createdAt: post.quotedPost.createdAt,
-                    imageUrl: post.quotedPost.imageUrl,
-                    mediaUrl: post.quotedPost.mediaUrl,
-                    linkPreview: post.quotedPost.linkPreview,
-                    isAnonymous: post.quotedPost.isAnonymous,
-                    author: post.quotedPost.author,
-                    _count: post.quotedPost._count,
-                } : null,
-            };
-        };
+        const replies = await fetchRepliesRecursive(BigInt(postId));
+        const mainPostWithQuote = await fetchQuotedPost(mainPost);
+        const ancestorsWithQuotes = await Promise.all(ancestors.map(fetchQuotedPost));
 
         return NextResponse.json(toJson({
             mainPost: formatPost(mainPostWithQuote),
             ancestors: ancestorsWithQuotes.map(formatPost),
-            replies: repliesWithQuotes
+            replies: replies
         }));
 
     } catch (error) {
