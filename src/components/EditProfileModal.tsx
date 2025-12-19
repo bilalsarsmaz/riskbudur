@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { useState, useRef } from "react";
 import { XMarkIcon, CameraIcon } from "@heroicons/react/24/outline";
 import { postApi } from "@/lib/api";
@@ -75,6 +77,7 @@ export default function EditProfileModal({
   currentProfile,
   onProfileUpdated,
 }: EditProfileModalProps) {
+  const router = useRouter();
   const [fullName, setFullName] = useState(currentProfile.fullName);
   const [bio, setBio] = useState(currentProfile.bio || "");
   const [website, setWebsite] = useState(currentProfile.website || "");
@@ -209,6 +212,7 @@ export default function EditProfileModal({
       }
 
       setTimeout(() => {
+        router.refresh(); // Server componentleri guncelle
         onProfileUpdated();
         onClose();
       }, 1000);

@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { postApi } from "@/lib/api";
 import { PhotoIcon, FaceSmileIcon, XMarkIcon, PlayIcon } from "@heroicons/react/24/outline";
@@ -22,6 +23,7 @@ export default function CommentComposeBox({
   onSubmit,
   submitButtonText = "Yanıtla"
 }: CommentComposeBoxProps) {
+  const router = useRouter();
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -126,6 +128,7 @@ export default function CommentComposeBox({
     try {
       if (onSubmit) {
         await onSubmit(content.trim());
+        router.refresh();
       } else {
         const response = await postApi("/comments", {
           postId,
@@ -137,6 +140,7 @@ export default function CommentComposeBox({
         setContent("");
         setPreviewUrl(null);
         onCommentAdded(response);
+        router.refresh();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bir hata oluştu");

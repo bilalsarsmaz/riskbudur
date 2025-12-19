@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { useState, useRef, useEffect, useId } from "react";
 import { EnrichedPost } from "@/types/post";
 import { postApi } from "@/lib/api";
@@ -29,6 +31,7 @@ export default function ComposeBox({
   onCancel,
   className
 }: ComposeBoxProps) {
+  const router = useRouter();
   const uniqueId = useId();
   const photoUploadId = `photo-upload-${uniqueId}`;
   const anonymousId = `anonymous-${uniqueId}`;
@@ -225,6 +228,7 @@ export default function ComposeBox({
       if (onPostCreated) {
         onPostCreated(data);
       }
+      router.refresh(); // Hashtagler ve feed icin server componentleri guncelle
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bir hata oluştu");
     } finally {
