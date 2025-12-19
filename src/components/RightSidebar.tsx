@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { IconChevronRight } from "@tabler/icons-react";
 import PopularPostsSlider from "./PopularPostsSlider";
 import { fetchApi } from "@/lib/api";
@@ -28,6 +28,8 @@ interface RightSidebarProps {
 }
 
 export default function RightSidebar({ hideHashtags = false }: RightSidebarProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const profileUsername = params?.username as string | undefined;
   // If there is an 'id' param, we are likely on a post detail page, not the main profile page.
@@ -85,7 +87,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     };
 
     fetchTrendingHashtags();
-  }, [hideHashtags]);
+  }, [hideHashtags, pathname]); // pathname degisince de guncelle
 
   return (
     <div className="space-y-4">
