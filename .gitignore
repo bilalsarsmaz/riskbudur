@@ -58,10 +58,10 @@ logs
 *.log
 
 # Database
-# *.sql
+*.sql
 *.db
 
 # Uploads (eğer public/uploads içinde kullanıcı dosyaları varsa)
-# public/uploads/*
-# !public/uploads/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
 
