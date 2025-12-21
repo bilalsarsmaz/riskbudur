@@ -122,7 +122,7 @@ export default function ComposeBox({
       }
 
       // riskbudur.net/username/status/[id] linkleri için önizleme yapma, sadece alıntı olarak göster
-      if (url.includes('riskbudur.net') && url.includes('/status/')) {
+      if (url.toLowerCase().includes('riskbudur.net') && url.toLowerCase().includes('/status/')) {
         setLinkPreview(null);
         return;
       }
@@ -487,7 +487,7 @@ export default function ComposeBox({
         </div>
 
         {isPollOpen && (
-          <div className="mb-3 p-3 border border-theme-border rounded-lg bg-[#151515]">
+          <div className="mb-3 p-3 border rounded-lg" style={{ backgroundColor: "var(--app-body-bg)", borderColor: "var(--app-border)" }}>
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium" style={{ color: "var(--app-subtitle)" }}>Anket Seçenekleri</span>
               <button type="button" onClick={() => setIsPollOpen(false)} className="text-gray-500 hover:text-white"><IconX size={16} /></button>
@@ -499,7 +499,8 @@ export default function ComposeBox({
                   value={option}
                   onChange={(e) => handleOptionChange(index, e.target.value)}
                   placeholder={`Seçenek ${index + 1}`}
-                  className="flex-1 bg-black border border-theme-border rounded px-3 py-2 text-sm text-white focus:border-[var(--app-global-link-color)] outline-none"
+                  className="flex-1 border rounded px-3 py-2 text-sm focus:border-[var(--app-global-link-color)] outline-none"
+                  style={{ backgroundColor: "var(--app-body-bg)", color: "var(--app-body-text)", borderColor: "var(--app-border)" }}
                   maxLength={25}
                 />
                 {pollOptions.length > 2 && (
@@ -523,11 +524,12 @@ export default function ComposeBox({
               <label className="text-sm font-medium mb-2 block" style={{ color: "var(--app-subtitle)" }}>Anket uzunluğu</label>
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="text-xs mb-1 block text-gray-400">Gün</label>
+                  <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>Gün</label>
                   <select
                     value={pollDays}
                     onChange={(e) => setPollDays(Number(e.target.value))}
-                    className="w-full bg-black border border-theme-border rounded px-3 py-2 text-sm text-white outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                    className="w-full border rounded px-3 py-2 text-sm outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                    style={{ backgroundColor: "var(--app-body-bg)", color: "var(--app-body-text)", borderColor: "var(--app-border)" }}
                   >
                     {[...Array(8)].map((_, i) => (
                       <option key={`day-${i}`} value={i}>{i}</option>
@@ -535,11 +537,12 @@ export default function ComposeBox({
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs mb-1 block text-gray-400">Saat</label>
+                  <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>Saat</label>
                   <select
                     value={pollHours}
                     onChange={(e) => setPollHours(Number(e.target.value))}
-                    className="w-full bg-black border border-theme-border rounded px-3 py-2 text-sm text-white outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                    className="w-full border rounded px-3 py-2 text-sm outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                    style={{ backgroundColor: "var(--app-body-bg)", color: "var(--app-body-text)", borderColor: "var(--app-border)" }}
                   >
                     {[...Array(24)].map((_, i) => (
                       <option key={`hour-${i}`} value={i}>{i}</option>
@@ -547,11 +550,12 @@ export default function ComposeBox({
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs mb-1 block text-gray-400">Dakika</label>
+                  <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>Dakika</label>
                   <select
                     value={pollMinutes}
                     onChange={(e) => setPollMinutes(Number(e.target.value))}
-                    className="w-full bg-black border border-theme-border rounded px-3 py-2 text-sm text-white outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                    className="w-full border rounded px-3 py-2 text-sm outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                    style={{ backgroundColor: "var(--app-body-bg)", color: "var(--app-body-text)", borderColor: "var(--app-border)" }}
                   >
                     {[...Array(60)].map((_, i) => (
                       <option key={`min-${i}`} value={i}>{i}</option>
