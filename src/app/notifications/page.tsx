@@ -551,7 +551,7 @@ export default function Notifications() {
                                                 {/* First Row: Avatars + Date */}
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     {/* Profile Photos */}
-                                                    <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                                                    <div className="flex items-center gap-0.5 flex-shrink-0 flex-wrap">
                                                         {group.actors.slice(0, 8).map((actor, i) => (
                                                             <div
                                                                 key={i}
