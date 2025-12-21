@@ -101,7 +101,7 @@ export default function PostItem({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [isCommented, setIsCommented] = useState(post.isCommented || false);
-  const [linkedPosts, setLinkedPosts] = useState<any[]>([]);
+  /* const [linkedPosts, setLinkedPosts] = useState<any[]>([]); // DEPRECATED: Caused duplicate quotes */
   const [youtubeEmbedOpen, setYoutubeEmbedOpen] = useState(false);
 
   const shareMenuRef = useRef<HTMLDivElement>(null);
@@ -152,6 +152,8 @@ export default function PostItem({
     };
   }, [showShareMenu, headerMenuOpen]);
 
+  /* 
+  // DEPRECATED: This client-side fetching causes duplicate quote cards because the backend now handles it via post.quotedPost.
   useEffect(() => {
     const extractPostLinks = (content: string): string[] => {
       if (!content) return [];
@@ -192,7 +194,8 @@ export default function PostItem({
 
       fetchLinkedPosts();
     }
-  }, [post.content]);
+  }, [post.content]); 
+  */
 
   const handleLike = async () => {
     if (isLiking) return;
@@ -731,8 +734,8 @@ export default function PostItem({
               );
             })()}
 
-            {/* YouTube/Link Preview for Hero Layout */}
-            {post.linkPreview && (() => {
+            {/* YouTube/Link Preview for Hero Layout - Link preview'i eger quotedPost varsa gosterme (cifte gosterimi engellemek icin) */}
+            {(!post.quotedPost && post.linkPreview) && (() => {
               const getYoutubeId = (url: string) => {
                 const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
                 const match = url.match(regex);
@@ -1247,95 +1250,8 @@ export default function PostItem({
               );
             })()}
 
-            {/* İçerikteki post linklerinden alıntılanan postlar */}
-            {linkedPosts.map((linkedPost, index) => {
-              const linkedPostIsAnonymous = linkedPost.isAnonymous || false;
-              return (
-                <div key={`linked-post-${index}`} className="post-quote mb-3 rounded-xl overflow-hidden border border-theme-border">
-                  <div className="post-quote-header flex items-center p-3 pb-2">
-                    <div className="post-quote-avatar">
-                      {linkedPostIsAnonymous ? (
-                        <div className="w-5 h-5 rounded-full mr-2 flex items-center justify-center">
-                          <img
-                            src="/logo.png"
-                            alt="Anonim"
-                            className="w-5 h-5 rounded-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = '<div class="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-[10px]">A</div>';
-                              }
-                            }}
-                          />
-                        </div>
-                      ) : linkedPost.author?.profileImage ? (
-                        <img
-                          src={linkedPost.author.profileImage}
-                          alt={linkedPost.author.nickname}
-                          className="w-5 h-5 rounded-full object-cover mr-2"
-                          onError={(e) => { (e.target as HTMLImageElement).src = '/Riskbudur-first.png'; }}
-                        />
-                      ) : (
-                        <img
-                          src="/Riskbudur-first.png"
-                          alt={linkedPost.author?.nickname || 'Bilinmeyen'}
-                          className="w-5 h-5 rounded-full object-cover mr-2"
-                        />
-                      )}
-                    </div>
-
-                    {linkedPostIsAnonymous ? (
-                      <span className="post-quote-author font-bold text-[15px] text-white">
-                        Anonim Kullanıcı
-                      </span>
-                    ) : (
-                      <Link href={`/${linkedPost.author?.nickname || ''}`}>
-                        <span className="post-quote-author font-bold text-[15px] text-white">
-                          {linkedPost.author?.fullName || linkedPost.author?.nickname || 'Bilinmeyen'}
-                        </span>
-                      </Link>
-                    )}
-                    {!linkedPostIsAnonymous && (
-                      <VerificationBadge
-                        tier={linkedPost.author?.verificationTier}
-                        hasBlueTick={linkedPost.author?.hasBlueTick}
-                        username={linkedPost.author?.nickname}
-                        className="post-quote-badge w-4 h-4 ml-0.5"
-                      />
-                    )}
-                    <span className="post-quote-separator mx-1 text-[15px]" style={{ color: "var(--app-subtitle)" }}>·</span>
-                    <span className="post-quote-date text-[15px]" style={{ color: "var(--app-subtitle)" }}>{formatCustomDate(linkedPost.createdAt)}</span>
-                  </div>
-
-                  <div
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/${linkedPost.author?.nickname || 'user'}/status/${linkedPost.id}`);
-                    }}
-                  >
-                    {linkedPost.content && (
-                      <div className="post-quote-text text-[15px] px-3 pb-3">
-                        {parseContent(linkedPost.content)}
-                      </div>
-                    )}
-
-                    {(linkedPost.mediaUrl || linkedPost.imageUrl) && (
-                      <div className="post-quote-media flex justify-center w-full bg-black/5" style={{ borderTop: "0.4px solid #2a2a2a" }}>
-                        <img
-                          src={linkedPost.imageUrl || linkedPost.mediaUrl}
-                          alt="Alıntılanan post görseli"
-                          className="w-full h-auto object-cover"
-                          style={{ maxHeight: "350px", minHeight: "150px" }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {/* İçerikteki post linkleri - ARTIK DEVRE DISI (Server-side quotedPost kullaniliyor) */}
+            {/* linkedPosts.map(...) removed to prevent duplicates */}
 
             <div className="post-actions flex items-center text-sm">
               <button
