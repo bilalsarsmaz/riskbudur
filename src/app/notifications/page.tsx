@@ -135,6 +135,7 @@ export default function Notifications() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log("Notification Page Loaded - Grouping Fix Active");
         const fetchNotifications = async () => {
             try {
                 const token = localStorage.getItem("token");
