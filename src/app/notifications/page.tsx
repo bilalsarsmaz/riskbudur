@@ -411,49 +411,41 @@ export default function Notifications() {
                                 break;
                         }
 
+                        /* Extracted handler for marking read */
+                        const handleMarkAsRead = async (group: GroupedNotification) => {
+                            if (!group.read) {
+                                // Update locally immediately
+                                const newNotifications = notifications.map(n =>
+                                    n.id === group.id ? { ...n, read: true } : n
+                                );
+                                setNotifications(newNotifications);
+
+                                // Send to server
+                                try {
+                                    const token = localStorage.getItem("token");
+                                    if (token) {
+                                        await fetch("/api/notifications/read", {
+                                            method: "PUT",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                "Authorization": `Bearer ${token}`
+                                            },
+                                            body: JSON.stringify({ notificationIds: group.notificationIds })
+                                        });
+                                    }
+                                } catch (error) {
+                                    console.error("Failed to mark as read", error);
+                                }
+                            }
+                        };
+
                         return (
                             <div
                                 key={group.id}
-                                onClick={async () => {
-                                    // Mark as read locally
-                                    if (isUnread) {
-                                        console.log("Marking Group Read:", group.notificationIds);
+                                onClick={() => {
+                                    handleMarkAsRead(group);
 
-                                        const newNotifications = notifications.map(n =>
-                                            n.id === group.id ? { ...n, read: true } : n
-                                        );
-                                        setNotifications(newNotifications);
-
-                                        try {
-                                            const token = localStorage.getItem("token");
-                                            if (token) {
-                                                const res = await fetch("/api/notifications/read", {
-                                                    method: "PUT",
-                                                    headers: {
-                                                        "Content-Type": "application/json",
-                                                        "Authorization": `Bearer ${token}`
-                                                    },
-                                                    body: JSON.stringify({ notificationIds: group.notificationIds })
-                                                });
-
-                                                if (!res.ok) {
-                                                    const err = await res.json();
-                                                    console.error("Server Failed:", err);
-                                                    alert("Hata: Bildirim okundu işaretlenemedi! " + (err.message || "Bilinmeyen hata"));
-                                                } else {
-                                                    console.log("Server Success: Marked as read");
-                                                }
-                                            }
-                                        } catch (error) {
-                                            console.error("Failed to mark as read", error);
-                                            alert("Bağlantı hatası: " + error);
-                                        }
-
-                                        // Small delay to ensure request isn't cancelled
-                                        await new Promise(resolve => setTimeout(resolve, 300));
-                                    }
-
-                                    // Navigate
+                                    // Default Navigation
                                     if (group.type === 'FOLLOW') {
                                         router.push(`/${group.actors[0].nickname}`);
                                     } else if (group.post) {
@@ -554,14 +546,23 @@ export default function Notifications() {
                                                 </span>
                                             </div>
                                         ) : (
-                                            /* Multiple Actors: Two lines */
+                                            /* Multiple Actors: Side by Side & Clickable */
                                             <>
                                                 {/* First Row: Avatars + Date */}
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     {/* Profile Photos */}
-                                                    <div className="flex items-center -space-x-2 flex-shrink-0">
+                                                    <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                                                         {group.actors.slice(0, 8).map((actor, i) => (
-                                                            <div key={i} className="w-7 h-7 rounded-full border border-black bg-gray-800">
+                                                            <div
+                                                                key={i}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation(); // Don't trigger parent click
+                                                                    handleMarkAsRead(group); // Mark as read anyway
+                                                                    router.push(`/${actor.nickname}`); // Go to THIS user
+                                                                }}
+                                                                className="w-7 h-7 rounded-full border border-black bg-gray-800 cursor-pointer hover:opacity-80 transition-opacity relative z-10"
+                                                                title={actor.nickname}
+                                                            >
                                                                 {actor.profileImage ? (
                                                                     <img src={actor.profileImage} alt={actor.nickname} className="w-full h-full object-cover rounded-full" />
                                                                 ) : (
