@@ -80,25 +80,35 @@ interface GroupedNotification {
             quotes: number;
         };
     } | null;
+    notificationIds: string[];
 }
 
 function groupNotifications(notifications: Notification[]): GroupedNotification[] {
     const grouped: GroupedNotification[] = [];
     const likeGroups = new Map<string, number>(); // postId -> index in grouped
+    let lastFollowGroupIndex = -1;
+    const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+
+    console.log("Grouping Notifications. Total:", notifications.length);
 
     for (const notif of notifications) {
         if (notif.type === 'LIKE' && notif.post) {
             if (likeGroups.has(notif.post.id)) {
                 const index = likeGroups.get(notif.post.id)!;
-                // Add actor if not already present (optimization: check id)
                 const existing = grouped[index];
+
+                // Add actor if not already present
                 if (!existing.actors.some(a => a.id === notif.actor.id)) {
                     existing.actors.push(notif.actor);
                 }
+
+                // Always add the notification ID to the list
+                existing.notificationIds.push(notif.id);
+
                 // Update timestamp to latest
                 if (new Date(notif.createdAt) > new Date(existing.createdAt)) {
                     existing.createdAt = notif.createdAt;
-                    existing.id = notif.id; // Update ID to latest
+                    existing.id = notif.id;
                 }
             } else {
                 const newGroup: GroupedNotification = {
@@ -108,12 +118,44 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
                     createdAt: notif.createdAt,
                     actors: [notif.actor],
                     post: notif.post,
+                    notificationIds: [notif.id],
                 };
                 const newIndex = grouped.push(newGroup) - 1;
                 likeGroups.set(notif.post.id, newIndex);
             }
+        } else if (notif.type === 'FOLLOW') {
+            let addedToGroup = false;
+
+            if (lastFollowGroupIndex !== -1) {
+                const existing = grouped[lastFollowGroupIndex];
+                // Check time difference (assuming notifications are sorted desc)
+                const d1 = new Date(existing.createdAt).getTime();
+                const d2 = new Date(notif.createdAt).getTime();
+                const timeDiff = Math.abs(d1 - d2);
+
+                if (timeDiff < THREE_HOURS_MS) {
+                    if (!existing.actors.some(a => a.id === notif.actor.id)) {
+                        existing.actors.push(notif.actor);
+                    }
+                    existing.notificationIds.push(notif.id);
+                    addedToGroup = true;
+                }
+            }
+
+            if (!addedToGroup) {
+                const newGroup: GroupedNotification = {
+                    id: notif.id,
+                    type: 'FOLLOW',
+                    read: notif.read,
+                    createdAt: notif.createdAt,
+                    actors: [notif.actor],
+                    post: notif.post,
+                    notificationIds: [notif.id],
+                };
+                lastFollowGroupIndex = grouped.push(newGroup) - 1;
+            }
         } else {
-            // Non-like or no-post notifications are not grouped
+            // Non-groupable notifications
             grouped.push({
                 id: notif.id,
                 type: notif.type,
@@ -121,6 +163,7 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
                 createdAt: notif.createdAt,
                 actors: [notif.actor],
                 post: notif.post,
+                notificationIds: [notif.id],
             });
         }
     }
