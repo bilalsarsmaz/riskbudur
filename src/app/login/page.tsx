@@ -32,7 +32,16 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error("JSON Parse Hatası:", jsonError);
+        console.log("Gelen Yanıt (Text):", responseText);
+        throw new Error(`Sunucu hatası: Beklenmedik yanıt formatı (HTML dönebilir). Yanıt başı: ${responseText.slice(0, 50)}...`);
+      }
+
       console.log("API yanıtı:", data);
 
       if (!response.ok) {
@@ -78,7 +87,16 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error("JSON Parse Hatası:", jsonError);
+        console.log("Gelen Yanıt (Text):", responseText);
+        throw new Error(`Sunucu hatası: Beklenmedik yanıt formatı (HTML dönebilir). Yanıt başı: ${responseText.slice(0, 50)}...`);
+      }
+
       console.log("API yanıtı:", data);
 
       if (!response.ok) {

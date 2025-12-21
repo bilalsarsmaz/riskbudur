@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
+  console.log("Login API Request Received");
   try {
     if (!process.env.JWT_SECRET) {
       console.error("JWT_SECRET çevre değişkeni tanımlanmamış!");
