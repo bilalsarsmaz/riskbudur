@@ -33,16 +33,16 @@ export default function MobileComposeModal({
 
             {/* Bottom Sheet Modal */}
             <div className="fixed inset-x-0 bottom-0 z-[60] animate-slide-up">
-                <div className="bg-black border-2 border-[#1DCD9F] rounded-t-3xl min-h-[50vh] max-h-[85vh] flex flex-col pb-8">
+                <div className="bg-black rounded-t-3xl h-auto max-h-[85vh] flex flex-col">
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-theme-border flex-shrink-0">
+                    <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
                         <div className="flex items-center gap-2">
                             <img
                                 src="/riskbudurlogo.png"
                                 alt="riskbudur"
                                 className="h-6"
                             />
-                            <span className="text-[15px] font-medium text-white">Paylaş</span>
+                            <span className="text-[15px] font-medium" style={{ color: "var(--app-body-text)" }}>Gönderi Oluştur</span>
                         </div>
                         <button
                             onClick={onClose}
@@ -53,10 +53,10 @@ export default function MobileComposeModal({
                     </div>
 
                     {/* ComposeBox - Scrollable */}
-                    <div className="overflow-y-auto flex-1">
+                    <div className="overflow-y-auto">
                         <ComposeBox
                             onPostCreated={handlePostCreated}
-                            className="border-0 !p-4"
+                            className="!bg-transparent !border-none !p-2 !pb-2"
                         />
                     </div>
                 </div>

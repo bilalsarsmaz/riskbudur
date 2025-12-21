@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
 import AdmSecondaryLayout from "@/components/AdmSecondaryLayout";
 import GlobalHeader from "@/components/GlobalHeader";
 import { fetchApi, deleteApi } from "@/lib/api";
@@ -81,6 +81,16 @@ export default function AdminPagesPage() {
                                     </p>
                                 </div>
                                 <div className="flex gap-2 justify-end mt-auto pt-2 border-t border-theme-border/50">
+                                    <a
+                                        href={`https://help.riskbudur.net/${page.slug}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="p-2 hover:bg-green-500/10 rounded-full text-green-500 transition-colors"
+                                        title="Görüntüle"
+                                    >
+                                        <IconEye size={18} />
+                                    </a>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();

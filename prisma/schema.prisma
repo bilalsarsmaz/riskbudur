@@ -39,35 +39,36 @@ model User {
   posts                 Post[]
   quotes                Quote[]
   verificationRequests  VerificationRequest[]
-  visited           ProfileVisit[]        @relation("visited")
-  visitors          ProfileVisit[]        @relation("visitor")
+  visited               ProfileVisit[]        @relation("visited")
+  visitors              ProfileVisit[]        @relation("visitor")
 
   // Messaging relations
-  conversations     ConversationParticipant[]
-  sentMessages      Message[]
+  conversations ConversationParticipant[]
+  sentMessages  Message[]
+  pollVotes     PollVote[]
 }
 
 model Conversation {
-  id            String    @id @default(cuid())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  lastMessageAt DateTime  @default(now())
-  
-  participants  ConversationParticipant[]
-  messages      Message[]
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastMessageAt DateTime @default(now())
+
+  participants ConversationParticipant[]
+  messages     Message[]
 
   @@index([lastMessageAt])
 }
 
 model ConversationParticipant {
-  id             String       @id @default(cuid())
+  id             String   @id @default(cuid())
   userId         String
   conversationId String
-  joinedAt       DateTime     @default(now())
-  lastReadAt     DateTime     @default(now()) // For unread count
-  
-  user           User         @relation(fields: [userId], references: [id])
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime @default(now()) // For unread count
+
+  user         User         @relation(fields: [userId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, conversationId])
   @@index([userId])
@@ -75,16 +76,16 @@ model ConversationParticipant {
 }
 
 model Message {
-  id             String       @id @default(cuid())
+  id             String   @id @default(cuid())
   content        String
   imageUrl       String?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime @default(now())
   conversationId String
   senderId       String
-  isRead         Boolean      @default(false)
-  
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation(fields: [senderId], references: [id])
+  isRead         Boolean  @default(false)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
 
   @@index([conversationId])
   @@index([senderId])
@@ -97,8 +98,8 @@ model ProfileVisit {
   visitedId String
   visitedAt DateTime @default(now())
 
-  visitor   User     @relation("visitor", fields: [visitorId], references: [id], onDelete: Cascade)
-  visited   User     @relation("visited", fields: [visitedId], references: [id], onDelete: Cascade)
+  visitor User @relation("visitor", fields: [visitorId], references: [id], onDelete: Cascade)
+  visited User @relation("visited", fields: [visitedId], references: [id], onDelete: Cascade)
 
   @@unique([visitorId, visitedId])
   @@index([visitedId, visitedAt])
@@ -127,6 +128,7 @@ model Post {
   threadPosts   Post[]         @relation("ThreadPosts")
   quotes        Quote[]
   hashtags      Hashtag[]      @relation("HashtagToPost")
+  poll          Poll?
 
   @@index([parentPostId])
   @@index([threadRootId])
@@ -255,4 +257,36 @@ enum NotificationType {
   QUOTE
   FOLLOW
   SYSTEM
+}
+
+model Poll {
+  id        String       @id @default(cuid())
+  postId    BigInt       @unique
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  options   PollOption[]
+  votes     PollVote[]
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+}
+
+model PollOption {
+  id        String     @id @default(cuid())
+  pollId    String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  text      String
+  votes     PollVote[]
+  voteCount Int        @default(0)
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  pollId    String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId  String
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([pollId, userId])
 }

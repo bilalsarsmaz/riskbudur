@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     // Şifreyi kontrol et
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = user.password ? await bcrypt.compare(password, user.password) : false;
 
     if (!isValidPassword) {
       return NextResponse.json(
@@ -78,6 +78,7 @@ export async function POST(req: Request) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 365,
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.riskbudur.net' : undefined,
     });
 
     return response;

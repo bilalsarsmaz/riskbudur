@@ -54,7 +54,15 @@ export async function GET(
             bookmarks: userId ? {
               where: { userId: userId },
               select: { userId: true }
-            } : false
+            } : false,
+            poll: {
+              include: {
+                options: {
+                  orderBy: { id: 'asc' }
+                },
+                votes: { where: { userId: userId || "0" } }
+              }
+            }
           }
         }
       }
@@ -86,7 +94,19 @@ export async function GET(
       _count: {
         likes: post._count.likes,
         comments: post._count.comments
-      }
+      },
+      poll: post.poll ? {
+        id: post.poll.id,
+        options: post.poll.options.map(opt => ({
+          id: opt.id,
+          text: opt.text,
+          voteCount: opt.voteCount,
+          isVoted: post.poll?.votes.some(v => v.optionId === opt.id) || false
+        })),
+        expiresAt: post.poll.expiresAt,
+        totalVotes: post.poll.options.reduce((acc, curr) => acc + curr.voteCount, 0),
+        isVoted: post.poll.votes.length > 0
+      } : null
     }));
 
     return NextResponse.json({

@@ -172,10 +172,10 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
       <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-footer-bg)' }}>
         <div className="text-xs space-y-2" style={{ color: 'var(--app-subtitle)' }}>
           <div className="flex flex-wrap gap-2">
-            <Link href="/about" >Hakkında</Link>
-            <Link href="/terms">Kullanım Şartları</Link>
-            <Link href="/privacy">Gizlilik</Link>
-            <Link href="/contact">İletişim</Link>
+            <a href="https://help.riskbudur.net/about" target="_blank" rel="noopener noreferrer" className="hover:underline">Hakkında</a>
+            <a href="https://help.riskbudur.net/terms" target="_blank" rel="noopener noreferrer" className="hover:underline">Kullanım Şartları</a>
+            <a href="https://help.riskbudur.net/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline">Gizlilik</a>
+            <a href="https://help.riskbudur.net/contact" target="_blank" rel="noopener noreferrer" className="hover:underline">İletişim</a>
           </div>
           <p>© 2026 RiskBudur</p>
         </div>

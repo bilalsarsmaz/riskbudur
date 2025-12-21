@@ -80,6 +80,15 @@ export async function GET(
             replies: true,
           },
         },
+
+        poll: {
+          include: {
+            options: {
+              orderBy: { id: 'asc' }
+            },
+            votes: { where: { userId: currentUserId || "0" } }
+          }
+        },
       },
     });
 
@@ -215,6 +224,18 @@ export async function GET(
         isCommented: currentUserId ? commentedPostIds.includes(postIdStr) : false,
         isQuoted: currentUserId ? quotedPostIds.includes(postIdStr) : false,
         isBookmarked: currentUserId ? bookmarkedPostIds.includes(postIdStr) : false,
+        poll: post.poll ? {
+          id: post.poll.id,
+          options: post.poll.options.map(opt => ({
+            id: opt.id,
+            text: opt.text,
+            voteCount: opt.voteCount,
+            isVoted: post.poll?.votes.some(v => v.optionId === opt.id) || false
+          })),
+          expiresAt: post.poll.expiresAt,
+          totalVotes: post.poll.options.reduce((acc, curr) => acc + curr.voteCount, 0),
+          isVoted: post.poll.votes.length > 0
+        } : null,
       };
 
       if (quote && quote.quotedPost) {
@@ -227,6 +248,8 @@ export async function GET(
             imageUrl: quote.quotedPost.imageUrl,
             mediaUrl: quote.quotedPost.mediaUrl,
             linkPreview: quote.quotedPost.linkPreview,
+            isAnonymous: quote.quotedPost.isAnonymous,
+            author: quote.quotedPost.author,
             isAnonymous: quote.quotedPost.isAnonymous,
             author: quote.quotedPost.author,
           }

@@ -11,6 +11,7 @@ import PostHeader from "./PostHeader";
 import VerificationBadge from "./VerificationBadge";
 import ImageModal from "./ImageModal";
 import { formatCustomDate } from "@/utils/date";
+import PollDisplay from "@/components/PollDisplay";
 
 import {
   IconHeart,
@@ -76,12 +77,14 @@ export default function PostItem({
     // Fallback to window.location if navigator or specialized logic fails, 
     // but usually construction from nickname/id is safest
     const url = `${window.location.origin}/${post.author.nickname}/status/${post.id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setShowCopiedToast(true);
-      setTimeout(() => setShowCopiedToast(false), 2000);
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-    });
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        setShowCopiedToast(true);
+        setTimeout(() => setShowCopiedToast(false), 2000);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+    }
   };
 
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -485,7 +488,7 @@ export default function PostItem({
     return (
       <>
         {/* Hero Post Container */}
-        <div className={`post-hero px-4 pt-3 pb-4 border-b border-theme-border bg-theme-bg relative ${className}`} onClick={handlePostClick}>
+        <div className={`post-hero px-4 pt-3 pb-4 border-b border-theme-border bg-theme-bg relative ${className} ${post.poll ? 'postcard-vote' : ''}`} onClick={handlePostClick}>
 
           {/* Thread Line (Above Avatar) - only if connected to parent */}
           {/* Note: This relies on props. We might need to ensure page.tsx passes correct showThreadLine or similar for the top connection */}
@@ -621,6 +624,19 @@ export default function PostItem({
             <p className="post-content text-xl leading-normal whitespace-pre-wrap">
               {parseContent(post.content)}
             </p>
+
+            {post.poll && (
+              <PollDisplay
+                poll={post.poll}
+                className="mb-3"
+                onVote={(updatedPoll) => {
+                  // Update local state if necessary or let parent/page handle it via re-fetch?
+                  // Ideally we should update the post object but PostItem props are read-only-ish.
+                  // But we can mutate the object or force re-render if we had state.
+                  // For now, simple vote will reflect in UI of PollDisplay itself.
+                }}
+              />
+            )}
 
             {(post.mediaUrl || post.imageUrl) && (
               <div
@@ -804,9 +820,17 @@ export default function PostItem({
 
           {/* Meta: Time & Date */}
           <div className="py-4 border-b border-theme-border flex items-center gap-1 text-[15px] post-date" style={{ color: "var(--app-subtitle)" }}>
-            <span>{new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            <span>·</span>
-            <span>{new Date(post.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span>
+              {(() => {
+                const d = new Date(post.createdAt);
+                const time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const day = d.getDate();
+                const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+                const month = months[d.getMonth()];
+                const year = d.getFullYear();
+                return `${time} · ${day} ${month}, ${year}`;
+              })()}
+            </span>
           </div>
 
           {/* Stats removed as per user request */}
@@ -977,6 +1001,14 @@ export default function PostItem({
 
             <div className="block">
               <p className="post-content mb-3 whitespace-pre-wrap break-words text-sm sm:text-[15px]">{parseContent(post.content)}</p>
+
+              {post.poll && (
+                <PollDisplay
+                  poll={post.poll}
+                  className="mb-3"
+                  onVote={(updatedPoll) => { }}
+                />
+              )}
 
               {(post.mediaUrl || post.imageUrl) && (
                 <div className="post-media mb-3 rounded-lg overflow-hidden flex justify-center cursor-pointer" style={{ border: "0.4px solid #2a2a2a" }} onClick={(e) => {

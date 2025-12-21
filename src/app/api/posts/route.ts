@@ -105,6 +105,12 @@ export async function GET(req: NextRequest) {
             },
           },
         },
+        poll: {
+          include: {
+            options: true,
+            votes: { where: { userId: userId || "0" } }
+          }
+        }
       },
     });
 
@@ -270,6 +276,18 @@ export async function GET(req: NextRequest) {
         isThread: isThread,
         threadRepliesCount: threadRepliesCount,
         mentionedUsers: extractMentions(post.content).filter(m => validMentions.has(m)),
+        poll: post.poll ? {
+          id: post.poll.id,
+          options: post.poll.options.map(opt => ({
+            id: opt.id,
+            text: opt.text,
+            voteCount: opt.voteCount,
+            isVoted: post.poll?.votes.some(v => v.optionId === opt.id) || false
+          })),
+          expiresAt: post.poll.expiresAt,
+          totalVotes: post.poll.options.reduce((acc, curr) => acc + curr.voteCount, 0),
+          isVoted: post.poll.votes.length > 0
+        } : null,
       };
 
       // Eger alinti varsa, alintilanan postu ekle
@@ -315,7 +333,7 @@ export async function POST(req: NextRequest) {
     const userId = decoded.userId;
 
     const body = await req.json();
-    const { content, imageUrl, mediaUrl, isAnonymous, linkPreview, parentPostId } = body;
+    const { content, imageUrl, mediaUrl, isAnonymous, linkPreview, parentPostId, pollOptions, pollDuration } = body;
 
     if ((!content || content.trim().length === 0) && !imageUrl && !mediaUrl) {
       return NextResponse.json(
@@ -375,6 +393,14 @@ export async function POST(req: NextRequest) {
             create: { name },
           })),
         },
+        poll: (pollOptions && Array.isArray(pollOptions) && pollOptions.length >= 2) ? {
+          create: {
+            expiresAt: new Date(Date.now() + (pollDuration || 1440) * 60 * 1000),
+            options: {
+              create: pollOptions.map((text: string) => ({ text }))
+            }
+          }
+        } : undefined,
       },
       include: {
         author: {
@@ -395,11 +421,19 @@ export async function POST(req: NextRequest) {
             replies: true,
           },
         },
+        poll: {
+          include: {
+            options: {
+              orderBy: { id: 'asc' }
+            },
+            votes: true
+          }
+        },
       },
     });
 
     // BigInt serialization icin
-    const formattedPost = {
+    const formattedPost: any = {
       id: post.id.toString(),
       content: post.content,
       createdAt: post.createdAt,
@@ -421,7 +455,20 @@ export async function POST(req: NextRequest) {
       },
       isPopular: false,
       isThread: false,
+      isThread: false,
       quotedPostId: null, // Default
+      poll: post.poll ? {
+        id: post.poll.id,
+        options: post.poll.options.map((opt: any) => ({
+          id: opt.id,
+          text: opt.text,
+          voteCount: opt.voteCount,
+          isVoted: false // Yeni oluşturulan ankette henüz oy yok
+        })),
+        expiresAt: post.poll.expiresAt,
+        totalVotes: 0,
+        isVoted: false
+      } : null,
     };
 
     return NextResponse.json(formattedPost, { status: 201 });

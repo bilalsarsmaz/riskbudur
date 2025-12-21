@@ -171,7 +171,7 @@ export default function Home() {
         </button>
 
         <p className="text-xs text-gray-500 leading-relaxed">
-          Kaydolarak <span className="text-[#DC5F00]">Hizmet Şartları</span>'nı ve <span className="text-[#DC5F00]">Gizlilik Politikası</span>'nı kabul etmiş olursun.
+          RiskBudur'a kayıt olarak <a href="https://help.riskbudur.net/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Kullanım Şartları</a>'nı kabul etmiş olursun.
         </p>
 
         <div className="mt-8 pt-4">
@@ -380,7 +380,7 @@ export default function Home() {
 
         <div className="mt-8">
           <p className="text-xs text-gray-500 mb-4">
-            Kaydolarak, <span className="text-[#DC5F00]">Hizmet Şartlarını</span> ve <span className="text-[#DC5F00]">Gizlilik Politikasını</span>, <span className="text-[#DC5F00]">Çerez Kullanımını</span> kabul etmiş olursun.
+            Kaydolarak, <a href="https://help.riskbudur.net/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Kullanım Şartları</a>'nı, <a href="https://help.riskbudur.net/privacy" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Gizlilik Politikası</a>'nı ve <a href="https://help.riskbudur.net/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Çerez Kullanımı</a>'nı kabul etmiş olursun.
           </p>
           <button
             type="submit"

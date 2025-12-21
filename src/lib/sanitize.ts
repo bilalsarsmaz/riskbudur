@@ -2,9 +2,8 @@ import DOMPurify from 'isomorphic-dompurify';
 
 export function sanitizeHtml(content: string): string {
     return DOMPurify.sanitize(content, {
-        USE_PROFILES: { html: true },
-        // Allow common attributes and tags for rich text
-        ADD_TAGS: ['iframe'], // If we want to allow embeds explicitly, otherwise remove this
-        ADD_ATTR: ['target', 'allow', 'allowfullscreen', 'frameborder', 'scrolling']
+        // Allow rich text tags and attributes
+        ADD_TAGS: ['iframe', 'p', 'span', 'div', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'b', 'strong', 'i', 'em', 'u', 'a', 'img', 'blockquote'],
+        ADD_ATTR: ['target', 'allow', 'allowfullscreen', 'frameborder', 'scrolling', 'style', 'class', 'href', 'src', 'alt', 'width', 'height']
     });
 }

@@ -60,6 +60,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             },
             likes: { select: { userId: true } },
             bookmarks: { select: { userId: true } },
+            poll: {
+                include: {
+                    options: true,
+                    votes: { where: { userId: decodedUserId || "0" } }
+                }
+            }
         };
 
         // 1. Fetch Main Post
@@ -159,7 +165,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     author: post.quotedPost.author,
                     _count: post.quotedPost._count,
                 } : null,
-                comments: post.comments || []
+                comments: post.comments || [],
+                poll: post.poll ? {
+                    id: post.poll.id,
+                    options: post.poll.options.map((opt: any) => ({
+                        id: opt.id,
+                        text: opt.text,
+                        voteCount: opt.voteCount,
+                        isVoted: post.poll.votes?.some((v: any) => v.optionId === opt.id) || false
+                    })),
+                    expiresAt: post.poll.expiresAt,
+                    totalVotes: post.poll.options.reduce((acc: number, curr: any) => acc + curr.voteCount, 0),
+                    isVoted: post.poll.votes?.length > 0
+                } : null
             };
         };
 
@@ -189,6 +207,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     },
                     likes: { select: { userId: true } },
                     bookmarks: { select: { userId: true } },
+                    poll: {
+                        include: {
+                            options: true,
+                            votes: { where: { userId: decodedUserId || "0" } }
+                        }
+                    }
                 }
             });
 

@@ -10,20 +10,31 @@ export default function ContactHelpButton() {
 
     const handleHelpClick = async () => {
         setIsLoading(true);
+
+        // Check if we are on the help subdomain
+        const isHelpSubdomain = window.location.hostname.startsWith('help.');
+
+        if (isHelpSubdomain) {
+            // Redirect to main domain with trigger param
+            if (window.location.hostname.includes('localhost')) {
+                window.location.href = 'http://localhost:3000/home?trigger_help=1';
+            } else {
+                window.location.href = 'https://riskbudur.net/home?trigger_help=1';
+            }
+            return;
+        }
+
+        // If on main domain, post directly
         try {
-            // Background post
             await postApi("/posts", {
                 content: "Benim kafam çok karışık. Yardımına ihtiyacım var çünkü ben bir malım. @RiskBudur"
             });
-            // Redirect immediately (or after post initiates) - User asked for "tiklandigi an... ama arkaplanda da..."
-            // To be safe and ensure post goes through, await is strictly better, but fast enough.
             router.push("/home");
         } catch (error) {
             console.error("Help post failed:", error);
-            // Redirect anyway? Probably yes.
             router.push("/home");
         } finally {
-            // No need to set loading false really as we redirect
+            setIsLoading(false);
         }
     };
 

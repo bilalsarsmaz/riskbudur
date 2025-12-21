@@ -23,6 +23,21 @@ export interface PostCount {
     quotes: number;
 }
 
+export interface PollOption {
+    id: string;
+    text: string;
+    voteCount: number;
+    isVoted: boolean;
+}
+
+export interface PollData {
+    id: string;
+    options: PollOption[];
+    expiresAt: string | Date;
+    totalVotes: number;
+    isVoted: boolean;
+}
+
 export interface EnrichedPost {
     id: string;
     content: string;
@@ -47,6 +62,7 @@ export interface EnrichedPost {
     // Rich content
     linkPreview?: LinkPreview;
     mentionedUsers?: string[];
+    poll?: PollData | null;
 
     // Threading / Relations
     parentPostId?: string;

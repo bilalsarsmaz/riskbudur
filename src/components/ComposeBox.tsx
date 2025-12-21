@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useId } from "react";
 import { EnrichedPost } from "@/types/post";
 import { postApi } from "@/lib/api";
-import { IconPhoto, IconGif, IconMoodSmile, IconX, IconPlayerPlay } from "@tabler/icons-react";
+import { IconPhoto, IconGif, IconMoodSmile, IconX, IconPlayerPlay, IconChartBar, IconPlus, IconMinus } from "@tabler/icons-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import GifPicker, { TenorImage } from 'gif-picker-react';
 import ErrorBoundary from './ErrorBoundary';
@@ -53,6 +53,11 @@ export default function ComposeBox({
   const [linkPreviewLoading, setLinkPreviewLoading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [isPollOpen, setIsPollOpen] = useState(false);
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollDays, setPollDays] = useState(0);
+  const [pollHours, setPollHours] = useState(0);
+  const [pollMinutes, setPollMinutes] = useState(5);
   const [isTextareaActive, setIsTextareaActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -200,6 +205,25 @@ export default function ComposeBox({
         postData.linkPreview = linkPreview;
       }
 
+      if (isPollOpen) {
+        const validOptions = pollOptions.filter(opt => opt.trim() !== "");
+        if (validOptions.length < 2) {
+          setError("Anket için en az 2 seçenek gereklidir.");
+          setIsLoading(false);
+          return;
+        }
+
+        const totalMinutes = (pollDays * 24 * 60) + (pollHours * 60) + pollMinutes;
+        if (totalMinutes < 5) {
+          setError("Anket süresi en az 5 dakika olmalıdır.");
+          setIsLoading(false);
+          return;
+        }
+
+        postData.pollOptions = validOptions;
+        postData.pollDuration = totalMinutes;
+      }
+
       let data;
       if (isReply && postId) {
         // Reply mode
@@ -225,6 +249,11 @@ export default function ComposeBox({
       setPreviewUrl(null);
       setLinkPreview(null);
       setIsTextareaActive(false);
+      setIsPollOpen(false);
+      setPollOptions(["", ""]);
+      setPollDays(0);
+      setPollHours(0);
+      setPollMinutes(5);
       if (onPostCreated) {
         onPostCreated(data);
       }
@@ -293,6 +322,32 @@ export default function ComposeBox({
     setShowGifPicker(false);
   };
 
+  const togglePoll = () => {
+    setIsPollOpen(!isPollOpen);
+    if (!isPollOpen && pollOptions.length === 0) {
+      setPollOptions(["", ""]);
+    }
+  };
+
+  const handleOptionChange = (index: number, value: string) => {
+    const newOptions = [...pollOptions];
+    newOptions[index] = value;
+    setPollOptions(newOptions);
+  };
+
+  const addOption = () => {
+    if (pollOptions.length < 4) {
+      setPollOptions([...pollOptions, ""]);
+    }
+  };
+
+  const removeOption = (index: number) => {
+    if (pollOptions.length > 2) {
+      const newOptions = pollOptions.filter((_, i) => i !== index);
+      setPollOptions(newOptions);
+    }
+  };
+
   return (
     <div className={`composebox text-white w-full ${(isReply || quotedPostId) ? 'bg-transparent' : 'bg-black p-4 border-t border-b border-theme-border lg:w-[598px]'} ${className || ''}`}>
       <form onSubmit={handleSubmit} className="relative">
@@ -311,7 +366,8 @@ export default function ComposeBox({
               onClick={() => setIsTextareaActive(true)}
               placeholder={placeholder}
               disabled={isLoading}
-              className={`w-full bg-transparent text-white text-xl placeholder-gray-500 resize-none outline-none ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
+              style={{ color: "var(--app-body-text)" }}
+              className={`w-full bg-transparent text-lg placeholder-gray-500 resize-none outline-none ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
               onPaste={(e) => {
                 if (e.clipboardData && e.clipboardData.items) {
                   const items = e.clipboardData.items;
@@ -427,7 +483,85 @@ export default function ComposeBox({
               </div>
             );
           })()}
+
         </div>
+
+        {isPollOpen && (
+          <div className="mb-3 p-3 border border-theme-border rounded-lg bg-[#151515]">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium" style={{ color: "var(--app-subtitle)" }}>Anket Seçenekleri</span>
+              <button type="button" onClick={() => setIsPollOpen(false)} className="text-gray-500 hover:text-white"><IconX size={16} /></button>
+            </div>
+            {pollOptions.map((option, index) => (
+              <div key={index} className="flex items-center mb-2 gap-2">
+                <input
+                  type="text"
+                  value={option}
+                  onChange={(e) => handleOptionChange(index, e.target.value)}
+                  placeholder={`Seçenek ${index + 1}`}
+                  className="flex-1 bg-black border border-theme-border rounded px-3 py-2 text-sm text-white focus:border-[var(--app-global-link-color)] outline-none"
+                  maxLength={25}
+                />
+                {pollOptions.length > 2 && (
+                  <button type="button" onClick={() => removeOption(index)} className="text-red-500 hover:text-red-400">
+                    <IconX size={18} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {pollOptions.length < 4 && (
+              <button
+                type="button"
+                onClick={addOption}
+                className="flex items-center text-sm mt-2 hover:underline"
+                style={{ color: "var(--app-global-link-color)" }}
+              >
+                <IconPlus size={16} className="mr-1" /> Seçenek Ekle
+              </button>
+            )}
+            <div className="mt-3 pt-3 border-t border-theme-border">
+              <label className="text-sm font-medium mb-2 block" style={{ color: "var(--app-subtitle)" }}>Anket uzunluğu</label>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-xs mb-1 block text-gray-400">Gün</label>
+                  <select
+                    value={pollDays}
+                    onChange={(e) => setPollDays(Number(e.target.value))}
+                    className="w-full bg-black border border-theme-border rounded px-3 py-2 text-sm text-white outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                  >
+                    {[...Array(8)].map((_, i) => (
+                      <option key={`day-${i}`} value={i}>{i}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs mb-1 block text-gray-400">Saat</label>
+                  <select
+                    value={pollHours}
+                    onChange={(e) => setPollHours(Number(e.target.value))}
+                    className="w-full bg-black border border-theme-border rounded px-3 py-2 text-sm text-white outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                  >
+                    {[...Array(24)].map((_, i) => (
+                      <option key={`hour-${i}`} value={i}>{i}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs mb-1 block text-gray-400">Dakika</label>
+                  <select
+                    value={pollMinutes}
+                    onChange={(e) => setPollMinutes(Number(e.target.value))}
+                    className="w-full bg-black border border-theme-border rounded px-3 py-2 text-sm text-white outline-none focus:border-[var(--app-global-link-color)] appearance-none"
+                  >
+                    {[...Array(60)].map((_, i) => (
+                      <option key={`min-${i}`} value={i}>{i}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mb-3 text-red-500 text-sm">{error}</div>
@@ -436,7 +570,7 @@ export default function ComposeBox({
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <label htmlFor={photoUploadId} className="cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}>
-              <IconPhoto className="h-5 w-5" />
+              <IconPhoto className="h-4 w-4 md:h-5 md:w-5" />
               <span className="sr-only">Fotoğraf ekle</span>
               <input
                 id={photoUploadId}
@@ -451,27 +585,36 @@ export default function ComposeBox({
 
             <button
               type="button"
-              className="cursor-pointer hover:opacity-80 ml-3" style={{ color: 'var(--app-global-link-color)' }}
+              className="cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
               onClick={toggleGifPicker}
               data-gif-button
               aria-label="GIF ekle"
               ref={gifButtonRef}
             >
-              <IconGif className="h-5 w-5" />
+              <IconGif className="h-4 w-4 md:h-5 md:w-5" />
             </button>
 
             <button
               type="button"
-              className="cursor-pointer hover:opacity-80 ml-3" style={{ color: 'var(--app-global-link-color)' }}
+              className="hidden md:block cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
               onClick={toggleEmojiPicker}
               data-emoji-button
               aria-label="Emoji ekle"
               ref={emojiButtonRef}
             >
-              <IconMoodSmile className="h-5 w-5" />
+              <IconMoodSmile className="h-4 w-4 md:h-5 md:w-5" />
             </button>
 
-            <div className="mx-3 h-6 border-l border-gray-300"></div>
+            <button
+              type="button"
+              className="cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
+              onClick={togglePoll}
+              aria-label="Anket ekle"
+            >
+              <IconChartBar className="h-4 w-4 md:h-5 md:w-5" />
+            </button>
+
+            <div className="mx-2 md:mx-3 h-6 border-l border-gray-300"></div>
 
             {/* Yanıt veya Alıntı değilse anonim butonu göster */}
             {(!isReply && !quotedPostId) && (
@@ -484,7 +627,7 @@ export default function ComposeBox({
                   className="rounded text-blue-600 focus:ring-blue-500"
                   disabled={isLoading}
                 />
-                <label htmlFor={anonymousId} className="ml-2 text-sm text-gray-700">
+                <label htmlFor={anonymousId} className="ml-2 text-xs md:text-sm" style={{ color: "var(--app-subtitle)" }}>
                   Anonim olarak paylaş
                 </label>
               </div>
@@ -493,8 +636,8 @@ export default function ComposeBox({
 
           <button
             type="submit"
-            style={{ backgroundColor: 'var(--app-global-link-color)', color: '#040404', border: 'none' }}
-            className={`px-4 py-2 rounded-full font-bold ${isLoading
+            style={{ backgroundColor: 'var(--app-global-link-color)', color: 'var(--app-body-text)', border: 'none' }}
+            className={`px-3 py-1.5 text-sm rounded-full font-bold ${isLoading
               ? "opacity-50 cursor-not-allowed"
               : "hover:opacity-90"
               }`}
