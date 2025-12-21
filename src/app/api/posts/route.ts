@@ -376,6 +376,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Alıntı (Quote) tespiti
+    let quotedPostId: bigint | null = null;
+    const quoteRegex = /(?:https?:\/\/)?(?:www\.)?riskbudur\.net\/(?:[^\/]+\/)?status\/(\d+)/i;
+    const quoteMatch = content.match(quoteRegex);
+    if (quoteMatch && quoteMatch[1]) {
+      quotedPostId = BigInt(quoteMatch[1]);
+    }
+
     // Post olustur
     const post = await prisma.post.create({
       data: {
@@ -431,6 +439,18 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    // Eger alinti varsa Quote tablosuna ekle
+    if (quotedPostId) {
+      await prisma.quote.create({
+        data: {
+          content: content.trim(),
+          authorId: userId,
+          quotedPostId: quotedPostId,
+          isAnonymous: isAnonymous || false
+        }
+      });
+    }
 
     // BigInt serialization icin
     const formattedPost: any = {

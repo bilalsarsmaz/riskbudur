@@ -156,7 +156,7 @@ export default function PostItem({
     const extractPostLinks = (content: string): string[] => {
       if (!content) return [];
 
-      const postLinkRegex = /(?:https?:\/\/)?(?:www\.)?riskbudur\.com\/(?:[^\/]+\/)?status\/(\d+)/gi;
+      const postLinkRegex = /(?:https?:\/\/)?(?:www\.)?riskbudur\.net\/(?:[^\/]+\/)?status\/(\d+)/gi;
       const matches: string[] = [];
       let match;
 
