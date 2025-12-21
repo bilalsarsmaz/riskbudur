@@ -16,7 +16,12 @@ import {
   IconLogout,
   IconDots,
   IconArrowLeftToArc,
-  IconUserCheck
+  IconUserCheck,
+  IconMailSpark,
+  IconSun,
+  IconMoon,
+  IconSunFilled,
+  IconMoonFilled
 } from "@tabler/icons-react";
 
 export default function AdminSidebar() {
@@ -24,6 +29,27 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      setTheme(systemTheme);
+      document.documentElement.setAttribute('data-theme', systemTheme);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -75,6 +101,12 @@ export default function AdminSidebar() {
       label: "Rozet Talepleri",
       icon: IconRosetteDiscountCheck,
       href: "/admincp/badges"
+    },
+    {
+      id: "ghost-message",
+      label: "Ghost Mesaj",
+      icon: IconMailSpark,
+      href: "/admincp/ghostmessage"
     },
     {
       id: "pages",
@@ -146,9 +178,50 @@ export default function AdminSidebar() {
         </nav>
       </div>
 
-      <div className="mt-auto relative">
+      <div className="mt-auto relative w-full flex flex-col items-center xl:items-start xl:px-2">
+        {/* Theme Toggle (Custom Switch) */}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center xl:justify-start p-3 xl:p-2 rounded-full xl:rounded-lg transition-colors aspect-square xl:aspect-auto w-fit xl:w-auto mx-auto xl:mx-0 w-full group mb-1 xl:mb-0"
+        >
+          {/* Custom Toggle Switch */}
+          <div
+            className={`relative w-[48px] h-[26px] rounded-full transition-colors duration-300 xl:mr-3 flex-shrink-0 border ${theme === 'dark' ? 'bg-black border-gray-700' : 'bg-gray-200 border-gray-300'}`}
+          >
+            {/* Sun Icon (Left Background - Visible when Dark) */}
+            <div className={`absolute left-1.5 top-1 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
+              <IconSun className="w-4 h-4 text-gray-500" />
+            </div>
+
+            {/* Moon Icon (Right Background - Visible when Light) */}
+            <div className={`absolute right-1.5 top-1 transition-opacity duration-300 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
+              <IconMoon className="w-4 h-4 text-gray-400" />
+            </div>
+
+            {/* Sliding Circle */}
+            <div
+              className={`absolute top-[2px] w-[20px] h-[20px] rounded-full shadow-sm flex items-center justify-center transition-transform duration-300 bg-[#f97316] ${theme === 'dark' ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}
+            >
+              {theme === 'dark' ? (
+                <IconMoonFilled className="w-3 h-3 text-white" />
+              ) : (
+                <IconSunFilled className="w-3 h-3 text-white" />
+              )}
+            </div>
+          </div>
+
+          <span className="hidden xl:inline text-[13px]" style={{ color: 'var(--app-body-text)' }}>
+            Platform Temasını Değiştir
+          </span>
+        </button>
+
+        {/* HR Separator */}
+        <div className="w-full px-2 my-2 xl:my-2 hidden xl:block">
+          <div className="border-t border-theme-border"></div>
+        </div>
+
         <div
-          className="flex items-center justify-center xl:justify-start p-2 rounded-lg cursor-pointer"
+          className="flex items-center justify-center xl:justify-start p-2 rounded-lg cursor-pointer w-full"
           onClick={() => setShowUserMenu(!showUserMenu)}
         >
           {userInfo?.profileImage ? (
