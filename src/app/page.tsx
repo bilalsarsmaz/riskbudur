@@ -227,7 +227,7 @@ export default function Home() {
             name="email"
             type="email"
             required
-            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
+            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-[var(--app-body-text)] focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
             placeholder="E-posta"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -240,7 +240,7 @@ export default function Home() {
             name="password"
             type="password"
             required
-            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
+            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-[var(--app-body-text)] focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
             placeholder="Şifre"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -289,7 +289,7 @@ export default function Home() {
           type="email"
           required
           placeholder="E-posta"
-          className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
+          className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-[var(--app-body-text)] focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
@@ -344,7 +344,7 @@ export default function Home() {
             name="fullName"
             type="text"
             required
-            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
+            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-[var(--app-body-text)] focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
             placeholder="İsim"
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -357,7 +357,7 @@ export default function Home() {
             name="email"
             type="email"
             required
-            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
+            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-[var(--app-body-text)] focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
             placeholder="E-posta"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -370,7 +370,7 @@ export default function Home() {
             name="password"
             type="password"
             required
-            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
+            className="appearance-none block w-full px-4 py-3 bg-black border border-gray-700 rounded-lg placeholder-gray-500 text-[var(--app-body-text)] focus:outline-none focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
             placeholder="Şifre"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -395,9 +395,9 @@ export default function Home() {
   );
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
+    <div className="flex min-h-screen bg-black text-[var(--app-body-text)]">
       {/* Sol Taraf: Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-[#111] items-center justify-center p-12 overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#111] text-white items-center justify-center p-12 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-0 -left-10 w-96 h-96 bg-[#DC5F00] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
           <div className="absolute bottom-0 -right-10 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
