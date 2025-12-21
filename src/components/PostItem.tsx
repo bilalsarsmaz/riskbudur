@@ -776,7 +776,7 @@ export default function PostItem({
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-black bg-opacity-80 rounded-full p-2">
+                            <div className="bg-[var(--app-global-link-color)] rounded-full p-2">
                               <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
                             </div>
                           </div>
@@ -1070,7 +1070,7 @@ export default function PostItem({
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-black bg-opacity-80 rounded-full p-2">
+                            <div className="bg-[var(--app-global-link-color)] rounded-full p-2">
                               <IconPlayerPlay className="h-6 w-6 text-white" fill="white" />
                             </div>
                           </div>
@@ -1227,7 +1227,7 @@ export default function PostItem({
                             />
                             {(post.quotedPost.linkPreview.type === 'youtube' || post.quotedPost.linkPreview.url.includes('youtube') || post.quotedPost.linkPreview.url.includes('youtu.be')) && (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                                <div className="bg-[#1D9BF0] text-white rounded-full p-3 shadow-lg">
+                                <div className="bg-[var(--app-global-link-color)] text-white rounded-full p-3 shadow-lg">
                                   <IconPlayerPlay className="h-6 w-6" fill="white" />
                                 </div>
                               </div>
