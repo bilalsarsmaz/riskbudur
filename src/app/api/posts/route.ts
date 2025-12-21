@@ -475,7 +475,6 @@ export async function POST(req: NextRequest) {
       },
       isPopular: false,
       isThread: false,
-      isThread: false,
       quotedPostId: null, // Default
       poll: post.poll ? {
         id: post.poll.id,
