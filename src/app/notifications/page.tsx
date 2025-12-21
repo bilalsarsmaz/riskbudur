@@ -105,6 +105,9 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
                 // Always add the notification ID to the list
                 existing.notificationIds.push(notif.id);
 
+                // Update read status (Group is unread if ANY item looks unread)
+                existing.read = existing.read && notif.read;
+
                 // Update timestamp to latest
                 if (new Date(notif.createdAt) > new Date(existing.createdAt)) {
                     existing.createdAt = notif.createdAt;
@@ -138,6 +141,9 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
                         existing.actors.push(notif.actor);
                     }
                     existing.notificationIds.push(notif.id);
+                    // Update read status
+                    existing.read = existing.read && notif.read;
+
                     addedToGroup = true;
                 }
             }
@@ -411,6 +417,10 @@ export default function Notifications() {
                                 onClick={async () => {
                                     // Mark as read locally
                                     if (isUnread) {
+                                        // DEBUG: Check what we are sending
+                                        console.log("Marking Group Read:", group.notificationIds);
+                                        // alert("Marking " + group.notificationIds.length + " notifications as read."); 
+
                                         const newNotifications = notifications.map(n =>
                                             n.id === group.id ? { ...n, read: true } : n
                                         );
