@@ -417,9 +417,7 @@ export default function Notifications() {
                                 onClick={async () => {
                                     // Mark as read locally
                                     if (isUnread) {
-                                        // DEBUG: Check what we are sending
                                         console.log("Marking Group Read:", group.notificationIds);
-                                        // alert("Marking " + group.notificationIds.length + " notifications as read."); 
 
                                         const newNotifications = notifications.map(n =>
                                             n.id === group.id ? { ...n, read: true } : n
@@ -429,18 +427,30 @@ export default function Notifications() {
                                         try {
                                             const token = localStorage.getItem("token");
                                             if (token) {
-                                                await fetch("/api/notifications/read", {
+                                                const res = await fetch("/api/notifications/read", {
                                                     method: "PUT",
                                                     headers: {
                                                         "Content-Type": "application/json",
                                                         "Authorization": `Bearer ${token}`
                                                     },
-                                                    body: JSON.stringify({ notificationIds: [group.id] })
+                                                    body: JSON.stringify({ notificationIds: group.notificationIds })
                                                 });
+
+                                                if (!res.ok) {
+                                                    const err = await res.json();
+                                                    console.error("Server Failed:", err);
+                                                    alert("Hata: Bildirim okundu işaretlenemedi! " + (err.message || "Bilinmeyen hata"));
+                                                } else {
+                                                    console.log("Server Success: Marked as read");
+                                                }
                                             }
                                         } catch (error) {
                                             console.error("Failed to mark as read", error);
+                                            alert("Bağlantı hatası: " + error);
                                         }
+
+                                        // Small delay to ensure request isn't cancelled
+                                        await new Promise(resolve => setTimeout(resolve, 300));
                                     }
 
                                     // Navigate
