@@ -146,7 +146,10 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
         <div className="px-4 pb-4 pt-2">
           <ComposeBox
             quotedPostId={post.id}
-            onPostCreated={(newPost) => onQuoteAdded(newPost)}
+            onPostCreated={(newPost) => {
+              onQuoteAdded(newPost);
+              onClose();
+            }}
             onCancel={onClose}
             placeholder="Bir şeyler ekle..."
             submitButtonText="Alıntıla"
