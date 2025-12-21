@@ -1,6 +1,6 @@
-# 🚀 Ultraswall - Anonim Mikroblog Platformu
+# 🚀 RiskBudur - Anonim Mikroblog Platformu
 
-Riskbudur, kullanıcıların anonim olarak düşüncelerini paylaşabilecekleri modern bir mikroblog platformudur.
+RiskBudur, kullanıcıların anonim olarak düşüncelerini paylaşabilecekleri modern bir mikroblog platformudur.
 
 ## ✨ Teknolojiler
 
@@ -35,7 +35,7 @@ sudo bash deployment/deploy-standalone.sh
 
 ### 1. Projeyi klonlayın:
 ```bash
-  git clone https://github.com/yourusername/ultraswall.git
+  git clone https://github.com/bilalsarsmaz/riskbudur.git
 ```
 
 ### 2. Bağımlılıkları yükleyin:
@@ -49,14 +49,14 @@ npm install
 ```bash
 brew install postgresql@16
 brew services start postgresql@16
-createdb ultraswall
+createdb riskbudur
 ```
 
 **Ubuntu/Debian:**
 ```bash
 sudo apt install postgresql postgresql-contrib
 sudo systemctl start postgresql
-sudo -u postgres createdb ultraswall
+sudo -u postgres createdb riskbudur
 ```
 
 **Windows:**
@@ -69,8 +69,8 @@ cp deployment/env.example .env.local
 
 Düzenleyin:
 ```env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/ultraswall"
-DIRECT_URL="postgresql://postgres:password@localhost:5432/ultraswall"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/riskbudur"
+DIRECT_URL="postgresql://postgres:password@localhost:5432/riskbudur"
 JWT_SECRET="your-random-secret-here"
 NEXT_PUBLIC_API_URL="http://localhost:3000/api"
 NODE_ENV=development
