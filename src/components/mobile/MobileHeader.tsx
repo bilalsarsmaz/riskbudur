@@ -311,7 +311,7 @@ export default function MobileHeader() {
                 </li>
                 <li>
                   <Link
-                    href="/bookmarks"
+                    href="/i/bookmarks"
                     className="flex items-center p-3 rounded-lg transition-colors text-sm sm:text-base"
                     style={{ color: 'var(--app-body-text)' }}
                     onClick={() => setIsMenuOpen(false)}

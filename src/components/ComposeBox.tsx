@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useId } from "react";
 import { EnrichedPost } from "@/types/post";
 import { postApi } from "@/lib/api";
-import { IconPhoto, IconGif, IconMoodSmile, IconX, IconPlayerPlay, IconChartBar, IconPlus, IconMinus } from "@tabler/icons-react";
+import { IconPhoto, IconGif, IconMoodSmile, IconX, IconPlayerPlay, IconChartBar, IconPlus, IconMinus, IconGhost, IconGhostFilled } from "@tabler/icons-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
-import GifPicker, { TenorImage } from 'gif-picker-react';
+import GifPicker, { TenorImage, Theme } from 'gif-picker-react';
 import ErrorBoundary from './ErrorBoundary';
 
 interface ComposeBoxProps {
@@ -65,6 +65,16 @@ export default function ComposeBox({
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const gifPickerRef = useRef<HTMLDivElement>(null);
   const gifButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to correctly calculate scrollHeight (shrinking)
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${scrollHeight}px`;
+    }
+  }, [content]);
 
   // Emoji picker dışında bir yere tıklandığında emoji picker'ı kapat
   useEffect(() => {
@@ -348,6 +358,24 @@ export default function ComposeBox({
     }
   };
 
+  // URL length calculation helper
+  const calculateLength = (text: string) => {
+    // Regex to find URLs
+    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+    const urls = text.match(urlRegex) || [];
+
+    // Remove URLs from text to count remaining characters
+    let remainingText = text.replace(urlRegex, "");
+
+    // Calculate total: remaining text length + (number of URLs * 23)
+    return remainingText.length + (urls.length * 23);
+  };
+
+  const MAX_CHARS = 360;
+  const currentLength = calculateLength(content);
+  const isOverLimit = currentLength > MAX_CHARS;
+  const remainingChars = MAX_CHARS - currentLength;
+
   return (
     <div className={`composebox text-white w-full ${(isReply || quotedPostId) ? 'bg-transparent' : 'bg-black p-4 border-t border-b border-theme-border lg:w-[598px]'} ${className || ''}`}>
       <form onSubmit={handleSubmit} className="relative">
@@ -358,21 +386,38 @@ export default function ComposeBox({
               ref={textareaRef}
               value={content}
               onChange={(e) => {
-                setContent(e.target.value);
-                if (e.target.value.trim() !== "") {
-                  setIsTextareaActive(true);
+                const newContent = e.target.value;
+                // Only allow update if length is within limit or if deleting (length decreasing)
+                // We check if the NEW length is <= MAX_CHARS.
+                // However, user might be trying to paste a long text. We should ideally truncate or block.
+                // Request said "Limit dolduğunda bana yazdırmamalı" (Don't let me type).
+                // But pasting might be tricky if we don't truncate. 
+                // Let's check new length. 
+                // If user is adding text and it exceeds, block. 
+                // If user is deleting, allow.
+
+                const newLength = calculateLength(newContent);
+                const oldLength = calculateLength(content);
+
+                if (newLength <= MAX_CHARS || newLength < oldLength) {
+                  setContent(newContent);
+                  if (newContent.trim() !== "") {
+                    setIsTextareaActive(true);
+                  }
                 }
               }}
               onClick={() => setIsTextareaActive(true)}
-              placeholder={placeholder}
+              placeholder={isAnonymous ? "Anonim olarak paylaşacaksınız..." : placeholder}
               disabled={isLoading}
               style={{ color: "var(--app-body-text)" }}
-              className={`w-full bg-transparent text-lg placeholder-gray-500 resize-none outline-none ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
+              className={`w-full bg-transparent text-lg placeholder-gray-500 resize-none outline-none overflow-hidden ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
               onPaste={(e) => {
+                // ... logic for images ... 
                 if (e.clipboardData && e.clipboardData.items) {
                   const items = e.clipboardData.items;
                   for (let i = 0; i < items.length; i++) {
                     if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                      // ... existing image paste logic ...
                       const file = items[i].getAsFile();
                       if (file) {
                         e.preventDefault();
@@ -386,8 +431,13 @@ export default function ComposeBox({
                     }
                   }
                 }
+                // Handle text paste truncation? 
+                // If standard onChange handles it, it will just block the paste if it exceeds. 
+                // Better UX might be to truncate the pasted text to fit, but user asked "Do not let me type".
+                // Blocking the paste entirely if it overflows is "not letting type/input".
               }}
             />
+            {/* Character Counter Removed from here */}
           </div>
 
           {previewUrl && (
@@ -573,7 +623,25 @@ export default function ComposeBox({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <label htmlFor={photoUploadId} className="cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}>
+            {/* Yanıt veya Alıntı değilse anonim butonu göster */}
+            {(!isReply && !quotedPostId) && (
+              <button
+                type="button"
+                className={`cursor-pointer hover:opacity-80 ${isAnonymous ? 'text-white' : ''}`}
+                style={{ color: isAnonymous ? 'white' : 'var(--app-global-link-color)' }}
+                onClick={() => setIsAnonymous(!isAnonymous)}
+                aria-label="Anonim mod"
+                title={isAnonymous ? "Anonim modu kapat" : "Anonim modu aç"}
+              >
+                {isAnonymous ? (
+                  <IconGhostFilled className="w-[20px] h-[20px] md:w-[23px] md:h-[23px] text-[#1DCD9F]" />
+                ) : (
+                  <IconGhost className="w-[20px] h-[20px] md:w-[23px] md:h-[23px]" />
+                )}
+              </button>
+            )}
+
+            <label htmlFor={photoUploadId} className={`cursor-pointer hover:opacity-80 ${(!isReply && !quotedPostId) ? 'ml-2 md:ml-3' : ''}`} style={{ color: 'var(--app-global-link-color)' }}>
               <IconPhoto className="h-4 w-4 md:h-5 md:w-5" />
               <span className="sr-only">Fotoğraf ekle</span>
               <input
@@ -595,7 +663,7 @@ export default function ComposeBox({
               aria-label="GIF ekle"
               ref={gifButtonRef}
             >
-              <IconGif className="h-4 w-4 md:h-5 md:w-5" />
+              <IconGif className="w-[25px] h-[25px]" />
             </button>
 
             <button
@@ -617,38 +685,28 @@ export default function ComposeBox({
             >
               <IconChartBar className="h-4 w-4 md:h-5 md:w-5" />
             </button>
-
-            <div className="mx-2 md:mx-3 h-6 border-l border-gray-300"></div>
-
-            {/* Yanıt veya Alıntı değilse anonim butonu göster */}
-            {(!isReply && !quotedPostId) && (
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={anonymousId}
-                  checked={isAnonymous}
-                  onChange={() => setIsAnonymous(!isAnonymous)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
-                  disabled={isLoading}
-                />
-                <label htmlFor={anonymousId} className="ml-2 text-xs md:text-sm" style={{ color: "var(--app-subtitle)" }}>
-                  Anonim olarak paylaş
-                </label>
-              </div>
-            )}
           </div>
 
-          <button
-            type="submit"
-            style={{ backgroundColor: 'var(--app-global-link-color)', color: 'var(--app-body-text)', border: 'none' }}
-            className={`px-3 py-1.5 text-sm rounded-full font-bold ${isLoading
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:opacity-90"
-              }`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Paylaşılıyor..." : (submitButtonText ? submitButtonText : (isReply ? "Yanıtla" : "Paylaş"))}
-          </button>
+          <div className="flex items-center gap-4">
+            {/* Character Counter */}
+            {(isTextareaActive || content.length > 0) && (
+              <div className={`text-xs font-medium ${remainingChars < 20 ? 'text-red-500' : 'text-gray-500'}`}>
+                {remainingChars}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              style={{ backgroundColor: 'var(--app-global-link-color)', color: 'var(--app-body-text)', border: 'none' }}
+              className={`px-3 py-1.5 text-sm rounded-full font-bold ${isLoading
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:opacity-90"
+                }`}
+              disabled={isLoading}
+            >
+              {isLoading ? "Paylaşılıyor..." : (submitButtonText ? submitButtonText : (isReply ? "Yanıtla" : "Paylaş"))}
+            </button>
+          </div>
         </div>
 
         {/* Emoji Picker */}
@@ -674,16 +732,29 @@ export default function ComposeBox({
           showGifPicker && (
             <div
               ref={gifPickerRef}
-              className="absolute top-10 left-0 z-50 shadow-lg rounded-lg"
-              style={{ width: '320px' }}
+              className="absolute top-10 left-0 z-50 shadow-lg rounded-lg overflow-hidden"
+              style={{
+                width: '400px',
+                backgroundColor: 'var(--app-body-bg)',
+              } as React.CSSProperties}
             >
+              <style>{`
+                .GifPickerReact.gpr-dark-theme {
+                    --gpr-bg-color: var(--app-body-bg) !important;
+                    --gpr-main-container-bg: var(--app-body-bg) !important;
+                    --gpr-search-input-bg-color: var(--app-surface) !important;
+                    --gpr-picker-border-color: var(--app-border) !important;
+                    --gpr-highlight-color: var(--app-accent) !important;
+                }
+              `}</style>
               <ErrorBoundary fallback={<div className="p-4 text-center text-gray-500">GIF yüklenemedi. API anahtarını kontrol edin.</div>}>
                 <GifPicker
-                  tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || "LIVDSRZULELA"}
+                  tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || ""}
                   clientKey="riskbudur_web"
                   onGifClick={handleGifClick}
-                  width={320}
+                  width={400}
                   height={450}
+                  theme={Theme.DARK}
                 />
               </ErrorBoundary>
             </div>

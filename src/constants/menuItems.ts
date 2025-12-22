@@ -72,7 +72,7 @@ export const menuItems: MenuItem[] = [
     },
     {
         id: "bookmarks",
-        label: "Çivilenenler",
+        label: "Kaydedilenler",
         icon: IconTargetArrow,
         iconFilled: IconTargetArrow,
         href: "/i/bookmarks",

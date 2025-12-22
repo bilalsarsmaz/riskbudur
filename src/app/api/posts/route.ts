@@ -107,7 +107,9 @@ export async function GET(req: NextRequest) {
         },
         poll: {
           include: {
-            options: true,
+            options: {
+              orderBy: { id: 'asc' }
+            },
             votes: { where: { userId: userId || "0" } }
           }
         }

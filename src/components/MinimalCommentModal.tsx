@@ -115,14 +115,14 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="rounded-lg w-full max-w-lg mx-4 shadow-xl border border-[var(--app-global-link-color)]" style={{ backgroundColor: "var(--app-body-bg)" }}>
+      <div className="w-full max-w-lg rounded-t-2xl rounded-b-none sm:rounded-lg mx-0 sm:mx-4 shadow-xl border-t border-x border-b-0 border-[var(--app-global-link-color)] sm:border" style={{ backgroundColor: "var(--app-body-bg)" }}>
         <div className="h-10 flex items-center justify-between px-4">
           <div className="flex items-center">
             <span className="text-sm font-bold text-[var(--app-global-link-color)] hover:opacity-80 transition-colors font-montserrat">riskbudur</span>

@@ -34,6 +34,11 @@ export default function PollDisplay({ poll: initialPoll, onVote, className = "" 
     // Parse expiresAt correctly
     const expiresAtDate = new Date(poll.expiresAt);
 
+    // Sync state with props for persistence
+    useEffect(() => {
+        setPoll(initialPoll);
+    }, [initialPoll]);
+
     useEffect(() => {
         const calculateTimeLeft = () => {
             const now = new Date();
@@ -106,7 +111,7 @@ export default function PollDisplay({ poll: initialPoll, onVote, className = "" 
                     return (
                         <div
                             key={option.id}
-                            className={`relative h-[42px] rounded-full overflow-hidden flex items-center px-4 cursor-pointer transition-colors border ${showResults
+                            className={`relative h-[42px] touch-manipulation rounded-full overflow-hidden flex items-center px-4 cursor-pointer transition-colors border ${showResults
                                 ? (isSelected ? 'border-[var(--app-global-link-color)]' : 'border-transparent')
                                 : 'border-[var(--app-global-link-color)] hover:bg-[#151515]'
                                 }`}

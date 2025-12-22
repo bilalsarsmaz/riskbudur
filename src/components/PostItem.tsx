@@ -362,17 +362,51 @@ export default function PostItem({
     const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;
     const matches: Array<{ type: 'hashtag' | 'mention' | 'link' | 'postlink'; start: number; end: number; text: string }> = [];
 
+    // Linkleri bul (Önce linkleri bul ki hashtag'ler linkin içindeki anchor'ları bozmasın)
+    while ((match = linkRegex.exec(content)) !== null) {
+      const m = match!;
+      const isPostLink = /riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/i.test(m[0]);
+
+      // Çakışma kontrolü (eğer başka bir eşleşme varsa - şu an ilk olduğu için gerek yok ama genel yapı bozulmasın diye bırakıyorum)
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+
+      if (!isPostLink && !isOverlapping) {
+        matches.push({ type: 'link', start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
+    }
+
     // Hashtag'leri bul
     while ((match = hashtagRegex.exec(content)) !== null) {
-      matches.push({ type: 'hashtag', start: match.index, end: match.index + match[0].length, text: match[0] });
+      const m = match!;
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+
+      if (!isOverlapping) {
+        matches.push({ type: 'hashtag', start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
     }
 
     // Mention'ları bul
     while ((match = mentionRegex.exec(content)) !== null) {
-      // Mention bir email adresi parcası mı kontrol et (basit bir kontrol)
-      const isEmail = match.index > 0 && content[match.index - 1] !== ' ' && content[match.index - 1] !== '\n';
-      if (!isEmail) {
-        matches.push({ type: 'mention', start: match.index, end: match.index + match[0].length, text: match[0] });
+      const m = match!;
+      // Mention bir email adresi parcası mı kontrol et
+      const isEmail = m.index > 0 && content[m.index - 1] !== ' ' && content[m.index - 1] !== '\n';
+
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+
+      if (!isEmail && !isOverlapping) {
+        matches.push({ type: 'mention', start: m.index, end: m.index + m[0].length, text: m[0] });
       }
     }
 
@@ -380,28 +414,12 @@ export default function PostItem({
     while ((match = postLinkRegex.exec(content)) !== null) {
       const m = match!;
       const isOverlapping = matches.some(existing =>
-        existing.start <= m.index && m.index < existing.end ||
-        existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
       );
       if (!isOverlapping) {
         matches.push({ type: 'postlink', start: m.index, end: m.index + m[0].length, text: m[0] });
-      }
-    }
-
-    // Diğer linkleri bul
-    while ((match = linkRegex.exec(content)) !== null) {
-      const m = match!;
-      const isPostLink = /riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/i.test(m[0]);
-
-      // Çakışma kontrolü
-      const isOverlapping = matches.some(existing =>
-        (existing.start <= m.index && m.index < existing.end) || // Yeni link eskisiyle başlıyor
-        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) || // Yeni link eskisiyle bitiyor
-        (m.index <= existing.start && existing.end <= m.index + m[0].length) // Yeni link eskisini kapsıyor
-      );
-
-      if (!isPostLink && !isOverlapping) {
-        matches.push({ type: 'link', start: m.index, end: m.index + m[0].length, text: m[0] });
       }
     }
 
@@ -624,7 +642,7 @@ export default function PostItem({
 
           {/* Content */}
           <div className="mt-4 mb-3">
-            <p className="post-content text-xl leading-normal whitespace-pre-wrap">
+            <p className="post-content text-xl leading-normal whitespace-pre-wrap break-words break-all">
               {parseContent(post.content)}
             </p>
 
