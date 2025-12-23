@@ -176,13 +176,13 @@ export async function PATCH(
     const actorRole = authResult.user.role as Role;
     const targetRole = targetUser.role as Role;
 
-    if (!canManageRole(actorRole, targetRole)) {
-      // Exception: Users can potentially edit lower tiers? Actually canManageRole covers strictly higher. 
-      // But wait, can an Admin edit another Admin? strict > implies no.
-      // Let's enforce strict hierarchy for now.
-      // actually if actorRole == targetRole (e.g. Admin edits Admin), should be allowed? 
-      // Usually no, unless self. But this is admin API. 
-      // canManageRole is actor > target. So Admin cannot edit Admin. This is good/safe.
+    // 3. Hierarchy Check
+    // EXCEPTION: A user can always edit themselves (if they have admin access to get here)
+    // EXCEPTION: ROOTADMIN can edit other ROOTADMINs
+    const isSelf = authResult.user.id === targetUserId;
+    const isRootEditRoot = actorRole === 'ROOTADMIN' && targetRole === 'ROOTADMIN';
+
+    if (!isSelf && !isRootEditRoot && !canManageRole(actorRole, targetRole)) {
       return NextResponse.json({ error: "Yetkisiz işlem: Sizinle aynı veya daha yüksek yetkiye sahip bir kullanıcıyı düzenleyemezsiniz." }, { status: 403 });
     }
 
@@ -286,9 +286,11 @@ export async function PATCH(
         return NextResponse.json({ error: "Erişim reddedildi: Rol verme yetkiniz yok." }, { status: 403 });
       }
 
-      // Cannot grant a role higher or equal to self
+      // Cannot grant a role higher or equal to self (EXCEPTION: ROOTADMIN can grant ROOTADMIN)
       const newRole = role as Role;
-      if (!canManageRole(actorRole, newRole)) {
+      const isRootGrantingRoot = actorRole === 'ROOTADMIN' && newRole === 'ROOTADMIN';
+
+      if (!isRootGrantingRoot && !canManageRole(actorRole, newRole)) {
         return NextResponse.json({ error: "Erişim reddedildi: Kendinizden yüksek veya eşit bir rol atayamazsınız." }, { status: 403 });
       }
 
