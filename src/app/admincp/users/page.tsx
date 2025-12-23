@@ -154,8 +154,8 @@ export default function AdminUsers() {
   };
 
   const handleEdit = (user: User) => {
-    if (user.role === 'ROOTADMIN') {
-      alert("Root Admin düzenlenemez!");
+    if (user.role === 'ROOTADMIN' && currentUserRole !== 'ROOTADMIN') {
+      alert("Root Admin sadece başka bir Root Admin tarafından düzenlenebilir!");
       return;
     }
     setSelectedUser(user);
