@@ -23,6 +23,9 @@ import {
   IconSunFilled,
   IconMoonFilled
 } from "@tabler/icons-react";
+import VerificationBadge from "@/components/VerificationBadge";
+import AdminBadge from "@/components/AdminBadge";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 export default function AdminSidebar() {
   const router = useRouter();
@@ -70,61 +73,74 @@ export default function AdminSidebar() {
       id: "dashboard",
       label: "Dashboard",
       icon: IconLayoutDashboard,
-      href: "/admincp"
+      href: "/admincp",
+      visible: true
     },
     {
       id: "announcements",
       label: "Duyurular",
       icon: IconSpeakerphone,
-      href: "/admincp/announcements"
+      href: "/admincp/announcements",
+      visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
     },
     {
       id: "users",
       label: "Kullanıcılar",
       icon: IconUserSearch,
-      href: "/admincp/users"
+      href: "/admincp/users",
+      // Moderator+ can access users to ban/edit basics.
+      // We assume basic admin access implies viewing users.
+      // Matrix didn't restrict viewing users explicitly, only "View Moderators" logic.
+      visible: true
     },
     {
       id: "reports",
       label: "Şikayetler",
       icon: IconMessageReport,
-      href: "/admincp/reports"
+      href: "/admincp/reports",
+      visible: true // Moderators need this
     },
     {
       id: "approve-users",
       label: "Üyeleri Onayla",
       icon: IconUserCheck,
-      href: "/admincp/approveuser"
+      href: "/admincp/approveuser",
+      visible: hasPermission(userInfo?.role as Role, Permission.APPROVE_USER)
     },
     {
       id: "badges",
       label: "Rozet Talepleri",
       icon: IconRosetteDiscountCheck,
-      href: "/admincp/badges"
+      href: "/admincp/badges",
+      visible: hasPermission(userInfo?.role as Role, Permission.GRANT_BADGES)
     },
     {
       id: "ghost-message",
       label: "Ghost Mesaj",
       icon: IconMailSpark,
-      href: "/admincp/ghostmessage"
+      href: "/admincp/ghostmessage",
+      visible: hasPermission(userInfo?.role as Role, Permission.GHOST_MESSAGE)
     },
     {
       id: "pages",
       label: "Sayfalar",
       icon: IconSitemap,
-      href: "/admincp/pages"
+      href: "/admincp/pages",
+      visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
     },
     {
       id: "settings",
       label: "Ayarlar",
       icon: IconSettings,
-      href: "/admincp/settings"
+      href: "/admincp/settings",
+      visible: true
     },
     {
       id: "back-to-platform",
       label: "Platforma Dön",
       icon: IconArrowLeftToArc,
-      href: "/home"
+      href: "/home",
+      visible: true
     }
   ];
 
@@ -155,7 +171,7 @@ export default function AdminSidebar() {
         </div>
 
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {menuItems.filter(item => item.visible).map((item) => {
             const Icon = item.icon;
             const isActive = activeMenuId === item.id;
 
@@ -239,9 +255,16 @@ export default function AdminSidebar() {
           <div className="hidden xl:flex flex-1 flex-col">
             <div className="flex items-center text-[15px] font-bold" style={{ color: 'var(--app-body-text)' }}>
               {userInfo?.fullName || userInfo?.nickname || 'Admin'}
-              {userInfo?.hasBlueTick && (
-                <IconRosetteDiscountCheckFilled className="w-5 h-5 ml-1" style={{ color: 'var(--app-icon-verified)' }} />
-              )}
+              <VerificationBadge
+                tier={userInfo?.verificationTier}
+                hasBlueTick={userInfo?.hasBlueTick}
+                username={userInfo?.nickname}
+                className="w-5 h-5 ml-1"
+              />
+              <AdminBadge
+                role={userInfo?.role}
+                className="w-5 h-5 ml-1"
+              />
             </div>
             <div className="text-[13px]" style={{ color: 'var(--app-subtitle)' }}>
               @{userInfo?.nickname || 'admin'}

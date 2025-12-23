@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { verifyTokenAndUpdateActivity } from "@/lib/auth";
 
 // BigInt serialization için yardımcı fonksiyon
 function serializeBigInt(obj: any): any {
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const decoded = await verifyToken(token);
+    const decoded = await verifyTokenAndUpdateActivity(token);
     if (!decoded) {
       return NextResponse.json(
         { message: "Geçersiz token" },
@@ -112,7 +112,7 @@ export async function DELETE(req: Request) {
       );
     }
 
-    const decoded = await verifyToken(token);
+    const decoded = await verifyTokenAndUpdateActivity(token);
     if (!decoded) {
       return NextResponse.json(
         { message: "Geçersiz token" },

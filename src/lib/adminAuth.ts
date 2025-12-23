@@ -24,7 +24,7 @@ export async function verifyAdmin(req: Request) {
     }
 
     // Check roles
-    const authorizedRoles = ['ADMIN', 'MODERATOR', 'SUPERADMIN'];
+    const authorizedRoles = ['ADMIN', 'MODERATOR', 'LEAD', 'ROOTADMIN'];
     if (!user.role || !authorizedRoles.includes(user.role)) {
         return { error: NextResponse.json({ message: "Erişim reddedildi: Yetkiniz yok." }, { status: 403 }) };
     }

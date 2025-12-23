@@ -16,6 +16,7 @@ import { useState, useRef, useEffect } from "react";
 import { EnrichedPost } from "@/types/post";
 import { formatCustomDate } from "@/utils/date";
 import VerificationBadge from "./VerificationBadge";
+import AdminBadge from "./AdminBadge";
 
 interface PostHeaderProps {
     post: EnrichedPost;
@@ -105,12 +106,18 @@ export default function PostHeader({
                     </Link>
                 )}
                 {!isAnonymous && (
-                    <VerificationBadge
-                        tier={post.author.verificationTier}
-                        hasBlueTick={post.author.hasBlueTick}
-                        username={post.author.nickname}
-                        className="post-badge w-4 h-4 sm:w-5 sm:h-5 ml-0.5"
-                    />
+                    <>
+                        <VerificationBadge
+                            tier={post.author.verificationTier}
+                            hasBlueTick={post.author.hasBlueTick}
+                            username={post.author.nickname}
+                            className="post-badge w-4 h-4 sm:w-5 sm:h-5 ml-0.5"
+                        />
+                        <AdminBadge
+                            role={post.author.role}
+                            className="post-badge w-4 h-4 sm:w-5 sm:h-5 ml-0.5"
+                        />
+                    </>
                 )}
                 {isPopular && (
                     <IconRosetteDiscountCheckFilled className="post-badge post-badge-orange w-4 h-4 sm:w-5 sm:h-5 ml-0.5 verified-icon" />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import VerificationBadge from "./VerificationBadge";
+import AdminBadge from "./AdminBadge";
 import { useState, useEffect } from "react";
 
 interface UserListItemProps {
@@ -13,6 +14,7 @@ interface UserListItemProps {
         hasBlueTick: boolean;
         bio?: string | null;
         isFollowing: boolean;
+        role?: string;
     };
     currentUserId?: string;
     onFollowToggle: (userId: string, currentlyFollowing: boolean) => Promise<void>;
@@ -86,6 +88,10 @@ export default function UserListItem({
                         username={user.nickname}
                         className="flex-shrink-0"
                         style={{ width: "18px", height: "18px" }}
+                    />
+                    <AdminBadge
+                        role={user.role}
+                        className="flex-shrink-0 w-[18px] h-[18px]"
                     />
                 </div>
                 <span className="text-[15px]" style={{ color: "var(--app-subtitle)" }}>

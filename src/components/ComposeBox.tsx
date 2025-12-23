@@ -9,6 +9,8 @@ import { IconPhoto, IconGif, IconMoodSmile, IconX, IconPlayerPlay, IconChartBar,
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import GifPicker, { TenorImage, Theme } from 'gif-picker-react';
 import ErrorBoundary from './ErrorBoundary';
+import MentionList from "./MentionList";
+import { getCaretCoordinates } from "@/lib/caret";
 
 interface ComposeBoxProps {
   onPostCreated?: (post: EnrichedPost) => void;
@@ -19,6 +21,7 @@ interface ComposeBoxProps {
   submitButtonText?: string;
   onCancel?: () => void;
   className?: string;
+  isMobileFullscreen?: boolean; // Mobile tam ekran modunda mı
 }
 
 export default function ComposeBox({
@@ -29,7 +32,8 @@ export default function ComposeBox({
   placeholder = "Ne düşünüyorsun?",
   submitButtonText,
   onCancel,
-  className
+  className,
+  isMobileFullscreen = false
 }: ComposeBoxProps) {
   const router = useRouter();
   const uniqueId = useId();
@@ -59,6 +63,11 @@ export default function ComposeBox({
   const [pollHours, setPollHours] = useState(0);
   const [pollMinutes, setPollMinutes] = useState(5);
   const [isTextareaActive, setIsTextareaActive] = useState(false);
+
+  // Mention State
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -244,10 +253,8 @@ export default function ComposeBox({
       } else if (quotedPostId) {
         // Quote mode
         data = await postApi<EnrichedPost>("/posts/quote", {
+          ...postData,
           quotedPostId,
-          content: content.trim() || undefined,
-          isAnonymous // Quotes can also honor anonymous flag if backend supports it, checking logic...
-          // backend likely expects 'isAnonymous' in body. 
         });
       } else {
         // Normal post mode
@@ -376,6 +383,35 @@ export default function ComposeBox({
   const isOverLimit = currentLength > MAX_CHARS;
   const remainingChars = MAX_CHARS - currentLength;
 
+  const handleMentionSelect = (user: { nickname: string }) => {
+    if (mentionQuery === null || !textareaRef.current) return;
+
+    const textarea = textareaRef.current;
+    const value = content;
+    const selectionEnd = textarea.selectionEnd;
+
+    // Find the @ before cursor
+    const textBeforeCursor = value.slice(0, selectionEnd);
+    const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+
+    if (lastAtIndex !== -1) {
+      const prefix = value.slice(0, lastAtIndex);
+      const suffix = value.slice(selectionEnd);
+      const newContent = `${prefix}@${user.nickname} ${suffix}`;
+
+      setContent(newContent);
+      setMentionQuery(null);
+
+      // Calculate new cursor position
+      const newCursorPos = lastAtIndex + user.nickname.length + 2; // +2 for @ and space
+
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 10);
+    }
+  };
+
   return (
     <div className={`composebox text-white w-full ${(isReply || quotedPostId) ? 'bg-transparent' : 'bg-black p-4 border-t border-b border-theme-border lg:w-[598px]'} ${className || ''}`}>
       <form onSubmit={handleSubmit} className="relative">
@@ -404,9 +440,44 @@ export default function ComposeBox({
                   if (newContent.trim() !== "") {
                     setIsTextareaActive(true);
                   }
+
+                  // Mention detection
+                  const cursor = e.target.selectionEnd;
+                  const textBeforeCursor = newContent.slice(0, cursor);
+                  const lastAtIndex = textBeforeCursor.lastIndexOf("@");
+
+                  if (lastAtIndex !== -1) {
+                    const query = textBeforeCursor.slice(lastAtIndex + 1);
+                    // Check if query is valid (no spaces, acceptable length)
+                    // Also check if the @ is preceded by space or is start of line (optional but good practice)
+                    const charBeforeAt = lastAtIndex > 0 ? textBeforeCursor[lastAtIndex - 1] : " ";
+                    const isValidPredecessor = /\s/.test(charBeforeAt);
+
+                    if (isValidPredecessor && !/\s/.test(query) && query.length < 20) {
+                      setMentionQuery(query);
+
+                      const coords = getCaretCoordinates(e.target, lastAtIndex + 1);
+                      // Adjust for scrollTop if needed, though getCaretCoordinates usually returns relative to top-left of element content box.
+                      // We need to add padding/border. The utility does add border.
+                      // We also need to subtract scrollTop of the textarea
+                      const top = coords.top - e.target.scrollTop + 24; // +24 for line height approx/gap
+
+                      setMentionPosition({ top, left: coords.left });
+                    } else {
+                      setMentionQuery(null);
+                    }
+                  } else {
+                    setMentionQuery(null);
+                  }
                 }
               }}
-              onClick={() => setIsTextareaActive(true)}
+              onClick={() => {
+                setIsTextareaActive(true);
+                setMentionQuery(null); // Click closes suggestion usually, or we could re-eval? 
+                // Better to keep it simple: clicking away or moving cursor arbitrarily might break context so closing is safe.
+                // Actually, if they click back into the @mention string, maybe we should re-open?
+                // For now let's just keep it simple. If they want to trigger it again they can retype or we can add complex cursor tracking later.
+              }}
               placeholder={isAnonymous ? "Anonim olarak paylaşacaksınız..." : placeholder}
               disabled={isLoading}
               style={{ color: "var(--app-body-text)" }}
@@ -438,6 +509,22 @@ export default function ComposeBox({
               }}
             />
             {/* Character Counter Removed from here */}
+            {mentionQuery !== null && (
+              <div style={{
+                position: 'absolute',
+                top: mentionPosition.top,
+                left: isMobileFullscreen ? '50%' : mentionPosition.left,
+                transform: isMobileFullscreen ? 'translateX(-50%)' : 'none',
+                zIndex: 100,
+                width: 'max-content'
+              }}>
+                <MentionList
+                  query={mentionQuery}
+                  onSelect={handleMentionSelect}
+                  onClose={() => setMentionQuery(null)}
+                />
+              </div>
+            )}
           </div>
 
           {previewUrl && (
@@ -677,14 +764,16 @@ export default function ComposeBox({
               <IconMoodSmile className="h-4 w-4 md:h-5 md:w-5" />
             </button>
 
-            <button
-              type="button"
-              className="cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
-              onClick={togglePoll}
-              aria-label="Anket ekle"
-            >
-              <IconChartBar className="h-4 w-4 md:h-5 md:w-5" />
-            </button>
+            {!isMobileFullscreen && (
+              <button
+                type="button"
+                className="cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
+                onClick={togglePoll}
+                aria-label="Anket ekle"
+              >
+                <IconChartBar className="h-4 w-4 md:h-5 md:w-5" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -709,6 +798,8 @@ export default function ComposeBox({
           </div>
         </div>
 
+
+
         {/* Emoji Picker */}
         {
           showEmojiPicker && (
@@ -730,34 +821,94 @@ export default function ComposeBox({
         {/* GIF Picker */}
         {
           showGifPicker && (
-            <div
-              ref={gifPickerRef}
-              className="absolute top-10 left-0 z-50 shadow-lg rounded-lg overflow-hidden"
-              style={{
-                width: '400px',
-                backgroundColor: 'var(--app-body-bg)',
-              } as React.CSSProperties}
-            >
-              <style>{`
-                .GifPickerReact.gpr-dark-theme {
-                    --gpr-bg-color: var(--app-body-bg) !important;
-                    --gpr-main-container-bg: var(--app-body-bg) !important;
-                    --gpr-search-input-bg-color: var(--app-surface) !important;
-                    --gpr-picker-border-color: var(--app-border) !important;
-                    --gpr-highlight-color: var(--app-accent) !important;
-                }
-              `}</style>
-              <ErrorBoundary fallback={<div className="p-4 text-center text-gray-500">GIF yüklenemedi. API anahtarını kontrol edin.</div>}>
-                <GifPicker
-                  tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || ""}
-                  clientKey="riskbudur_web"
-                  onGifClick={handleGifClick}
-                  width={400}
-                  height={450}
-                  theme={Theme.DARK}
-                />
-              </ErrorBoundary>
-            </div>
+            isMobileFullscreen ? (
+              // Mobil Tam Ekran GIF Picker
+              <div className="fixed inset-0 z-[100] bg-[var(--app-body-bg)] flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
+                  <div className="flex items-center gap-2">
+                    <img
+                      src="/riskbudurlogo.png"
+                      alt="riskbudur"
+                      className="h-5"
+                    />
+                    <span className="text-[15px] font-medium" style={{ color: "var(--app-body-text)" }}>
+                      GIF Seç
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowGifPicker(false)}
+                    className="p-1.5 rounded-full transition-colors"
+                    style={{ color: "var(--app-subtitle)" }}
+                  >
+                    <IconX className="w-5 h-5" />
+                  </button>
+                </div>
+                {/* GIF Picker Content */}
+                <div className="flex-1 overflow-hidden">
+                  <style>{`
+                    .GifPickerReact.gpr-dark-theme {
+                        --gpr-bg-color: var(--app-body-bg) !important;
+                        --gpr-main-container-bg: var(--app-body-bg) !important;
+                        --gpr-search-input-bg-color: var(--app-surface) !important;
+                        --gpr-picker-border-color: transparent !important;
+                        --gpr-highlight-color: var(--app-accent) !important;
+                        border-radius: 0 !important;
+                        border: none !important;
+                    }
+                    .GifPickerReact.gpr-dark-theme > div:first-child {
+                        border-radius: 0 !important;
+                        border: none !important;
+                        border-top: none !important;
+                    }
+                    .GifPickerReact .gpr-search-container {
+                        border-radius: 0 !important;
+                        border: none !important;
+                    }
+                  `}</style>
+                  <ErrorBoundary fallback={<div className="p-4 text-center" style={{ color: "var(--app-subtitle)" }}>GIF yüklenemedi.</div>}>
+                    <GifPicker
+                      tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || ""}
+                      clientKey="riskbudur_web"
+                      onGifClick={handleGifClick}
+                      width={typeof window !== 'undefined' ? window.innerWidth : 400}
+                      height={typeof window !== 'undefined' ? window.innerHeight - 60 : 500}
+                      theme={Theme.DARK}
+                    />
+                  </ErrorBoundary>
+                </div>
+              </div>
+            ) : (
+              // Desktop Inline GIF Picker
+              <div
+                ref={gifPickerRef}
+                className="absolute top-10 left-0 z-50 shadow-lg rounded-lg overflow-hidden"
+                style={{
+                  width: '400px',
+                  backgroundColor: 'var(--app-body-bg)',
+                } as React.CSSProperties}
+              >
+                <style>{`
+                  .GifPickerReact.gpr-dark-theme {
+                      --gpr-bg-color: var(--app-body-bg) !important;
+                      --gpr-main-container-bg: var(--app-body-bg) !important;
+                      --gpr-search-input-bg-color: var(--app-surface) !important;
+                      --gpr-picker-border-color: var(--app-border) !important;
+                      --gpr-highlight-color: var(--app-accent) !important;
+                  }
+                `}</style>
+                <ErrorBoundary fallback={<div className="p-4 text-center text-gray-500">GIF yüklenemedi. API anahtarını kontrol edin.</div>}>
+                  <GifPicker
+                    tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || ""}
+                    clientKey="riskbudur_web"
+                    onGifClick={handleGifClick}
+                    width={400}
+                    height={450}
+                    theme={Theme.DARK}
+                  />
+                </ErrorBoundary>
+              </div>
+            )
           )
         }
       </form >

@@ -18,17 +18,28 @@ export async function GET(req: Request) {
         const limit = parseInt(searchParams.get("limit") || "50");
         const search = searchParams.get("search");
 
+        const mode = searchParams.get("mode"); // "search" or undefined
+
         // Calculate timestamp for 10 minutes ago
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
 
-        const where: any = {
-            // Only show users active in last 10 minutes
-            lastSeen: {
+        const where: any = {};
+
+        // If NOT in search mode, only show active users
+        if (mode !== "search") {
+            where.lastSeen = {
                 gte: tenMinutesAgo
-            }
-        };
+            };
+        }
 
         if (search) {
+            // Mention aramasında kendimizi gösterme
+            if (mode === "search") {
+                where.NOT = {
+                    id: decoded.userId
+                };
+            }
+
             where.AND = [
                 {
                     OR: [
@@ -53,6 +64,7 @@ export async function GET(req: Request) {
                 profileImage: true,
                 verificationTier: true,
                 hasBlueTick: true,
+                role: true,
                 lastSeen: true // Include for debugging if needed
             }
         });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { verifyTokenAndUpdateActivity } from "@/lib/auth";
 
 // Yeni yanit (reply) ekle - artik Post olarak kaydediliyor
 export async function POST(req: Request) {
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const decoded = await verifyToken(token);
+    const decoded = await verifyTokenAndUpdateActivity(token);
     if (!decoded) {
       return NextResponse.json(
         { message: "Gecersiz token" },

@@ -38,7 +38,8 @@ export async function GET(
                 fullName: true,
                 hasBlueTick: true,
                 verificationTier: true,
-                profileImage: true
+                profileImage: true,
+                role: true,
               }
             },
             _count: {
@@ -89,7 +90,8 @@ export async function GET(
         fullName: post.author.fullName,
         hasBlueTick: post.author.hasBlueTick,
         verificationTier: post.author.verificationTier,
-        profileImage: post.author.profileImage
+        profileImage: post.author.profileImage,
+        role: post.author.role,
       },
       _count: {
         likes: post._count.likes,

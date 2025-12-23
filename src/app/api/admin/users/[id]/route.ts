@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyAdmin } from "@/lib/adminAuth";
+import { hasPermission, Permission, canManageRole, Role } from "@/lib/permissions";
 
 export async function DELETE(
   request: Request,
@@ -16,20 +17,25 @@ export async function DELETE(
     }
     // const userId = authResult.user.id;
 
-    // Check if target user is SUPERADMIN
+    // Check if target user is ROOTADMIN
     const targetUser = await prisma.user.findUnique({
       where: { id: targetUserId },
       select: { role: true }
     });
 
-    // TypeScript might complain if types are stale, cast to ensure check passes
-    if ((targetUser?.role as unknown as string) === 'SUPERADMIN') {
-      return NextResponse.json({ error: "Süper Admin silinemez!" }, { status: 403 });
+    if (!targetUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    // 1. Permission Check
+    if (!hasPermission(authResult.user.role as Role, Permission.DELETE_USER)) {
+      return NextResponse.json({ error: "Yetkisiz işlem: Kullanıcı silme yetkiniz yok." }, { status: 403 });
     }
 
-    // Kısıtlama: Moderatörler Adminleri ve Süper Adminleri silemez
-    if (authResult.user?.role === 'MODERATOR' && (targetUser?.role === 'ADMIN' || (targetUser?.role as unknown as string) === 'SUPERADMIN')) {
-      return NextResponse.json({ error: "Yetkisiz işlem: Yönetici hesaplarını silemezsiniz." }, { status: 403 });
+    // 2. Hierarchy Check
+    const actorRole = authResult.user.role as Role;
+    const targetRole = targetUser.role as Role;
+
+    if (!canManageRole(actorRole, targetRole)) {
+      return NextResponse.json({ error: "Yetkisiz işlem: Sizinle aynı veya daha yüksek yetkiye sahip bir kullanıcıyı silemezsiniz." }, { status: 403 });
     }
 
     // İlişkili verileri sil
@@ -157,16 +163,27 @@ export async function PATCH(
       return authResult.error;
     }
 
-    // Check if target user is SUPERADMIN
 
-    // Check if target user is SUPERADMIN
+
+    // Check hierarchy for target user
     const targetUser = await prisma.user.findUnique({
       where: { id: targetUserId },
-      select: { role: true }
+      select: { role: true, nickname: true, email: true }
     });
 
-    if (targetUser?.role === 'SUPERADMIN') {
-      return NextResponse.json({ error: "Süper Admin düzenlenemez!" }, { status: 403 });
+    if (!targetUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    const actorRole = authResult.user.role as Role;
+    const targetRole = targetUser.role as Role;
+
+    if (!canManageRole(actorRole, targetRole)) {
+      // Exception: Users can potentially edit lower tiers? Actually canManageRole covers strictly higher. 
+      // But wait, can an Admin edit another Admin? strict > implies no.
+      // Let's enforce strict hierarchy for now.
+      // actually if actorRole == targetRole (e.g. Admin edits Admin), should be allowed? 
+      // Usually no, unless self. But this is admin API. 
+      // canManageRole is actor > target. So Admin cannot edit Admin. This is good/safe.
+      return NextResponse.json({ error: "Yetkisiz işlem: Sizinle aynı veya daha yüksek yetkiye sahip bir kullanıcıyı düzenleyemezsiniz." }, { status: 403 });
     }
 
     const body = await request.json();
@@ -174,9 +191,22 @@ export async function PATCH(
 
     // Güncelleme verilerini hazırla
     const updateData: any = {};
-    if (fullName !== undefined) updateData.fullName = fullName;
+
+    // FULL NAME
+    if (fullName !== undefined) {
+      if (!hasPermission(actorRole, Permission.MANAGE_USER_FULLNAME)) {
+        return NextResponse.json({ error: "Erişim reddedildi: İsim düzenleme yetkiniz yok." }, { status: 403 });
+      }
+      updateData.fullName = fullName;
+    }
+
+    // NICKNAME / USERNAME
     if (nickname !== undefined) {
-      // Nickname validasyonu
+      if (!hasPermission(actorRole, Permission.MANAGE_USER_USERNAME)) {
+        return NextResponse.json({ error: "Erişim reddedildi: Kullanıcı adı düzenleme yetkiniz yok." }, { status: 403 });
+      }
+
+      // ... nickname validations ...
       if (nickname.length > 15) {
         return NextResponse.json(
           { error: "Kullanıcı adı en fazla 15 karakter olabilir" },
@@ -189,14 +219,6 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      // Admin API allows setting restricted nicknames
-      // const lowerNickname = nickname.toLowerCase();
-      // if (lowerNickname.includes("admin") || lowerNickname.includes("riskbudur")) {
-      //   return NextResponse.json(
-      //     { error: "Kullanıcı adı 'admin' veya 'riskbudur' içeremez" },
-      //     { status: 400 }
-      //   );
-      // }
       // Aynı nickname kontrolü (kendisi hariç)
       const existingUser = await prisma.user.findFirst({
         where: {
@@ -212,7 +234,18 @@ export async function PATCH(
       }
       updateData.nickname = nickname;
     }
+
+    // EMAIL (Sensitive, treat as full edit or specific? Let's check permissions.ts, likely DELETE/MANAGE_USER implies heavy access)
+    // We didn't define MANAGE_EMAIL. Let's assume MANAGE_USER_USERNAME or DELETE_USER level needed?
+    // Or just let anyone with access edit email? 
+    // Let's assume MANAGE_USER_FULLNAME is enough for basic details, but let's stick to base access.
+    // Actually, Admin/Lead usually can. Moderators? Matrix says "Edit Fullname" only.
+    // Matrix didn't specify Email. I will restrict Email to LEAD+ (same as Username)
     if (email !== undefined) {
+      if (!hasPermission(actorRole, Permission.MANAGE_USER_USERNAME)) { // Reusing username perm for email for now
+        return NextResponse.json({ error: "Erişim reddedildi: Email düzenleme yetkiniz yok." }, { status: 403 });
+      }
+
       // Email validasyonu
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
@@ -236,23 +269,27 @@ export async function PATCH(
       }
       updateData.email = email;
     }
+
     if (verificationTier !== undefined) {
-      // Kısıtlama: Moderatörler doğrulama seviyesini değiştiremez
-      if (authResult.user?.role === 'MODERATOR') {
-        return NextResponse.json({ error: "Erişim reddedildi: Doğrulama seviyesini değiştirme yetkiniz yok." }, { status: 403 });
+      // Permission specific? Not explicit in matrix, but let's assume ADMIN+ or LEAD+? 
+      // Matrix says "Grant Badges" -> Admin+.
+      if (!hasPermission(actorRole, Permission.GRANT_BADGES)) {
+        return NextResponse.json({ error: "Erişim reddedildi: Rozet verme yetkiniz yok." }, { status: 403 });
       }
 
       updateData.verificationTier = verificationTier;
       updateData.hasBlueTick = verificationTier !== 'NONE';
     }
+
     if (role !== undefined) {
-      if ((role as unknown as string) === 'SUPERADMIN') {
-        return NextResponse.json({ error: "Süper Admin rolü atanamaz!" }, { status: 403 });
+      if (!hasPermission(actorRole, Permission.GRANT_ROLES)) {
+        return NextResponse.json({ error: "Erişim reddedildi: Rol verme yetkiniz yok." }, { status: 403 });
       }
 
-      // Kısıtlama: Moderatörler rol değiştiremez
-      if (authResult.user?.role === 'MODERATOR') {
-        return NextResponse.json({ error: "Erişim reddedildi: Rol değiştirme yetkiniz yok." }, { status: 403 });
+      // Cannot grant a role higher or equal to self
+      const newRole = role as Role;
+      if (!canManageRole(actorRole, newRole)) {
+        return NextResponse.json({ error: "Erişim reddedildi: Kendinizden yüksek veya eşit bir rol atayamazsınız." }, { status: 403 });
       }
 
       updateData.role = role;

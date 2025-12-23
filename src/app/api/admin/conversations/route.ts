@@ -18,9 +18,9 @@ export async function GET(req: Request) {
 
         console.log(`Admin Request: ${adminId} Role: ${adminUser?.role}`);
 
-        if (!adminUser || (adminUser.role !== 'SUPERADMIN' && adminUser.role !== 'ADMIN')) {
+        if (!adminUser || (adminUser.role !== 'ROOTADMIN' && adminUser.role !== 'ADMIN')) {
             return NextResponse.json({
-                message: `Forbidden: Access denied. Role 'SUPERADMIN' or 'ADMIN' required. You are: ${adminUser?.role}`
+                message: `Forbidden: Access denied. Role 'ROOTADMIN' or 'ADMIN' required. You are: ${adminUser?.role}`
             }, { status: 403 });
         }
 

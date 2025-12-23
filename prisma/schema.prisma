@@ -246,8 +246,9 @@ enum VerificationTier {
 enum Role {
   USER
   MODERATOR
+  LEAD
   ADMIN
-  SUPERADMIN
+  ROOTADMIN
 }
 
 enum NotificationType {

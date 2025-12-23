@@ -14,6 +14,7 @@ interface Post {
     hasBlueTick: boolean;
     verificationTier?: 'NONE' | 'GREEN' | 'GOLD' | 'GRAY';
     fullName?: string;
+    role?: string;
   };
   _count: {
     likes: number;
@@ -95,6 +96,7 @@ export default function PopularPostsSlider() {
               profileImage: post.author.profileImage || undefined,
               hasBlueTick: post.author.hasBlueTick,
               verificationTier: post.author.verificationTier || 'NONE',
+              role: post.author.role,
             },
             _count: {
               likes: post._count.likes,

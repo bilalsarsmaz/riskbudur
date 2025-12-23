@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AdmStandardPageLayout from "@/components/AdmStandardPageLayout";
 import AdminSidebar from "@/components/AdminSidebar";
 import GlobalHeader from "@/components/GlobalHeader";
+import AdminBadge from "@/components/AdminBadge";
 import {
   IconBan,
   IconTrash,
@@ -15,6 +16,8 @@ import {
   IconMapPin,
   IconMail
 } from "@tabler/icons-react";
+import { hasPermission, Permission, Role, canManageRole } from "@/lib/permissions";
+import { fetchApi } from "@/lib/api";
 
 interface User {
   id: string; // Changed from number to string to match Prisma schema
@@ -40,6 +43,7 @@ export default function AdminUsers() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'ALL' | 'BANNED' | 'VERIFIED' | 'MODERATION'>('ALL');
+  const [currentUserRole, setCurrentUserRole] = useState<Role | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -47,8 +51,17 @@ export default function AdminUsers() {
       router.push("/");
       return;
     }
-    setIsAuthenticated(true);
-    fetchUsers();
+    const fetchMe = async () => {
+      try {
+        const me = await fetchApi("/users/me");
+        if (me) setCurrentUserRole(me.role as Role);
+        setIsAuthenticated(true);
+        fetchUsers();
+      } catch (e) {
+        router.push("/");
+      }
+    };
+    fetchMe();
   }, [router]);
 
   const fetchUsers = async () => {
@@ -109,8 +122,8 @@ export default function AdminUsers() {
   };
 
   const handleDelete = async (userId: string, nickname: string, role?: string) => {
-    if (role === 'SUPERADMIN') {
-      alert("Süper Admin silinemez!");
+    if (role === 'ROOTADMIN') {
+      alert("Root Admin silinemez!");
       return;
     }
     if (!confirm(`"${nickname}" kullanıcısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz!`)) {
@@ -141,8 +154,8 @@ export default function AdminUsers() {
   };
 
   const handleEdit = (user: User) => {
-    if (user.role === 'SUPERADMIN') {
-      alert("Süper Admin düzenlenemez!");
+    if (user.role === 'ROOTADMIN') {
+      alert("Root Admin düzenlenemez!");
       return;
     }
     setSelectedUser(user);
@@ -191,7 +204,7 @@ export default function AdminUsers() {
     // tab filter
     if (activeTab === 'BANNED') return user.isBanned;
     if (activeTab === 'VERIFIED') return user.hasBlueTick || user.verificationTier !== 'NONE';
-    if (activeTab === 'MODERATION') return user.role === 'ADMIN' || user.role === 'MODERATOR'; // Assuming roles
+    if (activeTab === 'MODERATION') return user.role === 'ADMIN' || user.role === 'MODERATOR' || user.role === 'LEAD' || user.role === 'ROOTADMIN';
 
     return true;
   });
@@ -332,6 +345,10 @@ export default function AdminUsers() {
                                 user.nickname === 'riskbudur' ? 'gold' : 'green'
                             }`} />
                         )}
+                        <AdminBadge
+                          role={user.role}
+                          className="w-[18px] h-[18px] ml-0.5"
+                        />
                         {user.isBanned && (
                           <span className="ml-2 px-1.5 py-0.5 text-[10px] uppercase font-bold bg-[#f4212e]/10 text-[#f4212e] rounded-sm tracking-wide">
                             Banned
@@ -355,22 +372,27 @@ export default function AdminUsers() {
                         <IconEdit size={18} />
                       </button>
                       {/* Verification button moved to Edit Modal */}
-                      <button
-                        onClick={() => handleBan(user.id, user.isBanned)}
-                        disabled={actionLoading === user.id}
-                        className={`p-2 rounded-full hover:bg-[#f4212e]/10 transition-colors ${user.isBanned ? 'text-[#f4212e]' : 'text-[#71767b] hover:text-[#f4212e]'}`}
-                        title={user.isBanned ? "Banı kaldır" : "Banla"}
-                      >
-                        <IconBan size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id, user.nickname, user.role)}
-                        disabled={actionLoading === user.id}
-                        className="p-2 rounded-full hover:bg-[#f4212e]/10 text-[#71767b] hover:text-[#f4212e] transition-colors"
-                        title="Sil"
-                      >
-                        <IconTrash size={18} />
-                      </button>
+                      {hasPermission(currentUserRole, Permission.BAN_USER) && (
+                        <button
+                          onClick={() => handleBan(user.id, user.isBanned)}
+                          disabled={actionLoading === user.id}
+                          className={`p-2 rounded-full hover:bg-[#f4212e]/10 transition-colors ${user.isBanned ? 'text-[#f4212e]' : 'text-[#71767b] hover:text-[#f4212e]'}`}
+                          title={user.isBanned ? "Banı kaldır" : "Banla"}
+                        >
+                          <IconBan size={18} />
+                        </button>
+                      )}
+
+                      {hasPermission(currentUserRole, Permission.DELETE_USER) && canManageRole(currentUserRole!, user.role as Role) && (
+                        <button
+                          onClick={() => handleDelete(user.id, user.nickname, user.role)}
+                          disabled={actionLoading === user.id}
+                          className="p-2 rounded-full hover:bg-[#f4212e]/10 text-[#71767b] hover:text-[#f4212e] transition-colors"
+                          title="Sil"
+                        >
+                          <IconTrash size={18} />
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center space-x-3 text-xs text-[#536471] pr-2">
                       {user.ipAddress && (
@@ -403,6 +425,7 @@ export default function AdminUsers() {
               setSelectedUser(null);
             }}
             loading={actionLoading === selectedUser.id}
+            currentUserRole={currentUserRole}
           />
         )
       }
@@ -411,7 +434,7 @@ export default function AdminUsers() {
 }
 
 // Düzenleme Modal Component'i
-function EditUserModal({ user, onSave, onCancel, loading }: { user: User; onSave: (data: Partial<User>) => void; onCancel: () => void; loading: boolean }) {
+function EditUserModal({ user, onSave, onCancel, loading, currentUserRole }: { user: User; onSave: (data: Partial<User>) => void; onCancel: () => void; loading: boolean; currentUserRole: Role | null }) {
   const [formData, setFormData] = useState({
     fullName: user.fullName || "",
     nickname: user.nickname,
@@ -493,7 +516,9 @@ function EditUserModal({ user, onSave, onCancel, loading }: { user: User; onSave
             >
               <option value="USER">Kullanıcı (Üye)</option>
               <option value="MODERATOR">Moderatör</option>
+              <option value="LEAD">Lider (Lead)</option>
               <option value="ADMIN">Yönetici (Admin)</option>
+              {currentUserRole === 'ROOTADMIN' && <option value="ROOTADMIN">Root Admin</option>}
             </select>
           </div>
 

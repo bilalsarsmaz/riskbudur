@@ -14,6 +14,7 @@ async function findThreadRoot(postId: bigint): Promise<any> {
           hasBlueTick: true,
           verificationTier: true,
           profileImage: true,
+          role: true,
         },
       },
     },
@@ -106,6 +107,7 @@ export async function GET(
             hasBlueTick: true,
             verificationTier: true,
             profileImage: true,
+            role: true,
           },
         },
         parentPost: {
@@ -118,6 +120,7 @@ export async function GET(
                 hasBlueTick: true,
                 verificationTier: true,
                 profileImage: true,
+                role: true,
               },
             },
           },

@@ -48,6 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     profileImage: true,
                     hasBlueTick: true,
                     verificationTier: true,
+                    role: true,
                 }
             },
             _count: {
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 include: {
                     quotedPost: {
                         include: {
-                            author: { select: { id: true, nickname: true, fullName: true, profileImage: true, hasBlueTick: true, verificationTier: true } },
+                            author: { select: { id: true, nickname: true, fullName: true, profileImage: true, hasBlueTick: true, verificationTier: true, role: true } },
                             _count: { select: { likes: true, comments: true, quotes: true, replies: true } }
                         }
                     }
@@ -195,6 +196,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                             profileImage: true,
                             hasBlueTick: true,
                             verificationTier: true,
+                            role: true,
                         }
                     },
                     _count: {

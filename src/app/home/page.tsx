@@ -101,6 +101,8 @@ export default function HomePage() {
 
 
 
+
+
   // Infinite scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -173,6 +175,18 @@ export default function HomePage() {
     });
   }, []);
 
+  // Listen for posts created from MobileBottomNav
+  useEffect(() => {
+    const handleMobilePostCreated = (event: CustomEvent<EnrichedPost>) => {
+      handlePostCreated(event.detail);
+    };
+
+    window.addEventListener('mobilePostCreated', handleMobilePostCreated as EventListener);
+    return () => {
+      window.removeEventListener('mobilePostCreated', handleMobilePostCreated as EventListener);
+    };
+  }, [handlePostCreated]);
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -204,10 +218,13 @@ export default function HomePage() {
           }}
         />
 
-        <ComposeBox
-          onPostCreated={handlePostCreated}
-          className="border-t-0"
-        />
+        {/* Desktop only - mobilde bottom nav'daki modal kullanılacak */}
+        <div className="hidden lg:block">
+          <ComposeBox
+            onPostCreated={handlePostCreated}
+            className="border-t-0"
+          />
+        </div>
 
         {newPostCount > 0 && (
           <div

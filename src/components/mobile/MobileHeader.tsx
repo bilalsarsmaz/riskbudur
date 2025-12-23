@@ -25,8 +25,19 @@ import {
   IconMoon,
   IconSunFilled,
   IconMoonFilled,
+  IconHomeCog,
+  IconLayoutDashboard,
+  IconSpeakerphone,
+  IconUserSearch,
+  IconMessageReport,
+  IconUserCheck,
+  IconRosetteDiscountCheck,
+  IconMailSpark,
+  IconSitemap,
+  IconArrowLeftToArc
 } from "@tabler/icons-react";
 import VerificationBadge from "@/components/VerificationBadge";
+import AdminBadge from "@/components/AdminBadge";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
 
 export default function MobileHeader() {
@@ -78,6 +89,7 @@ export default function MobileHeader() {
           const parsed = JSON.parse(storedUserInfo);
           parsed.profileImage = data.profileImage;
           parsed.fullName = data.fullName;
+          parsed.role = data.role;
           localStorage.setItem("userInfo", JSON.stringify(parsed));
         }
       } catch (err) {
@@ -143,7 +155,7 @@ export default function MobileHeader() {
       if (item.id === 'compose') return false;
 
       if (item.isAdmin) {
-        return userInfo?.role === 'ADMIN' || userInfo?.role === 'SUPERADMIN';
+        return userInfo?.role === 'ADMIN' || userInfo?.role === 'ROOTADMIN';
       }
       return true;
     })
@@ -203,7 +215,7 @@ export default function MobileHeader() {
 
   return (
     <>
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-theme-bg/80 backdrop-blur-md border-b border-theme-border z-50 flex items-center justify-between px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-theme-bg/80 backdrop-blur-md border-b border-theme-border z-[9999] flex items-center justify-between px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex items-start justify-center">
             <img src="/riskbudurlogo.png" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
@@ -231,7 +243,7 @@ export default function MobileHeader() {
       {/* Backdrop blur */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] lg:hidden"
           onClick={() => setIsMenuOpen(false)}
           style={{ top: '56px' }}
         />
@@ -240,149 +252,285 @@ export default function MobileHeader() {
       {/* Sidebar Menu */}
       <div
         ref={menuRef}
-        className={`fixed top-14 right-0 bottom-0 backdrop-blur-md border-l border-theme-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${isMenuOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-14 right-0 bottom-0 backdrop-blur-md border-l border-theme-border z-[9999] transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${isMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         style={{ width: "300px", paddingBottom: "60px", backgroundColor: "var(--app-body-bg)" }}
 
       >
         <div className="flex flex-col h-full">
-          {/* User Profile Section */}
-          <div className="px-4 py-4">
-            {/* Profil Fotoğrafı ve Kullanıcı Bilgileri */}
-            <div className="flex items-center p-2" style={{ marginBottom: "5px" }}>
-              {userInfo.profileImage ? (
-                <img
-                  src={userInfo.profileImage}
-                  alt={userInfo.nickname}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover mr-3"
-                  style={{ border: '0.5px solid #222222' }}
-                />
-              ) : (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3" style={{ border: '0.5px solid #222222', color: 'var(--app-body-text)' }}>
-                  {userInfo.nickname?.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm sm:text-[15px] font-bold" style={{ color: 'var(--app-body-text)' }}>
-                    {userInfo.fullName || userInfo.nickname}
-                  </div>
-                  <VerificationBadge
-                    tier={userInfo.verificationTier}
-                    hasBlueTick={userInfo.hasBlueTick}
-                    username={userInfo.nickname} // username is stored as nickname in this component's state
-                    className="w-5 h-5 -ml-1"
-                  />
-                </div>
-                <div className="text-sm" style={{ color: 'var(--app-subtitle)' }}>
-                  @{userInfo.nickname}
-                </div>
-              </div>
-            </div>
-
-            {/* Takip edilenler ve takipçi */}
-            <div className="flex items-center gap-4 mb-4 px-2">
-              <div className="flex items-center gap-1">
-                <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.following || 0}</div>
-                <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalanan</div>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.followers || 0}</div>
-                <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalayan</div>
-              </div>
-            </div>
-
-            {/* HR */}
-            <hr className="border-theme-border my-4" />
-
-            {/* Menu Items */}
-            <nav>
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href={userInfo ? `/${userInfo.nickname}` : "/profile"}
-                    className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base"
-                    style={{ color: 'var(--app-body-text)' }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <IconUser className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                    <span>Profilim</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/i/bookmarks"
-                    className="flex items-center p-3 rounded-lg transition-colors text-sm sm:text-base"
-                    style={{ color: 'var(--app-body-text)' }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <IconTargetArrow className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                    <span>Çivilenenler</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    href="/settings"
-                    className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base"
-                    style={{ color: 'var(--app-body-text)' }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <IconSettings className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                    <span>Ayarlar</span>
-                  </Link>
-                </li>
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center p-3 hover:bg-[#151515] rounded-lg text-left text-sm sm:text-base"
-                    style={{ color: 'var(--app-body-text)' }}
-                  >
-                    <IconLogout className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                    <span>Çıkış</span>
-                  </button>
-                </li>
-              </ul>
-
-              <hr className="border-theme-border my-4" />
-
-              <ul className="space-y-1">
-                <li>
-                  <button
-                    onClick={toggleTheme}
-                    className="w-full flex items-center p-3 rounded-lg text-left transition-colors"
-                  >
-                    {/* Custom Toggle Switch */}
-                    <div
-                      className={`relative w-[48px] h-[26px] rounded-full transition-colors duration-300 mr-3 flex-shrink-0 border ${theme === 'dark' ? 'bg-black border-gray-700' : 'bg-gray-200 border-gray-300'}`}
+          {pathname.startsWith('/admincp') && (userInfo.role === 'ADMIN' || userInfo.role === 'ROOTADMIN') ? (
+            // =========================
+            // ADMIN DRAWER CONTENT
+            // =========================
+            <div className="flex flex-col h-full pt-4">
+              {/* Admin Menu Items */}
+              <nav className="flex-1 overflow-y-auto px-4 py-2">
+                <ul className="space-y-1">
+                  <li>
+                    <Link
+                      href="/admincp"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname === "/admincp" ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
                     >
-                      {/* Sun Icon (Left Background - Visible when Dark) */}
-                      <div className={`absolute left-1.5 top-1 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
-                        <IconSun className="w-4 h-4 text-gray-500" />
-                      </div>
-
-                      {/* Moon Icon (Right Background - Visible when Light) */}
-                      <div className={`absolute right-1.5 top-1 transition-opacity duration-300 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
-                        <IconMoon className="w-4 h-4 text-gray-400" />
-                      </div>
-
-                      {/* Sliding Circle */}
-                      <div
-                        className={`absolute top-[2px] w-[20px] h-[20px] rounded-full shadow-sm flex items-center justify-center transition-transform duration-300 bg-[#f97316] ${theme === 'dark' ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}
-                      >
-                        {theme === 'dark' ? (
-                          <IconMoonFilled className="w-3 h-3 text-white" />
-                        ) : (
-                          <IconSunFilled className="w-3 h-3 text-white" />
-                        )}
-                      </div>
+                      <IconLayoutDashboard className="h-5 w-5 mr-3" />
+                      <span>Dashboard</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/announcements"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/announcements") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconSpeakerphone className="h-5 w-5 mr-3" />
+                      <span>Duyurular</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/users"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/users") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconUserSearch className="h-5 w-5 mr-3" />
+                      <span>Kullanıcılar</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/reports"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/reports") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconMessageReport className="h-5 w-5 mr-3" />
+                      <span>Şikayetler</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/approveuser"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/approveuser") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconUserCheck className="h-5 w-5 mr-3" />
+                      <span>Üyeleri Onayla</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/badges"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/badges") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconRosetteDiscountCheck className="h-5 w-5 mr-3" />
+                      <span>Rozet Talepleri</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/ghostmessage"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/ghostmessage") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconMailSpark className="h-5 w-5 mr-3" />
+                      <span>Ghost Mesaj</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/pages"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/pages") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconSitemap className="h-5 w-5 mr-3" />
+                      <span>Sayfalar</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/admincp/settings"
+                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname === "/admincp/settings" ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconSettings className="h-5 w-5 mr-3" />
+                      <span>Ayarlar</span>
+                    </Link>
+                  </li>
+                  <li className="pt-2 border-t border-theme-border mt-2">
+                    <Link
+                      href="/home"
+                      className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base text-[var(--app-global-link-color)]"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <IconArrowLeftToArc className="h-5 w-5 mr-3" />
+                      <span>Platforma Dön</span>
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          ) : (
+            // =========================
+            // USER DRAWER CONTENT (STANDARD)
+            // =========================
+            <>
+              {/* User Profile Section */}
+              <div className="px-4 py-4">
+                {/* Profil Fotoğrafı ve Kullanıcı Bilgileri */}
+                <div className="flex items-center p-2" style={{ marginBottom: "5px" }}>
+                  {userInfo.profileImage ? (
+                    <img
+                      src={userInfo.profileImage}
+                      alt={userInfo.nickname}
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover mr-3"
+                      style={{ border: '0.5px solid #222222' }}
+                    />
+                  ) : (
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3" style={{ border: '0.5px solid #222222', color: 'var(--app-body-text)' }}>
+                      {userInfo.nickname?.charAt(0).toUpperCase()}
                     </div>
-                    <span style={{ color: 'var(--app-body-text)' }} className="text-xs sm:text-sm">Platform Temasını Değiştir</span>
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm sm:text-[15px] font-bold" style={{ color: 'var(--app-body-text)' }}>
+                        {userInfo.fullName || userInfo.nickname}
+                      </div>
+                      <VerificationBadge
+                        tier={userInfo.verificationTier}
+                        hasBlueTick={userInfo.hasBlueTick}
+                        username={userInfo.nickname} // username is stored as nickname in this component's state
+                        className="w-5 h-5 -ml-1"
+                      />
+                      <AdminBadge
+                        role={userInfo.role}
+                        className="w-5 h-5 ml-1"
+                      />
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--app-subtitle)' }}>
+                      @{userInfo.nickname}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Takip edilenler ve takipçi */}
+                <div className="flex items-center gap-4 mb-4 px-2">
+                  <div className="flex items-center gap-1">
+                    <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.following || 0}</div>
+                    <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalanan</div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.followers || 0}</div>
+                    <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalayan</div>
+                  </div>
+                </div>
+
+                {/* HR */}
+                <hr className="border-theme-border my-4" />
+
+                {/* Menu Items */}
+                <nav>
+                  <ul className="space-y-1">
+                    {(userInfo.role === 'ADMIN' || userInfo.role === 'ROOTADMIN') && (
+                      <li className="md:hidden">
+                        <Link
+                          href="/admincp"
+                          className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base"
+                          style={{ color: 'var(--app-body-text)' }}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <IconLayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
+                          <span>Dashboard</span>
+                        </Link>
+                      </li>
+                    )}
+                    <li>
+                      <Link
+                        href={userInfo ? `/${userInfo.nickname}` : "/profile"}
+                        className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base"
+                        style={{ color: 'var(--app-body-text)' }}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <IconUser className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
+                        <span>Profilim</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/i/bookmarks"
+                        className="flex items-center p-3 rounded-lg transition-colors text-sm sm:text-base"
+                        style={{ color: 'var(--app-body-text)' }}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <IconTargetArrow className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
+                        <span>Çivilenenler</span>
+                      </Link>
+                    </li>
+
+                    <li>
+                      <Link
+                        href="/settings"
+                        className="flex items-center p-3 hover:bg-[#151515] rounded-lg text-sm sm:text-base"
+                        style={{ color: 'var(--app-body-text)' }}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <IconSettings className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
+                        <span>Ayarlar</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center p-3 hover:bg-[#151515] rounded-lg text-left text-sm sm:text-base"
+                        style={{ color: 'var(--app-body-text)' }}
+                      >
+                        <IconLogout className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
+                        <span>Çıkış</span>
+                      </button>
+                    </li>
+                  </ul>
+
+                  <hr className="border-theme-border my-4" />
+
+                  <ul className="space-y-1">
+                    <li>
+                      <button
+                        onClick={toggleTheme}
+                        className="w-full flex items-center p-3 rounded-lg text-left transition-colors"
+                      >
+                        {/* Custom Toggle Switch */}
+                        <div
+                          className={`relative w-[48px] h-[26px] rounded-full transition-colors duration-300 mr-3 flex-shrink-0 border ${theme === 'dark' ? 'bg-black border-gray-700' : 'bg-gray-200 border-gray-300'}`}
+                        >
+                          {/* Sun Icon (Left Background - Visible when Dark) */}
+                          <div className={`absolute left-1.5 top-1 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
+                            <IconSun className="w-4 h-4 text-gray-500" />
+                          </div>
+
+                          {/* Moon Icon (Right Background - Visible when Light) */}
+                          <div className={`absolute right-1.5 top-1 transition-opacity duration-300 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
+                            <IconMoon className="w-4 h-4 text-gray-400" />
+                          </div>
+
+                          {/* Sliding Circle */}
+                          <div
+                            className={`absolute top-[2px] w-[20px] h-[20px] rounded-full shadow-sm flex items-center justify-center transition-transform duration-300 bg-[#f97316] ${theme === 'dark' ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}
+                          >
+                            {theme === 'dark' ? (
+                              <IconMoonFilled className="w-3 h-3 text-white" />
+                            ) : (
+                              <IconSunFilled className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                        </div>
+                        <span style={{ color: 'var(--app-body-text)' }} className="text-xs sm:text-sm">Platform Temasını Değiştir</span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </>
+          )}
+
         </div>
       </div>
     </>

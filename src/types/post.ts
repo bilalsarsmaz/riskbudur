@@ -5,6 +5,7 @@ export interface Author {
     profileImage?: string;
     hasBlueTick: boolean;
     verificationTier?: 'NONE' | 'GREEN' | 'GOLD' | 'GRAY';
+    role?: string;
 }
 
 export interface LinkPreview {

@@ -468,3 +468,11 @@ div.flex.items-center .verified-icon,
 .static-page-content ol {
   list-style-type: decimal;
 }
+
+/* High specificity to override sidebar .left-nav .font-bold svg */
+.left-nav .font-bold .app-adminbadge,
+.left-nav .app-adminbadge,
+svg.app-adminbadge,
+.app-adminbadge {
+  color: #1DCD9F !important;
+}

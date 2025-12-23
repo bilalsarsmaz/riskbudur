@@ -9,6 +9,7 @@ import MinimalCommentModal from "./MinimalCommentModal";
 import QuoteModal from "./QuoteModal";
 import PostHeader from "./PostHeader";
 import VerificationBadge from "./VerificationBadge";
+import AdminBadge from "./AdminBadge";
 import ImageModal from "./ImageModal";
 import { formatCustomDate } from "@/utils/date";
 import PollDisplay from "@/components/PollDisplay";
@@ -552,12 +553,18 @@ export default function PostItem({
                     {isAnonymous ? 'Anonim Kullanıcı' : (post.author.fullName || post.author.nickname)}
                   </span>
                   {!isAnonymous && (
-                    <VerificationBadge
-                      tier={post.author.verificationTier}
-                      hasBlueTick={post.author.hasBlueTick}
-                      username={post.author.nickname}
-                      className="w-5 h-5 ml-0.5"
-                    />
+                    <>
+                      <VerificationBadge
+                        tier={post.author.verificationTier}
+                        hasBlueTick={post.author.hasBlueTick}
+                        username={post.author.nickname}
+                        className="w-5 h-5 ml-0.5"
+                      />
+                      <AdminBadge
+                        role={post.author.role}
+                        className="w-5 h-5 ml-0.5"
+                      />
+                    </>
                   )}
                 </div>
                 <span className="post-author-username text-[15px] leading-tight mt-0.5" style={{ color: "var(--app-subtitle)" }}>@{isAnonymous ? 'anonimkullanici' : post.author.nickname}</span>
@@ -717,12 +724,18 @@ export default function PostItem({
                       </Link>
                     )}
                     {!quotedPostIsAnonymous && (
-                      <VerificationBadge
-                        tier={post.quotedPost.author.verificationTier}
-                        hasBlueTick={post.quotedPost.author.hasBlueTick}
-                        username={post.quotedPost.author.nickname}
-                        className="post-quote-badge w-4 h-4 ml-0.5"
-                      />
+                      <>
+                        <VerificationBadge
+                          tier={post.quotedPost.author.verificationTier}
+                          hasBlueTick={post.quotedPost.author.hasBlueTick}
+                          username={post.quotedPost.author.nickname}
+                          className="post-quote-badge w-4 h-4 ml-0.5"
+                        />
+                        <AdminBadge
+                          role={post.quotedPost.author.role}
+                          className="post-quote-badge w-4 h-4 ml-0.5"
+                        />
+                      </>
                     )}
                     <span className="post-quote-username text-[15px] font-normal ml-1" style={{ color: "var(--app-subtitle)" }}>@{post.quotedPost.author.nickname}</span>
                     <span className="post-quote-separator mx-1 text-[15px]" style={{ color: "var(--app-subtitle)" }}>·</span>
@@ -1177,12 +1190,18 @@ export default function PostItem({
                       </Link>
                     )}
                     {!quotedPostIsAnonymous && (
-                      <VerificationBadge
-                        tier={post.quotedPost.author.verificationTier}
-                        hasBlueTick={post.quotedPost.author.hasBlueTick}
-                        username={post.quotedPost.author.nickname}
-                        className="post-quote-badge w-4 h-4 ml-0.5"
-                      />
+                      <>
+                        <VerificationBadge
+                          tier={post.quotedPost.author.verificationTier}
+                          hasBlueTick={post.quotedPost.author.hasBlueTick}
+                          username={post.quotedPost.author.nickname}
+                          className="post-quote-badge w-4 h-4 ml-0.5"
+                        />
+                        <AdminBadge
+                          role={post.quotedPost.author.role}
+                          className="post-quote-badge w-4 h-4 ml-0.5"
+                        />
+                      </>
                     )}
                     {post.quotedPost.isPopular && (
                       <IconRosetteDiscountCheckFilled className="post-quote-badge post-quote-badge-orange w-4 h-4 ml-0.5 verified-icon" />

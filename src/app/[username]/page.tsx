@@ -30,6 +30,7 @@ import PostList from "@/components/PostList";
 import { EnrichedPost } from "@/types/post";
 import ReplyThreadPreview from "@/components/ReplyThreadPreview";
 import VerificationBadge from "@/components/VerificationBadge";
+import AdminBadge from "@/components/AdminBadge";
 
 interface Profile {
   username: string;
@@ -48,6 +49,7 @@ interface Profile {
   id?: string;
   isBanned?: boolean;
   followsYou?: boolean;
+  role?: string;
 }
 
 interface Visitor {
@@ -529,6 +531,10 @@ export default function UserProfilePage() {
               className="w-4 h-4 ml-1"
               style={{ width: "20px", height: "20px", marginLeft: "0px" }}
             />
+            <AdminBadge
+              role={profile!.role}
+              className="w-4 h-4 ml-0.5"
+            />
           </div>
           <span className="text-xs text-[#71767b]">{profile!.postsCount || 0} gönderi</span>
         </div>
@@ -610,6 +616,10 @@ export default function UserProfilePage() {
                 tier={profile!.verificationTier}
                 hasBlueTick={profile!.hasBlueTick}
                 username={profile!.username}
+                className="w-6 h-6 ml-0.5"
+              />
+              <AdminBadge
+                role={profile!.role}
                 className="w-6 h-6 ml-0.5"
               />
             </div>

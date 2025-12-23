@@ -24,6 +24,7 @@ export async function GET(req: Request) {
             hasBlueTick: true,
             verificationTier: true,
             fullName: true,
+            role: true,
           },
         },
         _count: {
@@ -90,7 +91,6 @@ export async function GET(req: Request) {
       content: post.content,
       imageUrl: post.imageUrl,
       createdAt: post.createdAt,
-      author: post.author,
       author: post.author,
       _count: post._count,
       poll: post.poll ? {

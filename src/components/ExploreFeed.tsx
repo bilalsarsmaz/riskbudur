@@ -60,21 +60,28 @@ export default function ExploreFeed({ activeTab }: ExploreFeedProps) {
     }, [router]);
 
     useEffect(() => {
-        if (activeTab === "kisiler" && users.length === 0) {
-            const fetchUsers = async () => {
-                setUsersLoading(true);
-                try {
-                    const data = await fetchApi("/users?limit=40");
-                    setUsers(data.users || []);
-                } catch (err) {
-                    console.error("Kullanıcı listesi hatası:", err);
-                } finally {
-                    setUsersLoading(false);
-                }
-            };
-            fetchUsers();
-        }
-    }, [activeTab, users.length]);
+        if (activeTab !== "kisiler") return;
+
+        const fetchUsers = async () => {
+            setUsersLoading(true);
+            try {
+                const data = await fetchApi("/users?limit=40");
+                setUsers(data.users || []);
+            } catch (err) {
+                console.error("Kullanıcı listesi hatası:", err);
+            } finally {
+                setUsersLoading(false);
+            }
+        };
+
+        // İlk yükleme
+        fetchUsers();
+
+        // Her 30 saniyede bir yenile
+        const interval = setInterval(fetchUsers, 30000);
+
+        return () => clearInterval(interval);
+    }, [activeTab]);
 
     if (loading) {
         return (
@@ -296,7 +303,7 @@ export default function ExploreFeed({ activeTab }: ExploreFeedProps) {
                                             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-4 gap-2"> {/* Mobile: 4 cols */}
+                                        <div className="grid grid-cols-8 gap-2"> {/* Mobile: 8 cols */}
                                             {users.map((user) => (
                                                 <div
                                                     key={user.id}
@@ -318,7 +325,7 @@ export default function ExploreFeed({ activeTab }: ExploreFeedProps) {
                                                 </div>
                                             ))}
                                             {users.length === 0 && (
-                                                <div className="col-span-4 text-center text-[#71767b] py-8">
+                                                <div className="col-span-8 text-center text-[#71767b] py-8">
                                                     Kullanıcı bulunamadı.
                                                 </div>
                                             )}

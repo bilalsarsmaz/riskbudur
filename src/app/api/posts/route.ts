@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
+import { verifyTokenAndUpdateActivity } from "@/lib/auth";
 
 // Hashtag'leri cikar
 function extractHashtags(content: string): string[] {
@@ -25,9 +26,8 @@ export async function GET(req: NextRequest) {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-        userId = decoded.userId;
-        // lastSeen is now automatically updated via verifyTokenAndUpdateActivity in other endpoints
+        const decoded = await verifyTokenAndUpdateActivity(token);
+        userId = decoded?.userId || null;
       } catch (error) {
         // Token gecersiz, devam et
       }
@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
             profileImage: true,
             hasBlueTick: true,
             verificationTier: true,
+            role: true,
           },
         },
         _count: {
@@ -101,6 +102,7 @@ export async function GET(req: NextRequest) {
               select: {
                 id: true,
                 nickname: true,
+                role: true,
               },
             },
           },
@@ -239,6 +241,7 @@ export async function GET(req: NextRequest) {
                   profileImage: true,
                   hasBlueTick: true,
                   verificationTier: true,
+                  role: true,
                 },
               },
             },
@@ -331,7 +334,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+    const decoded = await verifyTokenAndUpdateActivity(token);
+    if (!decoded) {
+      return NextResponse.json(
+        { message: "Geçersiz token" },
+        { status: 401 }
+      );
+    }
     const userId = decoded.userId;
 
     const body = await req.json();
@@ -421,6 +430,7 @@ export async function POST(req: NextRequest) {
             profileImage: true,
             hasBlueTick: true,
             verificationTier: true,
+            role: true,
           },
         },
         _count: {

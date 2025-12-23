@@ -24,43 +24,40 @@ export default function MobileComposeModal({
     };
 
     return (
-        <>
-            {/* Backdrop */}
-            <div
-                className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60]"
-                onClick={onClose}
-            />
-
-            {/* Bottom Sheet Modal */}
-            <div className="fixed inset-x-0 bottom-0 z-[60] animate-slide-up">
-                <div className="bg-black rounded-t-3xl h-auto max-h-[85vh] flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
-                        <div className="flex items-center gap-2">
-                            <img
-                                src="/riskbudurlogo.png"
-                                alt="riskbudur"
-                                className="h-6"
-                            />
-                            <span className="text-[15px] font-medium" style={{ color: "var(--app-body-text)" }}>Gönderi Oluştur</span>
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-1.5 rounded-full hover:bg-[#151515] transition-colors"
-                        >
-                            <IconX className="w-5 h-5 text-gray-400" />
-                        </button>
-                    </div>
-
-                    {/* ComposeBox - Scrollable */}
-                    <div className="overflow-y-auto">
-                        <ComposeBox
-                            onPostCreated={handlePostCreated}
-                            className="!bg-transparent !border-none !p-2 !pb-2"
-                        />
-                    </div>
+        <div className="fixed inset-0 z-[70] bg-[var(--app-body-bg)] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
+                <div className="flex items-center gap-2">
+                    <img
+                        src="/riskbudurlogo.png"
+                        alt="riskbudur"
+                        className="h-5"
+                    />
+                    <span className="text-[15px] font-medium" style={{ color: "var(--app-body-text)" }}>
+                        Gönderi Oluştur
+                    </span>
                 </div>
+                <button
+                    onClick={onClose}
+                    className="p-1.5 rounded-full hover:bg-[#151515] transition-colors"
+                >
+                    <IconX className="w-5 h-5 text-gray-400" />
+                </button>
             </div>
-        </>
+
+            {/* ComposeBox Wrapper - shrink to fit content */}
+            <div className="flex-shrink-0">
+                <ComposeBox
+                    onPostCreated={handlePostCreated}
+                    className="!bg-transparent !border-none !rounded-none"
+                    isMobileFullscreen={true}
+                />
+                {/* Bottom Border - tam ComposeBox altında */}
+                <div className="w-full border-b" style={{ borderColor: "var(--app-border)" }} />
+            </div>
+
+            {/* Empty space */}
+            <div className="flex-1" />
+        </div>
     );
 }

@@ -8,7 +8,8 @@ export async function GET(req: NextRequest) {
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const decoded = await verifyToken(token);
-        if (!decoded || (decoded.role !== "ADMIN" && decoded.role !== "SUPERADMIN")) {
+        const validRoles = ['ADMIN', 'ROOTADMIN', 'LEAD', 'MODERATOR'];
+        if (!decoded || !decoded.role || !validRoles.includes(decoded.role as string)) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

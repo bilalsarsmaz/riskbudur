@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { postApi } from "@/lib/api";
 import { EnrichedPost } from "@/types/post";
-import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
+import { IconRosetteDiscountCheckFilled, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 import ComposeBox from "./ComposeBox";
 import { formatCustomDate } from "@/utils/date";
@@ -25,137 +25,172 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-black/50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div className="w-full max-w-lg rounded-t-2xl rounded-b-none sm:rounded-lg mx-0 sm:mx-4 shadow-xl border-t border-x border-b-0 border-[var(--app-global-link-color)] sm:border" style={{ backgroundColor: "var(--app-body-bg)" }}>
-        <div className="h-10 flex items-center justify-between px-4">
-          <div className="flex items-center">
-            <span className="text-sm font-bold text-[var(--app-global-link-color)] hover:opacity-80 transition-colors font-montserrat">riskbudur</span>
-            <div className="mx-3 h-4 border-l border-theme-border"></div>
-            <span className="text-xs font-medium" style={{ color: "var(--app-subtitle)" }}>Alıntıla</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="hover:opacity-80 transition-colors"
-            style={{ color: "var(--app-subtitle)" }}
-            title="Kapat"
-            aria-label="Kapat"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+    <>
+      {/* Desktop Modal */}
+      <div
+        className="hidden md:flex fixed inset-0 z-50 items-center justify-center backdrop-blur-md bg-black/50"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div className="w-full max-w-lg rounded-lg shadow-xl border border-[var(--app-global-link-color)]" style={{ backgroundColor: "var(--app-body-bg)" }}>
+          <div className="h-10 flex items-center justify-between px-4">
+            <div className="flex items-center">
+              <span className="text-sm font-bold text-[var(--app-global-link-color)] hover:opacity-80 transition-colors font-montserrat">riskbudur</span>
+              <div className="mx-3 h-4 border-l border-theme-border"></div>
+              <span className="text-xs font-medium" style={{ color: "var(--app-subtitle)" }}>Alıntıla</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="hover:opacity-80 transition-colors"
+              style={{ color: "var(--app-subtitle)" }}
+              title="Kapat"
+              aria-label="Kapat"
             >
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-        <hr className="border-theme-border" />
+              <IconX className="w-5 h-5" />
+            </button>
+          </div>
+          <hr className="border-theme-border" />
 
-        <div className="p-4 pb-0">
-          <div className="post-quote mb-3 rounded-lg overflow-hidden" style={{ border: "0.4px solid #333" }}>
-            <div className="p-3">
-              <div className="flex items-start">
-                <div className="post-quote-avatar">
-                  {isAnonymous ? (
-                    <div className="w-8 h-8 rounded-full mr-2 flex items-center justify-center">
-                      <img
-                        src="/riskbudurlogo.png"
-                        alt="Anonim"
-                        className="w-8 h-8 rounded-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const parent = target.parentElement;
-                          if (parent) {
-                            parent.innerHTML = '<div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">A</div>';
-                          }
-                        }}
-                      />
-                    </div>
-                  ) : post.author.profileImage ? (
-                    <img
-                      src={post.author.profileImage}
-                      alt={post.author.nickname}
-                      className="w-8 h-8 rounded-full object-cover mr-2"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-2">
-                      {post.author.nickname.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-
-                <div className="post-quote-content flex-1">
-                  <div className="post-quote-header flex items-center mb-1">
+          <div className="p-4 pb-0">
+            {/* Quote Content */}
+            <div className="post-quote mb-3 rounded-lg overflow-hidden" style={{ border: "0.4px solid #333" }}>
+              <div className="p-3">
+                <div className="flex items-start">
+                  <div className="post-quote-avatar">
                     {isAnonymous ? (
-                      <span className="post-quote-author font-medium text-sm" style={{ color: "var(--app-body-text)" }}>
-                        Anonim Kullanıcı
-                      </span>
+                      <div className="w-8 h-8 rounded-full mr-2 flex items-center justify-center">
+                        <img
+                          src="/riskbudurlogo.png"
+                          alt="Anonim"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      </div>
                     ) : (
-                      <Link href={`/${post.author.nickname}`}>
+                      <img
+                        src={post.author.profileImage || `https://ui-avatars.com/api/?name=${post.author.nickname}&background=random`}
+                        alt={post.author.nickname}
+                        className="w-8 h-8 rounded-full object-cover mr-2"
+                      />
+                    )}
+                  </div>
+
+                  <div className="post-quote-content flex-1">
+                    <div className="post-quote-header flex items-center mb-1">
+                      {isAnonymous ? (
+                        <span className="post-quote-author font-medium text-sm" style={{ color: "var(--app-body-text)" }}>
+                          Anonim Kullanıcı
+                        </span>
+                      ) : (
                         <span className="post-quote-author font-medium text-sm" style={{ color: "var(--app-body-text)" }}>
                           {post.author.fullName || post.author.nickname}
                         </span>
-                      </Link>
-                    )}
-                    {!isAnonymous && post.author.hasBlueTick && (
-                      <IconRosetteDiscountCheckFilled className="w-4 h-4 ml-1 text-[var(--app-global-link-color)]" />
-                    )}
-                    {isPopular && (
-                      <IconRosetteDiscountCheckFilled className="w-4 h-4 ml-1 text-orange-500" />
-                    )}
-                    <span className="mx-1 font-light text-xs" style={{ color: "var(--app-subtitle)" }}>·</span>
-                    <span className="text-xs font-light" style={{ color: "var(--app-subtitle)" }}>{formattedDate}</span>
+                      )}
+                      {!isAnonymous && post.author.hasBlueTick && (
+                        <IconRosetteDiscountCheckFilled className="w-4 h-4 ml-1 text-[var(--app-global-link-color)]" />
+                      )}
+                      <span className="mx-1 font-light text-xs" style={{ color: "var(--app-subtitle)" }}>·</span>
+                      <span className="text-xs font-light" style={{ color: "var(--app-subtitle)" }}>{formattedDate}</span>
+                    </div>
+
+                    <div className="post-quote-text text-sm line-clamp-3" style={{ color: 'var(--app-body-text)' }}>
+                      {post.content}
+                    </div>
                   </div>
+                </div>
+              </div>
+            </div>
 
-                  <Link href={`/${post.author.nickname}/status/${post.id}`}>
-                    {post.content && (
-                      <div className="post-quote-text text-sm line-clamp-3" style={{ color: 'var(--app-body-text)' }}>
-                        {post.content}
-                      </div>
-                    )}
+            <ComposeBox
+              quotedPostId={post.id}
+              onPostCreated={(newPost) => {
+                onQuoteAdded(newPost);
+                onClose();
+              }}
+              onCancel={onClose}
+              placeholder="Bir şeyler ekle..."
+              submitButtonText="Alıntıla"
+            />
+          </div>
+        </div>
+      </div>
 
-                    {(post.mediaUrl || post.imageUrl) && (
-                      <div className={`post-quote-media rounded-lg overflow-hidden ${post.content ? 'mt-2' : ''}`} style={{ border: "0.4px solid #333" }}>
-                        <img
-                          src={post.imageUrl || post.mediaUrl}
-                          alt="Alıntılanan post görseli"
-                          className="w-full h-auto object-cover"
-                        />
-                      </div>
-                    )}
-                  </Link>
+      {/* Mobile Modal (Full Screen) */}
+      <div className="md:hidden fixed inset-0 z-[9999] bg-[var(--app-body-bg)] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
+          <div className="flex items-center gap-2">
+            <img
+              src="/riskbudurlogo.png"
+              alt="riskbudur"
+              className="h-5"
+            />
+            <span className="text-[15px] font-medium" style={{ color: "var(--app-body-text)" }}>
+              Alıntıla
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-[#151515] transition-colors"
+          >
+            <IconX className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto px-4 py-4 border-b" style={{ borderColor: "var(--app-border)" }}>
+          {/* Quote Preview */}
+          <div className="post-quote rounded-lg overflow-hidden mb-4" style={{ border: "0.4px solid #333" }}>
+            <div className="p-3">
+              <div className="flex items-start">
+                <div className="post-quote-avatar mr-2">
+                  <img
+                    src={isAnonymous ? "/riskbudurlogo.png" : (post.author.profileImage || `https://ui-avatars.com/api/?name=${post.author.nickname}`)}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center mb-1">
+                    <span className="text-sm font-medium" style={{ color: "var(--app-body-text)" }}>
+                      {isAnonymous ? "Anonim Kullanıcı" : (post.author.fullName || post.author.nickname)}
+                    </span>
+                    <span className="mx-1 text-xs text-gray-500">·</span>
+                    <span className="text-xs text-gray-500">{formattedDate}</span>
+                  </div>
+                  <div className="text-sm" style={{ color: "var(--app-body-text)" }}>
+                    {post.content}
+                  </div>
+                  {(post.imageUrl || post.mediaUrl) && (
+                    <img src={post.imageUrl || post.mediaUrl} className="mt-2 rounded-md w-full max-h-40 object-cover" alt="Media" />
+                  )}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Compose Area - Moved inside scrollable area */}
+          <div className="pt-[12px]">
+            <ComposeBox
+              quotedPostId={post.id}
+              onPostCreated={(newPost) => {
+                onQuoteAdded(newPost);
+                onClose();
+              }}
+              placeholder="Bir şeyler ekle..."
+              submitButtonText="Alıntıla"
+              isMobileFullscreen={true}
+              className="!bg-transparent !border-none !rounded-none !p-0"
+            />
+            {/* Alt border kaldırıldı */}
+          </div>
         </div>
 
-        <div className="px-4 pb-4 pt-2">
-          <ComposeBox
-            quotedPostId={post.id}
-            onPostCreated={(newPost) => {
-              onQuoteAdded(newPost);
-              onClose();
-            }}
-            onCancel={onClose}
-            placeholder="Bir şeyler ekle..."
-            submitButtonText="Alıntıla"
-          />
-        </div>
+        {/* Keyboard Spacer */}
+        <div className="flex-1" />
       </div>
-    </div>
+    </>
   );
 }

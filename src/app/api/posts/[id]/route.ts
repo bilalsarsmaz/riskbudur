@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 export async function GET(
   req: Request,
@@ -19,6 +20,7 @@ export async function GET(
             verificationTier: true,
             fullName: true,
             profileImage: true,
+            role: true,
           },
         },
         parentPost: {
@@ -29,6 +31,7 @@ export async function GET(
                 nickname: true,
                 fullName: true,
                 verificationTier: true,
+                role: true,
               }
             }
           }
@@ -74,6 +77,7 @@ export async function GET(
             verificationTier: true,
             profileImage: true,
             fullName: true,
+            role: true,
           },
         },
         _count: {
@@ -98,6 +102,7 @@ export async function GET(
               verificationTier: true,
               profileImage: true,
               fullName: true,
+              role: true,
             },
           },
           _count: {
@@ -171,6 +176,7 @@ export async function GET(
                 verificationTier: true,
                 fullName: true,
                 profileImage: true,
+                role: true,
               },
             },
           },
@@ -238,10 +244,19 @@ export async function DELETE(
     const token = authHeader.replace("Bearer ", "");
 
     let userId: string;
+    let userRole: Role | undefined;
+
     try {
       const jwt = await import("jsonwebtoken");
-      const decoded = jwt.default.verify(token, process.env.JWT_SECRET!) as { userId: string };
+      const decoded = jwt.default.verify(token, process.env.JWT_SECRET!) as { userId: string, role?: string };
       userId = decoded.userId;
+      // We might need to fetch the fresh role from DB as JWT might be stale, 
+      // OR rely on verification logic. For deleting ANY post, we need to check DB for role usually 
+      // or at least trust the token if it had role. 
+      // But let's fetch user to be safe and get specific permission.
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+      userRole = user?.role as Role;
+
     } catch (e) {
       return NextResponse.json(
         { message: "Gecersiz token" },
@@ -267,10 +282,14 @@ export async function DELETE(
     }
 
     if (post.authorId !== userId) {
-      return NextResponse.json(
-        { message: "Bu gonderiyi silme yetkiniz yok" },
-        { status: 403 }
-      );
+      // Check for moderator/admin permission
+      if (!hasPermission(userRole, Permission.DELETE_USER_POST)) {
+        return NextResponse.json(
+          { message: "Bu gonderiyi silme yetkiniz yok" },
+          { status: 403 }
+        );
+      }
+      // If has permission, allow delete
     }
 
     // Eger bu post bir alinti ise, ilgili Quote kaydini da bulup silelim.

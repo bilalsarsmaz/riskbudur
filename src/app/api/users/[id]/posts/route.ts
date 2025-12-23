@@ -70,6 +70,7 @@ export async function GET(
             verificationTier: true,
             profileImage: true,
             fullName: true,
+            role: true,
           },
         },
         _count: {
@@ -180,6 +181,7 @@ export async function GET(
                   verificationTier: true,
                   fullName: true,
                   profileImage: true,
+                  role: true,
                 },
               },
             },
@@ -210,6 +212,7 @@ export async function GET(
           verificationTier: post.author.verificationTier,
           profileImage: post.author.profileImage,
           fullName: post.author.fullName,
+          role: post.author.role,
         },
         _count: {
           likes: post._count.likes,
@@ -248,8 +251,6 @@ export async function GET(
             imageUrl: quote.quotedPost.imageUrl,
             mediaUrl: quote.quotedPost.mediaUrl,
             linkPreview: quote.quotedPost.linkPreview,
-            isAnonymous: quote.quotedPost.isAnonymous,
-            author: quote.quotedPost.author,
             isAnonymous: quote.quotedPost.isAnonymous,
             author: quote.quotedPost.author,
           }

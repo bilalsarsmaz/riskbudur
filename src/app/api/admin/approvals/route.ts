@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 export async function GET(req: NextRequest) {
     try {
         const token = req.headers.get("Authorization")?.split(" ")[1];
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const decoded = await verifyToken(token);
-        if (!decoded || (decoded.role !== "ADMIN" && decoded.role !== "SUPERADMIN")) {
+        const decoded = await verifyToken(token) as { userId: string, role: string };
+        if (!decoded) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        // APPROVE_USER permission check
+        // Assuming verifyToken returns role. 
+        if (!hasPermission(decoded.role as Role, Permission.APPROVE_USER)) {
+            return NextResponse.json({ error: "Forbidden: No approve permission" }, { status: 403 });
         }
 
         const pendingUsers = await prisma.user.findMany({
@@ -42,9 +49,13 @@ export async function POST(req: NextRequest) {
         const token = req.headers.get("Authorization")?.split(" ")[1];
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const decoded = await verifyToken(token);
-        if (!decoded || (decoded.role !== "ADMIN" && decoded.role !== "SUPERADMIN")) {
+        const decoded = await verifyToken(token) as { userId: string, role: string };
+        if (!decoded) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        if (!hasPermission(decoded.role as Role, Permission.APPROVE_USER)) {
+            return NextResponse.json({ error: "Forbidden: No approve permission" }, { status: 403 });
         }
 
         const { userId, action } = await req.json();

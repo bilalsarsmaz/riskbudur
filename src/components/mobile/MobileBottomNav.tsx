@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
 import MobileComposeModal from "@/components/MobileComposeModal";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [isMobileComposeOpen, setIsMobileComposeOpen] = useState(false);
 
@@ -89,6 +90,11 @@ export default function MobileBottomNav() {
       <MobileComposeModal
         isOpen={isMobileComposeOpen}
         onClose={() => setIsMobileComposeOpen(false)}
+        onPostCreated={(post) => {
+          // Dispatch custom event for other components to listen
+          window.dispatchEvent(new CustomEvent('mobilePostCreated', { detail: post }));
+          router.refresh();
+        }}
       />
     </>
   );

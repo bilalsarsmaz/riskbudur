@@ -17,6 +17,8 @@ export default function VerificationBadge({ tier, hasBlueTick, username, classNa
 
     if (tier === 'GOLD' || username === 'riskbudur') {
         colorClass = 'gold';
+    } else if (tier === 'GRAY') {
+        colorClass = 'gray';
     } else if (tier === 'GREEN') {
         colorClass = 'default';
     }

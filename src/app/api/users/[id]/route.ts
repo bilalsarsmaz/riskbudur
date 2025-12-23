@@ -24,6 +24,7 @@ export async function GET(
         coverImage: true,
         hasBlueTick: true,
         verificationTier: true,
+        role: true,
         createdAt: true,
         isBanned: true,
         _count: {
@@ -105,6 +106,7 @@ export async function GET(
       postsCount: user._count.posts,
       hasBlueTick: user.hasBlueTick,
       verificationTier: user.verificationTier,
+      role: user.role,
       coverImage: user.coverImage,
       profileImage: user.profileImage,
       isFollowing,

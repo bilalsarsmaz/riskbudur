@@ -26,6 +26,7 @@ import {
   IconMoonFilled,
 } from "@tabler/icons-react";
 import VerificationBadge from "./VerificationBadge";
+import AdminBadge from "./AdminBadge";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
 
 export default function LeftSidebar() {
@@ -66,6 +67,7 @@ export default function LeftSidebar() {
           parsed.fullName = data.fullName;
           parsed.verificationTier = data.verificationTier;
           parsed.hasBlueTick = data.hasBlueTick;
+          parsed.role = data.role;
           localStorage.setItem("userInfo", JSON.stringify(parsed));
         }
       } catch (err) {
@@ -141,7 +143,7 @@ export default function LeftSidebar() {
     .filter(item => {
       if (item.id === 'compose') return false;
       if (item.isAdmin) {
-        return userInfo?.role === 'ADMIN' || userInfo?.role === 'SUPERADMIN';
+        return userInfo?.role === 'ADMIN' || userInfo?.role === 'ROOTADMIN';
       }
       return true;
     })
@@ -299,6 +301,10 @@ export default function LeftSidebar() {
                 tier={userInfo.verificationTier}
                 hasBlueTick={userInfo.hasBlueTick}
                 username={userInfo.nickname}
+              />
+              <AdminBadge
+                role={userInfo.role}
+                className="w-5 h-5 ml-0.5"
               />
             </div>
             <div className="text-[13px]" style={{ color: 'var(--app-subtitle)' }}>
