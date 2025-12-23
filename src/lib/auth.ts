@@ -19,9 +19,19 @@ export async function verifyTokenAndUpdateActivity(token: string) {
   const decoded = await verifyToken(token);
 
   if (decoded?.userId) {
-    // Update lastSeen in background (don't await to avoid blocking)
-    prisma.user.update({
-      where: { id: decoded.userId },
+    // Throttle Update: Only update if lastSeen is older than 2 minutes
+    // This dramatically reduces database write load
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+
+    prisma.user.updateMany({
+      where: {
+        id: decoded.userId,
+        // Only update if lastSeen is null OR older than 2 mins
+        OR: [
+          { lastSeen: { lt: twoMinutesAgo } },
+          { lastSeen: null }
+        ]
+      },
       data: { lastSeen: new Date() }
     }).catch(err => console.error("LastSeen update error:", err));
   }
