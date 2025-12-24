@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyTokenAndUpdateActivity } from "@/lib/auth";
+import { verifyToken, verifyTokenAndUpdateActivity } from "@/lib/auth";
 
 // BigInt serialization için yardımcı fonksiyon
 function serializeBigInt(obj: any): any {
