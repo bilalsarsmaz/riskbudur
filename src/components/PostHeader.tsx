@@ -10,7 +10,8 @@ import {
     IconUserPlus,
     IconUserMinus,
     IconBan,
-    IconFlag
+    IconFlag,
+    IconAlertTriangleFilled
 } from "@tabler/icons-react";
 import { useState, useRef, useEffect } from "react";
 import { EnrichedPost } from "@/types/post";
@@ -136,16 +137,22 @@ export default function PostHeader({
             </div>
 
             <div className="relative">
-                <button
-                    ref={buttonRef}
-                    onClick={(e) => {
-                        e.preventDefault(); // Prevent navigating to post detail if header is clickable
-                        setShowMenu(!showMenu);
-                    }}
-                    className="p-1 hover:bg-gray-700 rounded-full"
-                >
-                    <IconDots className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "var(--app-subtitle)" }} />
-                </button>
+                {post.isCensored ? (
+                    <div className="p-1">
+                        <IconAlertTriangleFilled className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#DC5F00" }} />
+                    </div>
+                ) : (
+                    <button
+                        ref={buttonRef}
+                        onClick={(e) => {
+                            e.preventDefault(); // Prevent navigating to post detail if header is clickable
+                            setShowMenu(!showMenu);
+                        }}
+                        className="p-1 hover:bg-gray-700 rounded-full"
+                    >
+                        <IconDots className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "var(--app-subtitle)" }} />
+                    </button>
+                )}
 
                 {showMenu && (
                     <div

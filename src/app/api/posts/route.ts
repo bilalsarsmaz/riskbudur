@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import { verifyTokenAndUpdateActivity } from "@/lib/auth";
+import { shouldCensorContent } from "@/lib/moderation";
 
 // Hashtag'leri cikar
 function extractHashtags(content: string): string[] {
@@ -272,6 +273,7 @@ export async function GET(req: NextRequest) {
         isCommented: userId ? commentedPostIds.includes(post.id.toString()) : false,
         isQuoted: userId ? quotedPostIds.includes(post.id.toString()) : false,
         isBookmarked: userId ? bookmarkedPostIds.includes(post.id.toString()) : false,
+        isCensored: (post as any).isCensored || false,
         _count: {
           likes: post._count.likes,
           comments: post._count.comments + post._count.replies, // Toplam yanit
@@ -420,6 +422,7 @@ export async function POST(req: NextRequest) {
             }
           }
         } : undefined,
+        isCensored: shouldCensorContent(content.trim()),
       },
       include: {
         author: {
@@ -480,6 +483,7 @@ export async function POST(req: NextRequest) {
       isCommented: false,
       isQuoted: false,
       isBookmarked: false,
+      isCensored: post.isCensored,
       _count: {
         likes: post._count.likes,
         comments: post._count.comments + post._count.replies,

@@ -32,7 +32,8 @@ import {
   IconUserPlus,
   IconUserMinus,
   IconBan,
-  IconFlag
+  IconFlag,
+  IconSquareChevronRightFilled
 } from "@tabler/icons-react";
 
 interface PostItemProps {
@@ -309,6 +310,9 @@ export default function PostItem({
   const isAnonymous = post.isAnonymous || false;
 
   const handlePostClick = (e: React.MouseEvent) => {
+    // Censored posts should not be clickable
+    if (post.isCensored) return;
+
     // Eğer tıklanan element link veya buton ise yönlendirme yapma
     const target = e.target as HTMLElement;
     if (target.closest('a') || target.closest('button') || target.closest('[role="button"]')) {
@@ -650,10 +654,16 @@ export default function PostItem({
           {/* Content */}
           <div className="mt-4 mb-3">
             <p className="post-content text-xl leading-normal whitespace-pre-wrap break-words break-all">
-              {parseContent(post.content)}
+              {post.isCensored ? (
+                <span className="text-sm" style={{ color: "var(--app-subtitle)" }}>
+                  Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
+                </span>
+              ) : (
+                parseContent(post.content)
+              )}
             </p>
 
-            {post.poll && (
+            {!post.isCensored && post.poll && (
               <PollDisplay
                 poll={post.poll}
                 className="mb-3"
@@ -666,7 +676,7 @@ export default function PostItem({
               />
             )}
 
-            {(post.mediaUrl || post.imageUrl) && (
+            {!post.isCensored && (post.mediaUrl || post.imageUrl) && (
               <div
                 className="mt-3 rounded-2xl overflow-hidden border border-theme-border cursor-pointer"
                 onClick={(e) => {
@@ -684,7 +694,7 @@ export default function PostItem({
             )}
 
             {/* Alıntılanan post - Hero layout için */}
-            {post.quotedPost && (() => {
+            {!post.isCensored && post.quotedPost && (() => {
               const quotedPostIsAnonymous = post.quotedPost.isAnonymous || false;
               return (
                 <div className="mt-3 post-quote rounded-xl overflow-hidden border border-theme-border">
@@ -871,69 +881,77 @@ export default function PostItem({
 
           {/* Action Buttons: Split Groups */}
           {/* Action Buttons: Standard Timeline Style */}
-          <div className="py-2 border-b border-theme-border flex items-center text-sm">
-            <button
-              onClick={handleCommentClick}
-              className="post-action post-action-comment flex items-center mr-6"
-              style={{ color: isCommented ? "#1d9bf0" : undefined }}
-            >
-              <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
-              {commentCount > 0 && (
-                <span className={`post-action-count ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
-              )}
-            </button>
-
-            <button
-              onClick={handleLike}
-              disabled={isLiking}
-              className="post-action post-action-like flex items-center mr-6"
-              style={{ color: isLiked ? "#FF0066" : undefined }}
-            >
-              {isLiked ? (
-                <IconHeartFilled className="w-5 h-5 mr-1" style={{ color: "#FF0066" }} />
-              ) : (
-                <IconHeart className="interaction-icon w-5 h-5 mr-1" />
-              )}
-              {likeCount > 0 && (
-                <span className={`post-action-count ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
-              )}
-            </button>
-
-            <button
-              onClick={handleQuoteClick}
-              className="post-action post-action-quote flex items-center mr-6"
-              style={{ color: quoted ? "#1DCD9F" : undefined }}
-            >
-              <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
-              {quoteCount > 0 && (
-                <span className={`post-action-count ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
-              )}
-            </button>
-
-            <div className="ml-auto flex items-center gap-2">
+          {post.isCensored ? (
+            <div className="py-3 border-b border-theme-border flex items-center">
+              <Link href="https://help.riskbudur.net/terms" className="text-xs font-bold flex items-center" style={{ color: "var(--app-link)" }}>
+                Detaylar <IconSquareChevronRightFilled className="w-4 h-4 ml-1" />
+              </Link>
+            </div>
+          ) : (
+            <div className="py-2 border-b border-theme-border flex items-center text-sm">
               <button
-                onClick={handleBookmark}
-                className="post-action post-action-bookmark p-1 rounded-full transition-colors"
-                style={{ color: isBookmarked ? "#DC5F00" : undefined }}
+                onClick={handleCommentClick}
+                className="post-action post-action-comment flex items-center mr-6"
+                style={{ color: isCommented ? "#1d9bf0" : undefined }}
               >
-                <IconTargetArrow className={`w-5 h-5 ${!isBookmarked ? 'interaction-icon' : ''}`} style={{ color: isBookmarked ? "#DC5F00" : undefined }} />
+                <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
+                {commentCount > 0 && (
+                  <span className={`post-action-count ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
+                )}
               </button>
 
-              <div className="relative">
+              <button
+                onClick={handleLike}
+                disabled={isLiking}
+                className="post-action post-action-like flex items-center mr-6"
+                style={{ color: isLiked ? "#FF0066" : undefined }}
+              >
+                {isLiked ? (
+                  <IconHeartFilled className="w-5 h-5 mr-1" style={{ color: "#FF0066" }} />
+                ) : (
+                  <IconHeart className="interaction-icon w-5 h-5 mr-1" />
+                )}
+                {likeCount > 0 && (
+                  <span className={`post-action-count ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
+                )}
+              </button>
+
+              <button
+                onClick={handleQuoteClick}
+                className="post-action post-action-quote flex items-center mr-6"
+                style={{ color: quoted ? "#1DCD9F" : undefined }}
+              >
+                <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
+                {quoteCount > 0 && (
+                  <span className={`post-action-count ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
+                )}
+              </button>
+
+              <div className="ml-auto flex items-center gap-2">
                 <button
-                  onClick={handleCopyLink}
-                  className="post-action post-action-share p-1 rounded-full transition-colors relative"
+                  onClick={handleBookmark}
+                  className="post-action post-action-bookmark p-1 rounded-full transition-colors"
+                  style={{ color: isBookmarked ? "#DC5F00" : undefined }}
                 >
-                  <IconLibraryPlusFilled className="interaction-icon w-5 h-5" />
-                  {showCopiedToast && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#1DCD9F] text-black text-xs font-bold rounded shadow-lg whitespace-nowrap z-50 animate-fade-in-out">
-                      Kopyalandı!
-                    </div>
-                  )}
+                  <IconTargetArrow className={`w-5 h-5 ${!isBookmarked ? 'interaction-icon' : ''}`} style={{ color: isBookmarked ? "#DC5F00" : undefined }} />
                 </button>
+
+                <div className="relative">
+                  <button
+                    onClick={handleCopyLink}
+                    className="post-action post-action-share p-1 rounded-full transition-colors relative"
+                  >
+                    <IconLibraryPlusFilled className="interaction-icon w-5 h-5" />
+                    {showCopiedToast && (
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#1DCD9F] text-black text-xs font-bold rounded shadow-lg whitespace-nowrap z-50 animate-fade-in-out">
+                        Kopyalandı!
+                      </div>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
 
         </div >
@@ -994,7 +1012,7 @@ export default function PostItem({
                 <img
                   src="/Riskbudur-pp.png"
                   alt="Anonim"
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border border-theme-border"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = '/Riskbudur-first.png';
@@ -1007,13 +1025,13 @@ export default function PostItem({
                   <img
                     src={post.author.profileImage}
                     alt={post.author.nickname}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-2 sm:mr-3 relative z-10 cursor-pointer hover:opacity-80"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-2 sm:mr-3 relative z-10 cursor-pointer hover:opacity-80 border border-theme-border"
                   />
                 ) : (
                   <img
                     src="/Riskbudur-first.png"
                     alt={post.author.nickname}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-2 sm:mr-3 relative z-10 cursor-pointer hover:opacity-80"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-2 sm:mr-3 relative z-10 cursor-pointer hover:opacity-80 border border-theme-border"
                   />
                 )}
               </Link>
@@ -1034,9 +1052,17 @@ export default function PostItem({
             />
 
             <div className="block">
-              <p className="post-content mb-3 whitespace-pre-wrap break-words text-sm sm:text-[15px]">{parseContent(post.content)}</p>
+              <p className="post-content mb-3 whitespace-pre-wrap break-words text-sm sm:text-[15px]">
+                {post.isCensored ? (
+                  <span className="text-xs" style={{ color: "var(--app-subtitle)" }}>
+                    Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
+                  </span>
+                ) : (
+                  parseContent(post.content)
+                )}
+              </p>
 
-              {post.poll && (
+              {!post.isCensored && post.poll && (
                 <PollDisplay
                   poll={post.poll}
                   className="mb-3"
@@ -1044,7 +1070,7 @@ export default function PostItem({
                 />
               )}
 
-              {(post.mediaUrl || post.imageUrl) && (
+              {!post.isCensored && (post.mediaUrl || post.imageUrl) && (
                 <div className="post-media mb-3 rounded-lg overflow-hidden flex justify-center cursor-pointer" style={{ border: "0.4px solid #2a2a2a" }} onClick={(e) => {
                   e.stopPropagation();
                   setImageModalUrl(post.imageUrl || post.mediaUrl || null);
@@ -1060,7 +1086,7 @@ export default function PostItem({
             </div>
 
             {/* YouTube/Link Preview - X.com Style */}
-            {post.linkPreview && (() => {
+            {!post.isCensored && post.linkPreview && (() => {
               const getYoutubeId = (url: string) => {
                 const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
                 const match = url.match(regex);
@@ -1146,7 +1172,7 @@ export default function PostItem({
             })()}
 
             {/* Alıntılanan post */}
-            {post.quotedPost && (() => {
+            {!post.isCensored && post.quotedPost && (() => {
               const quotedPostIsAnonymous = post.quotedPost.isAnonymous || false;
               return (
                 <div className="post-quote mb-3 rounded-xl overflow-hidden border border-theme-border">
@@ -1290,69 +1316,77 @@ export default function PostItem({
             {/* İçerikteki post linkleri - ARTIK DEVRE DISI (Server-side quotedPost kullaniliyor) */}
             {/* linkedPosts.map(...) removed to prevent duplicates */}
 
-            <div className="post-actions flex items-center text-sm">
-              <button
-                onClick={handleCommentClick}
-                className="post-action post-action-comment flex items-center mr-4"
-                style={{ color: isCommented ? "#1d9bf0" : undefined }}
-              >
-                <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
-                {commentCount > 0 && (
-                  <span className={`post-action-count ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
-                )}
-              </button>
-
-              <button
-                onClick={handleLike}
-                disabled={isLiking}
-                className="post-action post-action-like flex items-center mr-4"
-                style={{ color: isLiked ? "#FF0066" : undefined }}
-              >
-                {isLiked ? (
-                  <IconHeartFilled className="w-5 h-5 mr-1" style={{ color: "#FF0066" }} />
-                ) : (
-                  <IconHeart className="interaction-icon w-5 h-5 mr-1" />
-                )}
-                {likeCount > 0 && (
-                  <span className={`post-action-count ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
-                )}
-              </button>
-
-              <button
-                onClick={handleQuoteClick}
-                className="post-action post-action-quote flex items-center mr-4"
-                style={{ color: quoted ? "#1DCD9F" : undefined }}
-              >
-                <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
-                {quoteCount > 0 && (
-                  <span className={`post-action-count ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
-                )}
-              </button>
-
-              <div className="ml-auto flex items-center gap-2">
+            {post.isCensored ? (
+              <div className="post-actions flex items-center text-sm py-1">
+                <Link href="https://help.riskbudur.net/terms" className="font-bold flex items-center text-xs" style={{ color: "var(--app-link)" }}>
+                  Detaylar <IconSquareChevronRightFilled className="w-4 h-4 ml-1" />
+                </Link>
+              </div>
+            ) : (
+              <div className="post-actions flex items-center text-sm">
                 <button
-                  onClick={handleBookmark}
-                  className="post-action post-action-bookmark p-1 rounded-full transition-colors"
-                  style={{ color: isBookmarked ? "#DC5F00" : undefined }}
+                  onClick={handleCommentClick}
+                  className="post-action post-action-comment flex items-center mr-4"
+                  style={{ color: isCommented ? "#1d9bf0" : undefined }}
                 >
-                  <IconTargetArrow className={`w-5 h-5 ${!isBookmarked ? 'interaction-icon' : ''}`} style={{ color: isBookmarked ? "#DC5F00" : undefined }} />
+                  <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
+                  {commentCount > 0 && (
+                    <span className={`post-action-count ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
+                  )}
                 </button>
 
-                <div className="relative">
+                <button
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  className="post-action post-action-like flex items-center mr-4"
+                  style={{ color: isLiked ? "#FF0066" : undefined }}
+                >
+                  {isLiked ? (
+                    <IconHeartFilled className="w-5 h-5 mr-1" style={{ color: "#FF0066" }} />
+                  ) : (
+                    <IconHeart className="interaction-icon w-5 h-5 mr-1" />
+                  )}
+                  {likeCount > 0 && (
+                    <span className={`post-action-count ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleQuoteClick}
+                  className="post-action post-action-quote flex items-center mr-4"
+                  style={{ color: quoted ? "#1DCD9F" : undefined }}
+                >
+                  <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
+                  {quoteCount > 0 && (
+                    <span className={`post-action-count ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
+                  )}
+                </button>
+
+                <div className="ml-auto flex items-center gap-2">
                   <button
-                    onClick={handleCopyLink}
-                    className="post-action post-action-share p-1 rounded-full transition-colors relative"
+                    onClick={handleBookmark}
+                    className="post-action post-action-bookmark p-1 rounded-full transition-colors"
+                    style={{ color: isBookmarked ? "#DC5F00" : undefined }}
                   >
-                    <IconLibraryPlusFilled className="interaction-icon w-5 h-5" />
-                    {showCopiedToast && (
-                      <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[#1DCD9F] text-black text-xs font-bold rounded shadow-lg whitespace-nowrap z-50 animate-fade-in-out">
-                        Kopyalandı!
-                      </div>
-                    )}
+                    <IconTargetArrow className={`w-5 h-5 ${!isBookmarked ? 'interaction-icon' : ''}`} style={{ color: isBookmarked ? "#DC5F00" : undefined }} />
                   </button>
+
+                  <div className="relative">
+                    <button
+                      onClick={handleCopyLink}
+                      className="post-action post-action-share p-1 rounded-full transition-colors relative"
+                    >
+                      <IconLibraryPlusFilled className="interaction-icon w-5 h-5" />
+                      {showCopiedToast && (
+                        <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[#1DCD9F] text-black text-xs font-bold rounded shadow-lg whitespace-nowrap z-50 animate-fade-in-out">
+                          Kopyalandı!
+                        </div>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div >
       </div >

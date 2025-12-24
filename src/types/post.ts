@@ -59,6 +59,7 @@ export interface EnrichedPost {
     isAnonymous?: boolean;
     isThread?: boolean;
     isPopular?: boolean;
+    isCensored?: boolean;
 
     // Rich content
     linkPreview?: LinkPreview;
