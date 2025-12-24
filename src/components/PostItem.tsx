@@ -50,6 +50,7 @@ interface PostItemProps {
   showThreadFooter?: boolean;
   className?: string;
   isHero?: boolean;
+  isAdminView?: boolean;
 }
 
 export default function PostItem({
@@ -65,7 +66,8 @@ export default function PostItem({
   isThread = false,
   showThreadFooter = true,
   className = "",
-  isHero = false
+  isHero = false,
+  isAdminView = false
 }: PostItemProps) {
   const router = useRouter();
   const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
@@ -653,17 +655,29 @@ export default function PostItem({
 
           {/* Content */}
           <div className="mt-4 mb-3">
-            <p className="post-content text-xl leading-normal whitespace-pre-wrap break-words break-all">
+            <div className="post-content text-xl leading-normal whitespace-pre-wrap break-words break-all">
               {post.isCensored ? (
-                <span className="text-sm" style={{ color: "var(--app-subtitle)" }}>
-                  Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
-                </span>
+                isAdminView ? (
+                  <div className="p-4 border border-red-500/40 bg-red-500/10 rounded-xl">
+                    <div className="flex items-center mb-2">
+                      <span className="text-xs font-bold text-red-500 uppercase tracking-wider">⚠️ Admin Görünümü - Gizlenen İçerik</span>
+                    </div>
+                    <div className="text-base text-gray-200 font-mono whitespace-pre-wrap bg-black/30 p-2 rounded">
+                      {post.content || <span className="italic text-gray-500">İçerik boş</span>}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-sm block" style={{ color: "var(--app-subtitle)" }}>
+                    Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
+                  </span>
+                )
               ) : (
                 parseContent(post.content)
               )}
-            </p>
+            </div>
 
-            {!post.isCensored && post.poll && (
+
+            {(!post.isCensored || isAdminView) && post.poll && (
               <PollDisplay
                 poll={post.poll}
                 className="mb-3"
@@ -676,7 +690,7 @@ export default function PostItem({
               />
             )}
 
-            {!post.isCensored && (post.mediaUrl || post.imageUrl) && (
+            {(!post.isCensored || isAdminView) && (post.mediaUrl || post.imageUrl) && (
               <div
                 className="mt-3 rounded-2xl overflow-hidden border border-theme-border cursor-pointer"
                 onClick={(e) => {
@@ -694,7 +708,7 @@ export default function PostItem({
             )}
 
             {/* Alıntılanan post - Hero layout için */}
-            {!post.isCensored && post.quotedPost && (() => {
+            {(!post.isCensored || isAdminView) && post.quotedPost && (() => {
               const quotedPostIsAnonymous = post.quotedPost.isAnonymous || false;
               return (
                 <div className="mt-3 post-quote rounded-xl overflow-hidden border border-theme-border">
@@ -1052,15 +1066,21 @@ export default function PostItem({
             />
 
             <div className="block">
-              <p className="post-content mb-3 whitespace-pre-wrap break-words text-sm sm:text-[15px]">
+              <div className="post-content mb-3 whitespace-pre-wrap break-words text-sm sm:text-[15px]">
                 {post.isCensored ? (
-                  <span className="text-xs" style={{ color: "var(--app-subtitle)" }}>
-                    Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
-                  </span>
+                  isAdminView ? (
+                    <div className="mt-2 text-sm sm:text-[15px]" style={{ color: 'var(--app-body-text)' }}>
+                      {post.content || <span className="italic text-gray-500">İçerik boş</span>}
+                    </div>
+                  ) : (
+                    <span className="text-xs" style={{ color: "var(--app-subtitle)" }}>
+                      Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
+                    </span>
+                  )
                 ) : (
                   parseContent(post.content)
                 )}
-              </p>
+              </div>
 
               {!post.isCensored && post.poll && (
                 <PollDisplay

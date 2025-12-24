@@ -8,6 +8,7 @@ import {
   IconLayoutDashboard,
   IconSpeakerphone,
   IconUserSearch,
+  IconMessage2Search,
   IconMessageReport,
   IconRosetteDiscountCheckFilled,
   IconRosetteDiscountCheck,
@@ -92,6 +93,13 @@ export default function AdminSidebar() {
       // We assume basic admin access implies viewing users.
       // Matrix didn't restrict viewing users explicitly, only "View Moderators" logic.
       visible: true
+    },
+    {
+      id: "posts",
+      label: "Gönderiler",
+      icon: IconMessage2Search,
+      href: "/admincp/posts",
+      visible: true // Or check permission if needed
     },
     {
       id: "reports",

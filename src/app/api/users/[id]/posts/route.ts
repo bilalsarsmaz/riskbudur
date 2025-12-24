@@ -61,7 +61,19 @@ export async function GET(
       orderBy: {
         createdAt: "desc",
       },
-      include: {
+      select: {
+        id: true,
+        content: true,
+        imageUrl: true,
+        mediaUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        isAnonymous: true,
+        authorId: true,
+        linkPreview: true,
+        parentPostId: true,
+        threadRootId: true,
+        isCensored: true,
         author: {
           select: {
             id: true,
@@ -239,6 +251,7 @@ export async function GET(
           totalVotes: post.poll.options.reduce((acc, curr) => acc + curr.voteCount, 0),
           isVoted: post.poll.votes.length > 0
         } : null,
+        isCensored: (post as any).isCensored || false,
       };
 
       if (quote && quote.quotedPost) {

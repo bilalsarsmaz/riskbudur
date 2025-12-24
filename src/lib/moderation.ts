@@ -42,10 +42,14 @@ function getBadWords(): string[] {
 function normalizeText(text: string): string {
     return text.toLowerCase()
         .replace(/1|!|İ|ı/g, 'i')
-        .replace(/0/g, 'o')
+        .replace(/0|ö/g, 'o')
         .replace(/3/g, 'e')
         .replace(/4|@/g, 'a')
         .replace(/5|\$/g, 's')
+        .replace(/ü/g, 'u')
+        .replace(/ç/g, 'c')
+        .replace(/ğ/g, 'g')
+        .replace(/ş/g, 's')
         .replace(/ß/g, 'b');
 }
 
@@ -73,9 +77,7 @@ export function shouldCensorContent(content: string): boolean {
     const badWords = getBadWords();
     const hasBadWord = badWords.some(badWord => {
         // Robust check: Handle bad words that might have been loaded with whitespace
-        const cleanBadWord = badWord.trim();
-        // Normalize bad word too just in case (though file should be standard)
-        // Actually no, bad words list is standard turkish usually. 
+        const cleanBadWord = normalizeText(badWord.trim());
         if (!cleanBadWord) return false;
 
         return checkContent.includes(cleanBadWord);
