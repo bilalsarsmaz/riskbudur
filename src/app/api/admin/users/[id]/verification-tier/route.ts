@@ -38,6 +38,27 @@ export async function POST(
             }
         });
 
+        // Create system notification for the user
+        // Determine notification type based on tier
+        const isApproval = tier !== 'NONE';
+        const notificationType = isApproval ? 'VERIFICATION_APPROVED' : 'VERIFICATION_REJECTED';
+
+        console.log(`[DEBUG] Tier Update: User=${userId}, Tier=${tier}, Type=${notificationType}, Actor=${decoded.userId}`);
+
+        try {
+            const notif = await prisma.notification.create({
+                data: {
+                    type: notificationType,
+                    recipientId: userId.toString(),
+                    actorId: decoded.userId, // Admin who performed the action
+                    read: false,
+                }
+            });
+            console.log("[DEBUG] Notification created:", notif.id);
+        } catch (notifError) {
+            console.error("[DEBUG] Notification creation failed:", notifError);
+        }
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Verification tier update error:", error);

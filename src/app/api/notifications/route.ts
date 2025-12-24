@@ -48,6 +48,7 @@ export async function GET(req: Request) {
         const page = parseInt(searchParams.get("page") || "1");
         const skip = (page - 1) * NOTIFICATIONS_PER_PAGE;
 
+        // Ensure we fetch recipient details
         const notifications = await prisma.notification.findMany({
             where: {
                 recipientId: userId,
@@ -99,6 +100,17 @@ export async function GET(req: Request) {
                         // Note: We can't easily get isLiked/isBookmarked here without more complex queries or a separate mapping step.
                         // For now, we will pass basic data. PostItem might need to fetch its own interaction state or we accept defaults.
                     },
+                },
+                recipient: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        fullName: true,
+                        profileImage: true,
+                        hasBlueTick: true,
+                        verificationTier: true,
+                        role: true,
+                    }
                 },
             },
         });

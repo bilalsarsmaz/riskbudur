@@ -303,6 +303,18 @@ export async function PATCH(
       data: updateData
     });
 
+    // Create Notification if Role Changed
+    if (role !== undefined) {
+      await prisma.notification.create({
+        data: {
+          type: "ROLE_UPDATED",
+          recipientId: targetUserId,
+          actorId: authResult.user.id,
+          read: false,
+        }
+      });
+    }
+
     return NextResponse.json({
       id: updatedUser.id,
       nickname: updatedUser.nickname,

@@ -5,7 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNowStrict } from "date-fns";
 import { tr } from "date-fns/locale";
-import { IconHeartFilled, IconMessageCircle, IconRepeat, IconAt, IconUserFilled, IconInfoCircle } from "@tabler/icons-react";
+import {
+    IconHeartFilled, IconMessageCircle,
+    IconRepeat,
+    IconUserPlus,
+    IconInfoCircle,
+    IconAlertTriangleFilled,
+    IconUserFilled,
+    IconAt,
+    IconShieldCheckFilled
+} from '@tabler/icons-react';
 
 import GlobalHeader from "@/components/GlobalHeader";
 import VerificationBadge from "@/components/VerificationBadge";
@@ -19,14 +28,17 @@ interface Actor {
     profileImage: string | null;
     verificationTier: 'NONE' | 'GREEN' | 'GOLD' | 'GRAY';
     hasBlueTick: boolean;
+    role?: 'USER' | 'MODERATOR' | 'LEAD' | 'ADMIN' | 'ROOTADMIN';
 }
 
 interface Notification {
     id: string;
-    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW' | 'SYSTEM';
+    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW' | 'SYSTEM' | 'VERIFICATION_APPROVED' | 'VERIFICATION_REJECTED' | 'ROLE_UPDATED' | 'POST_CENSORED';
     read: boolean;
     createdAt: string;
     actor: Actor;
+    recipientId: string;
+    recipient?: Actor;
     post?: {
         id: string;
         content: string;
@@ -47,17 +59,17 @@ interface Notification {
             likes: number;
             replies: number;
             quotes: number;
-        };
+        } | null;
     } | null;
-    recipientId: string;
 }
 
 interface GroupedNotification {
     id: string;
-    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW' | 'SYSTEM';
+    type: 'LIKE' | 'REPLY' | 'MENTION' | 'QUOTE' | 'FOLLOW' | 'SYSTEM' | 'VERIFICATION_APPROVED' | 'VERIFICATION_REJECTED' | 'ROLE_UPDATED' | 'POST_CENSORED';
     read: boolean;
     createdAt: string;
     actors: Actor[];
+    recipient?: Actor;
     post?: {
         id: string;
         content: string;
@@ -78,7 +90,7 @@ interface GroupedNotification {
             likes: number;
             replies: number;
             quotes: number;
-        };
+        } | null;
     } | null;
     notificationIds: string[];
 }
@@ -120,6 +132,7 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
                     read: notif.read,
                     createdAt: notif.createdAt,
                     actors: [notif.actor],
+                    recipient: notif.recipient,
                     post: notif.post,
                     notificationIds: [notif.id],
                 };
@@ -168,6 +181,7 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
                 read: notif.read,
                 createdAt: notif.createdAt,
                 actors: [notif.actor],
+                recipient: notif.recipient,
                 post: notif.post,
                 notificationIds: [notif.id],
             });
@@ -251,15 +265,39 @@ export default function Notifications() {
                                     unreadClass = 'bg-[#1d9bf0]/10 border-l-4 border-l-[#1d9bf0]';
                                     break;
                                 case 'SYSTEM':
-                                    unreadClass = 'bg-[#1d9bf0]/10 border-l-4 border-l-gray-500'; // Gray/Default for System?
+                                    unreadClass = 'bg-[#1d9bf0]/10 border-l-4 border-l-gray-500'; // Default System
+                                    break;
+                                case 'VERIFICATION_APPROVED':
+                                case 'VERIFICATION_REJECTED':
+                                    unreadClass = 'bg-orange-500/10 border-l-4 border-l-orange-500'; // Orange for Verification
+                                    break;
+                                case 'ROLE_UPDATED':
+                                    unreadClass = 'bg-[#1DCD9F]/10 border-l-4 border-l-[#1DCD9F]'; // Green for Role
+                                    break;
+                                case 'POST_CENSORED':
+                                    unreadClass = 'bg-gray-500/10 border-l-4 border-l-gray-500'; // Gray for Censored
                                     break;
                             }
                         }
 
                         // Determine styling and content based on type
+
                         let icon = null;
                         let actionText = "";
                         let contentBody = null;
+
+
+                        // For System notifications, we want to show the User (Recipient) as the actor
+                        // because the text is phrased as "User's application was accepted"
+                        const isSystemUserCentric = group.type === 'VERIFICATION_APPROVED' ||
+                            group.type === 'VERIFICATION_REJECTED' ||
+                            group.type === 'ROLE_UPDATED' ||
+                            group.type === 'POST_CENSORED';
+
+                        const displayActor = (isSystemUserCentric && group.recipient)
+                            ? group.recipient
+                            : group.actors[0];
+
 
                         switch (group.type) {
                             case 'LIKE':
@@ -284,7 +322,40 @@ export default function Notifications() {
                                         style={{ color: 'inherit' }} // Let it handle its own color 
                                     />
                                 );
-                                actionText = 'başvurunuz Riskbudur Özel Tim tarafından imha edildi.';
+                                actionText = 'kapsamında bir bildirim.';
+                                break;
+                            case 'VERIFICATION_APPROVED':
+                                icon = (
+                                    <VerificationBadge
+                                        tier="GREEN"
+                                        hasBlueTick={true}
+                                        className="w-7 h-7"
+                                        style={{ color: 'inherit' }}
+                                    />
+                                );
+                                actionText = 'başvurunuz Riskbudur Özel Tim tarafından kabul edildi.';
+                                break;
+                            case 'VERIFICATION_REJECTED':
+                                icon = (
+                                    <VerificationBadge
+                                        tier="NONE"
+                                        hasBlueTick={false}
+                                        className="w-7 h-7 text-gray-500" // Grey icon for rejection
+                                        style={{ color: 'gray' }}
+                                    />
+                                );
+                                actionText = 'başvurunuz Riskbudur Özel Tim tarafından reddedildi.';
+                                break;
+                            case 'ROLE_UPDATED':
+                                icon = <IconShieldCheckFilled className="w-7 h-7 app-adminbadge" style={{ color: '#1DCD9F' }} />;
+                                const isUserRole = group.recipient?.role === 'USER';
+                                actionText = isUserRole
+                                    ? "RiskBudur Özel Tim'den emekli oldun. Artık sen de sıradan birisin..."
+                                    : "RiskBudur Özel Tim'e hoş geldin! İçeceğini hazırla, işte şimdi başlıyorsun...";
+                                break;
+                            case 'POST_CENSORED':
+                                icon = <IconAlertTriangleFilled className="w-7 h-7" style={{ color: 'var(--app-subtitle)' }} />;
+                                actionText = 'gönderin RiskBudur insansız hava aracıyla imha edildi! Bu bir uyarıydı, tekrarında bu diyarlardan göç edeceksin!';
                                 break;
                             case 'REPLY':
                                 icon = <IconMessageCircle className="w-7 h-7 text-[#1d9bf0]" />;
@@ -307,9 +378,9 @@ export default function Notifications() {
                                                     hasBlueTick: group.post.author.hasBlueTick || false,
                                                 },
                                                 _count: {
-                                                    likes: group.post._count.likes || 0,
-                                                    comments: group.post._count.replies || 0,
-                                                    quotes: group.post._count.quotes || 0,
+                                                    likes: group.post._count?.likes || 0,
+                                                    comments: group.post._count?.replies || 0,
+                                                    quotes: group.post._count?.quotes || 0,
                                                 },
                                                 mediaUrl: group.post.mediaUrl || undefined,
                                                 imageUrl: group.post.imageUrl || undefined,
@@ -348,9 +419,9 @@ export default function Notifications() {
                                                     hasBlueTick: group.post.author.hasBlueTick || false,
                                                 },
                                                 _count: {
-                                                    likes: group.post._count.likes || 0,
-                                                    comments: group.post._count.replies || 0,
-                                                    quotes: group.post._count.quotes || 0,
+                                                    likes: group.post._count?.likes || 0,
+                                                    comments: group.post._count?.replies || 0,
+                                                    quotes: group.post._count?.quotes || 0,
                                                 },
                                                 mediaUrl: group.post.mediaUrl || undefined,
                                                 imageUrl: group.post.imageUrl || undefined,
@@ -389,9 +460,9 @@ export default function Notifications() {
                                                     hasBlueTick: group.post.author.hasBlueTick || false,
                                                 },
                                                 _count: {
-                                                    likes: group.post._count.likes || 0,
-                                                    comments: group.post._count.replies || 0,
-                                                    quotes: group.post._count.quotes || 0,
+                                                    likes: group.post._count?.likes || 0,
+                                                    comments: group.post._count?.replies || 0,
+                                                    quotes: group.post._count?.quotes || 0,
                                                 },
                                                 mediaUrl: group.post.mediaUrl || undefined,
                                                 imageUrl: group.post.imageUrl || undefined,
@@ -446,7 +517,15 @@ export default function Notifications() {
                                     handleMarkAsRead(group);
 
                                     // Default Navigation
-                                    if (group.type === 'FOLLOW') {
+                                    const isSystemType = group.type === 'SYSTEM' ||
+                                        group.type === 'VERIFICATION_APPROVED' ||
+                                        group.type === 'VERIFICATION_REJECTED' ||
+                                        group.type === 'ROLE_UPDATED' ||
+                                        group.type === 'POST_CENSORED';
+
+                                    if (isSystemType) {
+                                        router.push('/home');
+                                    } else if (group.type === 'FOLLOW') {
                                         router.push(`/${group.actors[0].nickname}`);
                                     } else if (group.post) {
                                         router.push(`/${group.post.author?.nickname || 'user'}/status/${group.post.id}`);
@@ -464,7 +543,7 @@ export default function Notifications() {
 
                                     {/* Main Content */}
                                     <div className="flex-1 min-w-0">
-                                        {group.type === 'SYSTEM' ? (
+                                        {group.type === 'SYSTEM' || group.type === 'VERIFICATION_APPROVED' || group.type === 'VERIFICATION_REJECTED' || group.type === 'ROLE_UPDATED' || group.type === 'POST_CENSORED' ? (
                                             /* SYSTEM Notification Layout */
                                             <div className="flex flex-col gap-1">
                                                 {/* Header: Badge + Info + System Notification + Date */}
@@ -480,14 +559,14 @@ export default function Notifications() {
 
                                                 {/* Content: Avatar + Text */}
                                                 <div className="flex items-start gap-3 mt-1">
-                                                    {/* Profile Photo */}
+                                                    {/* Profile Photo - Displays User/Recipient for System messages */}
                                                     <div className="flex-shrink-0">
                                                         <div className="w-9 h-9 rounded-full border border-black bg-gray-800">
-                                                            {group.actors[0].profileImage ? (
-                                                                <img src={group.actors[0].profileImage} alt={group.actors[0].nickname} className="w-full h-full object-cover rounded-full" />
+                                                            {displayActor.profileImage ? (
+                                                                <img src={displayActor.profileImage} alt={displayActor.nickname} className="w-full h-full object-cover rounded-full" />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-gray-700">
-                                                                    {group.actors[0].nickname[0].toUpperCase()}
+                                                                    {displayActor.nickname[0].toUpperCase()}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -496,16 +575,16 @@ export default function Notifications() {
                                                     {/* Message Body */}
                                                     <div className="flex-1 text-[15px] leading-5 text-theme-text">
                                                         <span className="font-bold">
-                                                            {group.actors[0].fullName || group.actors[0].nickname}
+                                                            {displayActor.nickname}
                                                         </span>
-                                                        <VerificationBadge
-                                                            tier={group.actors[0].verificationTier}
-                                                            hasBlueTick={group.actors[0].hasBlueTick}
-                                                            username={group.actors[0].nickname}
-                                                            className="ml-0.5 inline-block align-bottom"
-                                                            style={{ width: '18px', height: '18px', marginBottom: '1px' }}
-                                                        />
-                                                        <span> profil onay rozeti başvurunuz Riskbudur Özel Timi tarafından {group.actors[0].verificationTier !== 'NONE' ? 'kabul edildi.' : 'imha edildi.'}</span>
+                                                        {/* Only show badge if it's NOT a verification/system notification about the user themselves, 
+                                                            OR if we want to show the user's current badge status. 
+                                                            Screenshot shows NO badge next to name, just the name in bold. */}
+
+                                                        {/* Text Body */}
+                                                        {/* For Verification, we hardcoded 'profil onay rozeti' prefix in the code previously. 
+                                                            Let's keep it if it matches the screenshot logic. */}
+                                                        <span> {group.type === 'VERIFICATION_APPROVED' || group.type === 'VERIFICATION_REJECTED' ? 'profil onay rozeti ' : ''}{actionText}</span>
                                                     </div>
                                                 </div>
                                             </div>

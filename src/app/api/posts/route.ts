@@ -455,6 +455,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Send notification if censored
+    if (post.isCensored) {
+      await prisma.notification.create({
+        data: {
+          type: "POST_CENSORED",
+          recipientId: userId,
+          actorId: userId, // Self-notification
+          postId: post.id, // Link to the specific post
+          read: false,
+        }
+      });
+    }
+
     // Eger alinti varsa Quote tablosuna ekle
     if (quotedPostId) {
       await prisma.quote.create({

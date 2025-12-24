@@ -56,24 +56,33 @@ export async function PUT(req: Request) {
             data: { status }
         });
 
+        const admin = authResult.user;
+
         // 1. APPROVAL LOGIC
         if (status === "APPROVED") {
             await prisma.user.update({
                 where: { id: request.userId },
-                data: { hasBlueTick: true, verificationTier: "GREEN" } // GREEN maps to Default Color
+                data: { hasBlueTick: true, verificationTier: "GREEN" }
+            });
+
+            // Create Notification
+            await prisma.notification.create({
+                data: {
+                    type: "VERIFICATION_APPROVED",
+                    recipientId: request.userId,
+                    actorId: admin.id,
+                    read: false,
+                }
             });
         }
 
-        // 2. REJECTION LOGIC (Notification)
+        // 2. REJECTION LOGIC
         else if (status === "REJECTED") {
-            // Create a SYSTEM notification for the user
-            // We use the user themselves as the 'actor' so their profile photo shows up in the notification card
-            // mimicking: "[User Photo] [User Name] başvurunuz..."
             await prisma.notification.create({
                 data: {
-                    type: "SYSTEM",
+                    type: "VERIFICATION_REJECTED",
                     recipientId: request.userId,
-                    actorId: request.userId, // Self-notification to show own avatar
+                    actorId: admin.id,
                     read: false,
                 }
             });
