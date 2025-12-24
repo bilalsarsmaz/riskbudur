@@ -9,8 +9,13 @@ export async function GET(
         const params = await props.params;
         const username = params.id;
 
-        const user = await prisma.user.findUnique({
-            where: { nickname: username },
+        const user = await prisma.user.findFirst({
+            where: {
+                nickname: {
+                    equals: username,
+                    mode: 'insensitive'
+                }
+            },
             select: { id: true }
         });
 

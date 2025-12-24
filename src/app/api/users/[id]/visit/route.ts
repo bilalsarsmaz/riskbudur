@@ -15,8 +15,13 @@ export async function POST(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const visitedUser = await prisma.user.findUnique({
-            where: { nickname: username },
+        const visitedUser = await prisma.user.findFirst({
+            where: {
+                nickname: {
+                    equals: username,
+                    mode: 'insensitive'
+                }
+            },
             select: { id: true }
         });
 
