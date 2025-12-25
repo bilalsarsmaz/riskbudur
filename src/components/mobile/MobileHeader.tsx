@@ -190,7 +190,7 @@ export default function MobileHeader() {
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-theme-bg/80 backdrop-blur-md border-b border-theme-border z-50 flex items-center justify-between px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex items-start justify-center">
-            <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
+            <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "35px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
             <div className="flex flex-col justify-center" style={{ marginTop: '5px' }}>
               <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
                 riskbudur
@@ -218,7 +218,7 @@ export default function MobileHeader() {
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-theme-bg/80 backdrop-blur-md border-b border-theme-border z-[9999] flex items-center justify-between px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex items-start justify-center">
-            <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
+            <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "35px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
             <div className="flex flex-col justify-center" style={{ marginTop: '5px' }}>
               <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
                 riskbudur
