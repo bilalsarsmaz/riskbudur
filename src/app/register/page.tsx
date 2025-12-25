@@ -55,7 +55,7 @@ export default function RegisterPage() {
         <div className="relative z-10 text-center">
           {/* Logo */}
           <div className="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(255,255,255,0.1)] overflow-hidden">
-            <img src="/riskbudurlogo.png" alt="Riskbudur Logo" className="w-16 h-16 object-contain" />
+            <img src="/riskbudurlogo.png?v=2" alt="Riskbudur Logo" className="w-16 h-16 object-contain" />
           </div>
 
           <h1 className="text-5xl font-extrabold mb-6 tracking-tight">RiskBudur'a hoş geldin!</h1>
@@ -69,7 +69,7 @@ export default function RegisterPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative z-10 bg-black">
         <div className="w-full max-w-sm space-y-8">
           <div className="lg:hidden text-center mb-8">
-            <img src="/riskbudurlogo.png" alt="Riskbudur Logo" className="w-16 h-16 mx-auto object-contain" />
+            <img src="/riskbudurlogo.png?v=2" alt="Riskbudur Logo" className="w-16 h-16 mx-auto object-contain" />
           </div>
 
           <div>

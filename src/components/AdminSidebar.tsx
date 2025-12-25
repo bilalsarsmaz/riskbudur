@@ -166,7 +166,7 @@ export default function AdminSidebar() {
       <div className="flex-1">
         <div className="mb-6 px-2">
           <Link href="/admincp" className="flex items-start justify-center xl:justify-start py-2 xl:pr-2 xl:pl-0">
-            <img src="/riskbudurlogo.png" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]" />
+            <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]" />
             <div className="hidden xl:flex flex-col justify-center" style={{ marginTop: '5px' }}>
               <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
                 riskbudur

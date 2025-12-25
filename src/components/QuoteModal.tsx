@@ -63,7 +63,7 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                     {isAnonymous ? (
                       <div className="w-8 h-8 rounded-full mr-2 flex items-center justify-center">
                         <img
-                          src="/riskbudurlogo.png"
+                          src="/riskbudurlogo.png?v=2"
                           alt="Anonim"
                           className="w-8 h-8 rounded-full object-cover"
                         />
@@ -123,7 +123,7 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
         <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
           <div className="flex items-center gap-2">
             <img
-              src="/riskbudurlogo.png"
+              src="/riskbudurlogo.png?v=2"
               alt="riskbudur"
               className="h-5"
             />
@@ -147,7 +147,7 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
               <div className="flex items-start">
                 <div className="post-quote-avatar mr-2">
                   <img
-                    src={isAnonymous ? "/riskbudurlogo.png" : (post.author.profileImage || `https://ui-avatars.com/api/?name=${post.author.nickname}`)}
+                    src={isAnonymous ? "/riskbudurlogo.png?v=2" : (post.author.profileImage || `https://ui-avatars.com/api/?name=${post.author.nickname}`)}
                     alt="Avatar"
                     className="w-8 h-8 rounded-full object-cover"
                   />

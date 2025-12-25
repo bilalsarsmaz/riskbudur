@@ -29,7 +29,7 @@ export default function MobileComposeModal({
             <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
                 <div className="flex items-center gap-2">
                     <img
-                        src="/riskbudurlogo.png"
+                        src="/riskbudurlogo.png?v=2"
                         alt="riskbudur"
                         className="h-5"
                     />

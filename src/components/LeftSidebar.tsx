@@ -184,7 +184,7 @@ export default function LeftSidebar() {
     <div className="px-2 w-full h-[calc(100vh-2rem)] sticky top-4 flex flex-col items-center xl:items-start" style={{ backgroundColor: 'var(--app-header-bg)' }}>
       <div className="mb-4 px-2">
         <Link href="/home" className="flex items-start justify-center xl:justify-start py-2 xl:pr-2 xl:pl-0">
-          <img src="/riskbudurlogo.png" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]" />
+          <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "40px", height: "auto", objectFit: "contain", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]" />
           <div className="hidden xl:flex flex-col justify-center" style={{ marginTop: '5px' }}>
             <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
               riskbudur

@@ -12,7 +12,7 @@ export default function SetupLayout({ children }: SetupLayoutProps) {
             <div className="w-full max-w-lg">
                 <div className="flex justify-center mb-8 transition-transform hover:scale-105 duration-300">
                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden">
-                        <img src="/riskbudurlogo.png" alt="Riskbudur Logo" className="w-14 h-14 object-contain" />
+                        <img src="/riskbudurlogo.png?v=2" alt="Riskbudur Logo" className="w-14 h-14 object-contain" />
                     </div>
                 </div>
 
