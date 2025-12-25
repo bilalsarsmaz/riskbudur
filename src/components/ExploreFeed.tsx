@@ -100,7 +100,7 @@ export default function ExploreFeed({ activeTab }: ExploreFeedProps) {
                                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
                                 </div>
                             </section>
-                            <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+                            <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[20px] pt-6">
                                 <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
                                     <RightSidebar hideHashtags={true} />
                                 </div>
@@ -232,7 +232,7 @@ export default function ExploreFeed({ activeTab }: ExploreFeedProps) {
                         </section>
 
                         {/* Sağ Sidebar */}
-                        <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[10px] pt-6">
+                        <aside className="right-side hidden xl:block w-[350px] flex-shrink-0 ml-[20px] pt-6">
                             <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
                                 <RightSidebar hideHashtags={true} />
                             </div>

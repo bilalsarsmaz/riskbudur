@@ -45,7 +45,7 @@ export default function StandardPageLayout({
 
                     {/* Right Sidebar */}
                     {showRightSidebar && (
-                        <aside className="w-[350px] ml-[10px] pt-6 hidden lg:block">
+                        <aside className="w-[350px] ml-[20px] pt-6 hidden lg:block">
                             <RightSidebar />
                         </aside>
                     )}

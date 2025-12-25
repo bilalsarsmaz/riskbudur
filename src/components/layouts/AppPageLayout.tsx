@@ -33,7 +33,7 @@ export default function AppPageLayout({
           </section>
 
           {rightSidebar && (
-            <aside className={`${rightSidebarWrapperClassName} w-[350px] flex-shrink-0 ml-[10px] pt-6`}>
+            <aside className={`${rightSidebarWrapperClassName} w-[350px] flex-shrink-0 ml-[20px] pt-6`}>
               <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 {rightSidebar}
               </div>

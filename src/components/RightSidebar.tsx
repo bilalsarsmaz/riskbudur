@@ -100,12 +100,12 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
               <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {trendingHashtags.map((hashtag) => (
                 <Link
                   key={hashtag.id}
                   href={`/hashtag/${hashtag.name}`}
-                  className="flex flex-col items-start py-2 rounded-lg"
+                  className="flex flex-col items-start py-1 rounded-lg"
                 >
                   <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
                   <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} gönderi</span>
@@ -141,11 +141,11 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                   {visitors.map((visitor, idx) => (
                     <Link href={`/${visitor.nickname}`} key={idx} className="block aspect-square group relative">
                       {visitor.profileImage ? (
-                        <div className="w-full h-full rounded-lg overflow-hidden border border-theme-border hover:border-[var(--app-global-link-color)] transition-colors">
+                        <div className="w-full h-full rounded-lg overflow-hidden hover:border-[var(--app-global-link-color)] transition-colors">
                           <img src={visitor.profileImage} alt={visitor.nickname} className="w-full h-full object-cover" />
                         </div>
                       ) : (
-                        <div className="w-full h-full rounded-lg bg-gray-800 flex items-center justify-center border border-theme-border hover:border-[var(--app-global-link-color)] transition-colors">
+                        <div className="w-full h-full rounded-lg bg-gray-800 flex items-center justify-center hover:border-[var(--app-global-link-color)] transition-colors">
                           <span className="text-sm font-bold text-gray-400">{visitor.nickname[0].toUpperCase()}</span>
                         </div>
                       )}
