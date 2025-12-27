@@ -343,7 +343,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(formattedPosts);
   } catch (error) {
     console.error("Posts fetch error:", error);
-    return NextResponse.json({ error: "Posts yuklenirken hata olustu" }, { status: 500 });
+    return NextResponse.json({ error: "Posts yuklenirken hata olustu", details: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined }, { status: 500 });
   }
 }
 
