@@ -178,7 +178,8 @@ export default function CommentComposeBox({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Yanıtını yaz..."
-              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none min-h-[80px]"
+              className="w-full bg-transparent placeholder-gray-500 resize-none outline-none min-h-[80px]"
+              style={{ color: "var(--app-body-text)" }}
               onPaste={(e) => {
                 if (e.clipboardData && e.clipboardData.items) {
                   const items = e.clipboardData.items;

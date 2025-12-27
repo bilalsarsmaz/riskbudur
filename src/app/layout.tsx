@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 import ApprovalGuard from "@/components/ApprovalGuard";
+import BanChecker from "@/components/BanChecker";
 
 export default function RootLayout({
   children,
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="tr">
       <body className={`${inter.variable} font-sans antialiased`}>
         <ApprovalGuard>
+          <BanChecker />
           {children}
         </ApprovalGuard>
       </body>

@@ -23,6 +23,17 @@ export async function verifyTokenAndUpdateActivity(token: string) {
   const decoded = await verifyToken(token);
 
   if (decoded?.userId) {
+    // Check if user is banned (Critical for immediate enforcement)
+    // We check this on every request to ensure strict security
+    const userStatus = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { isBanned: true }
+    });
+
+    if (userStatus?.isBanned) {
+      return null; // Treat as invalid token => equivalent to logout
+    }
+
     const now = Date.now();
     const lastUpdate = lastSeenCache.get(decoded.userId) || 0;
 

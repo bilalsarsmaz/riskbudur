@@ -32,11 +32,21 @@ export const fetchApi = async (endpoint: string) => {
     });
 
     if (!response.ok) {
+      if (response.status === 401 && typeof window !== 'undefined') {
+        // Auto-logout on 401 (Unauthorized / Banned)
+        localStorage.removeItem('token');
+        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+        window.location.href = '/login';
+        return; // Stop execution
+      }
       throw new Error(`API hatası: ${response.status}`);
     }
 
     return await response.json();
   } catch (error) {
+    if (error instanceof Error && error.message.includes('401')) {
+      // Catch re-thrown 401s if logic leaks
+    }
     console.error(`API isteği başarısız: ${endpoint}`, error);
     throw error;
   }
@@ -48,7 +58,7 @@ export const fetchApi = async (endpoint: string) => {
 export const postApi = async <T>(endpoint: string, data: Record<string, unknown> | FormData) => {
   try {
     const isFormData = data instanceof FormData;
-    
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
       headers: getHeaders(isFormData),
@@ -56,6 +66,12 @@ export const postApi = async <T>(endpoint: string, data: Record<string, unknown>
     });
 
     if (!response.ok) {
+      if (response.status === 401 && typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+        window.location.href = '/login';
+        return null as any;
+      }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `API hatası: ${response.status}`);
     }
