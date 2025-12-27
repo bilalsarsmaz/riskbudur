@@ -19,7 +19,7 @@ model User {
   hasBlueTick           Boolean               @default(false)
   coverImage            String?               @default("/rb-cover.png")
   fullName              String?
-  profileImage          String?
+  profileImage          String?               @default("/riskbudur-first.png")
   verificationTier      VerificationTier      @default(NONE)
   createdAt             DateTime?             @default(now())
   updatedAt             DateTime?             @updatedAt

@@ -42,6 +42,7 @@ export async function POST(req: Request) {
         nickname: tempNickname,
         fullName: fullName || "", // Fullname'i kaydet
         isSetupComplete: false, // Kurulum sihirbazına yönlendirilecek
+        profileImage: "/riskbudur-first.png",
       },
     });
 
