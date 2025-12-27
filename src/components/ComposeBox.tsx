@@ -471,6 +471,13 @@ export default function ComposeBox({
                   }
                 }
               }}
+              onKeyDown={(e) => {
+                // Ctrl + Enter or Cmd + Enter to submit
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
               onClick={() => {
                 setIsTextareaActive(true);
                 setMentionQuery(null); // Click closes suggestion usually, or we could re-eval? 

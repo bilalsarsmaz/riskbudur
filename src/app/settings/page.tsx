@@ -171,6 +171,13 @@ export default function SettingsPage() {
               {activeCategory === 'account' && <div className="w-1 h-4 bg-orange-500 rounded-full"></div>}
             </button>
 
+            <button
+              onClick={() => router.push('/settings/theme')}
+              className="w-full flex items-center justify-between p-3 rounded-lg text-gray-400 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+            >
+              <span className="font-medium ml-9">Tema</span>
+            </button>
+
             <button disabled className="w-full flex items-center justify-between p-3 rounded-lg text-gray-600 cursor-not-allowed">
               <span className="font-medium ml-9">Premium (Yakında)</span>
             </button>

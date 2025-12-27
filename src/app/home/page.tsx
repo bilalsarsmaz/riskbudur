@@ -7,9 +7,9 @@ import PostList from "@/components/PostList";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
 import MobileComposeModal from "@/components/MobileComposeModal";
 import TimelineTabs from "@/components/TimelineTabs";
-import StandardPageLayout from "@/components/StandardPageLayout";
 import AutoPostHandler from "@/components/AutoPostHandler";
 import { Suspense } from "react";
+import StandardPageLayout from "@/components/StandardPageLayout";
 
 import { EnrichedPost } from "@/types/post";
 import { fetchApi, postApi } from "@/lib/api";
@@ -208,6 +208,15 @@ export default function HomePage() {
           />
         </Suspense>
         <AnnouncementBanner />
+
+        {/* Desktop ComposeBox */}
+        <div className="hidden lg:block">
+          <ComposeBox
+            onPostCreated={handlePostCreated}
+            className="border-t-0"
+          />
+        </div>
+
         <TimelineTabs
           activeTab={activeTimeline}
           onTabChange={(tab: TimelineType) => {
@@ -217,14 +226,6 @@ export default function HomePage() {
             loadPosts(0, true);
           }}
         />
-
-        {/* Desktop only - mobilde bottom nav'daki modal kullanılacak */}
-        <div className="hidden lg:block">
-          <ComposeBox
-            onPostCreated={handlePostCreated}
-            className="border-t-0"
-          />
-        </div>
 
         {newPostCount > 0 && (
           <div

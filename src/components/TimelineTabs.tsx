@@ -40,7 +40,7 @@ export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsPro
 
   return (
     <div
-      className={`w-full bg-theme-bg/80 backdrop-blur-md border-b border-theme-border sticky top-14 lg:top-0 z-20 h-[60px] flex transition-transform duration-300 ease-in-out ${!isVisible ? '-translate-y-[120%]' : 'translate-y-0'
+      className={`timeline-tabs w-full bg-theme-bg/80 backdrop-blur-md border-b border-theme-border sticky top-14 lg:top-0 z-20 h-[60px] flex transition-transform duration-300 ease-in-out ${!isVisible ? '-translate-y-[120%]' : 'translate-y-0'
         } lg:translate-y-0`}
     >
       <div className="flex w-full h-full">
