@@ -195,46 +195,50 @@ export default function PostHeader({
                             </>
                         ) : (
                             <>
-                                <button
-                                    onClick={() => handleMenuAction(onFollowToggle)}
-                                    className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                                    style={{ color: "var(--app-body-text)" }}
-                                >
-                                    {isFollowing ? (
-                                        <>
-                                            <IconUserMinus className="w-5 h-5 mr-3" />
-                                            @{post.author.nickname} adlı kişiyi takipten çıkar
-                                        </>
-                                    ) : (
-                                        <>
-                                            <IconUserPlus className="w-5 h-5 mr-3" />
-                                            @{post.author.nickname} adlı kişiyi takip et
-                                        </>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => handleMenuAction(onBlock)}
-                                    className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
-                                >
-                                    <IconBan className="w-5 h-5 mr-3" />
-                                    @{post.author.nickname} adlı kişiyi engelle
-                                </button>
-                                <button
-                                    onClick={safeOnViewStats}
-                                    className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                                    style={{ color: "var(--app-body-text)" }}
-                                >
-                                    <IconChartBar className="w-5 h-5 mr-3" />
-                                    Gönderi etkileşimlerini görüntüle
-                                </button>
-                                <button
-                                    onClick={safeOnPin}
-                                    className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                                    style={{ color: "var(--app-body-text)" }}
-                                >
-                                    <IconCode className="w-5 h-5 mr-3" />
-                                    Gönderiyi yerleştir
-                                </button>
+                                {!isAnonymous && (
+                                    <>
+                                        <button
+                                            onClick={() => handleMenuAction(onFollowToggle)}
+                                            className="w-full text-left px-4 py-3 flex items-center transition-colors"
+                                            style={{ color: "var(--app-body-text)" }}
+                                        >
+                                            {isFollowing ? (
+                                                <>
+                                                    <IconUserMinus className="w-5 h-5 mr-3" />
+                                                    @{post.author.nickname} adlı kişiyi takipten çıkar
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <IconUserPlus className="w-5 h-5 mr-3" />
+                                                    @{post.author.nickname} adlı kişiyi takip et
+                                                </>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => handleMenuAction(onBlock)}
+                                            className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
+                                        >
+                                            <IconBan className="w-5 h-5 mr-3" />
+                                            @{post.author.nickname} adlı kişiyi engelle
+                                        </button>
+                                        <button
+                                            onClick={safeOnViewStats}
+                                            className="w-full text-left px-4 py-3 flex items-center transition-colors"
+                                            style={{ color: "var(--app-body-text)" }}
+                                        >
+                                            <IconChartBar className="w-5 h-5 mr-3" />
+                                            Gönderi etkileşimlerini görüntüle
+                                        </button>
+                                        <button
+                                            onClick={safeOnPin}
+                                            className="w-full text-left px-4 py-3 flex items-center transition-colors"
+                                            style={{ color: "var(--app-body-text)" }}
+                                        >
+                                            <IconCode className="w-5 h-5 mr-3" />
+                                            Gönderiyi yerleştir
+                                        </button>
+                                    </>
+                                )}
                                 <button
                                     onClick={() => handleMenuAction(onReport)}
                                     className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"

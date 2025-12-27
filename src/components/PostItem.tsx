@@ -13,6 +13,7 @@ import AdminBadge from "./AdminBadge";
 import ImageModal from "./ImageModal";
 import { formatCustomDate } from "@/utils/date";
 import PollDisplay from "@/components/PollDisplay";
+import ReportModal from "@/components/ReportModal";
 
 import {
   IconHeart,
@@ -106,7 +107,9 @@ export default function PostItem({
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [isCommented, setIsCommented] = useState(post.isCommented || false);
   /* const [linkedPosts, setLinkedPosts] = useState<any[]>([]); // DEPRECATED: Caused duplicate quotes */
+  /* const [linkedPosts, setLinkedPosts] = useState<any[]>([]); // DEPRECATED: Caused duplicate quotes */
   const [youtubeEmbedOpen, setYoutubeEmbedOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const shareMenuRef = useRef<HTMLDivElement>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
@@ -266,12 +269,18 @@ export default function PostItem({
 
   const handleBlock = async () => {
     if (confirm(`@${post.author.nickname} adlı kullanıcıyı engellemek istediğinize emin misiniz?`)) {
-      console.log("Engelle:", post.author.nickname);
+      try {
+        await postApi("/blocks", { userId: post.author.id });
+        window.location.reload();
+      } catch (error) {
+        console.error("Block error:", error);
+        alert("Engelleme işlemi başarısız oldu.");
+      }
     }
   };
 
   const handleReport = () => {
-    console.log("Gönderiyi bildir:", post.id);
+    setIsReportModalOpen(true);
   };
 
   const handleDelete = async () => {
@@ -534,7 +543,12 @@ export default function PostItem({
               <Link href={isAnonymous ? '/Riskbudur' : `/${post.author.nickname}`} className="block relative">
                 {post.isAnonymous ? (
                   <div className="w-10 h-10 rounded-full bg-[#151515] flex items-center justify-center border border-theme-border">
-                    <img src="/Riskbudur-pp.png" alt="Anonim" className="w-10 h-10 rounded-full object-cover" />
+                    <img
+                      src="/Riskbudur-pp.png"
+                      alt="Anonim"
+                      className="w-10 h-10 rounded-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/Riskbudur-first.png'; }}
+                    />
                   </div>
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-[#151515] flex items-center justify-center border border-theme-border overflow-hidden">
@@ -615,30 +629,34 @@ export default function PostItem({
                     </>
                   ) : (
                     <>
-                      <button
-                        onClick={() => { handleFollowToggle(); setHeaderMenuOpen(false); }}
-                        className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                        style={{ color: "var(--app-body-text)" }}
-                      >
-                        {isFollowing ? (
-                          <>
-                            <IconUserMinus className="w-5 h-5 mr-3" />
-                            @{post.author.nickname} adlı kişiyi takipten çıkar
-                          </>
-                        ) : (
-                          <>
-                            <IconUserPlus className="w-5 h-5 mr-3" />
-                            @{post.author.nickname} adlı kişiyi takip et
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => { handleBlock(); setHeaderMenuOpen(false); }}
-                        className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
-                      >
-                        <IconBan className="w-5 h-5 mr-3" />
-                        @{post.author.nickname} adlı kişiyi engelle
-                      </button>
+                      {!isAnonymous && (
+                        <>
+                          <button
+                            onClick={() => { handleFollowToggle(); setHeaderMenuOpen(false); }}
+                            className="w-full text-left px-4 py-3 flex items-center transition-colors"
+                            style={{ color: "var(--app-body-text)" }}
+                          >
+                            {isFollowing ? (
+                              <>
+                                <IconUserMinus className="w-5 h-5 mr-3" />
+                                @{post.author.nickname} adlı kişiyi takipten çıkar
+                              </>
+                            ) : (
+                              <>
+                                <IconUserPlus className="w-5 h-5 mr-3" />
+                                @{post.author.nickname} adlı kişiyi takip et
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => { handleBlock(); setHeaderMenuOpen(false); }}
+                            className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
+                          >
+                            <IconBan className="w-5 h-5 mr-3" />
+                            @{post.author.nickname} adlı kişiyi engelle
+                          </button>
+                        </>
+                      )}
                       <button
                         onClick={() => { handleReport(); setHeaderMenuOpen(false); }}
                         className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
@@ -1446,6 +1464,12 @@ export default function PostItem({
       <ImageModal
         imageUrl={imageModalUrl}
         onClose={() => setImageModalUrl(null)}
+      />
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        postId={post.id.toString()}
       />
     </>
   );

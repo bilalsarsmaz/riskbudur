@@ -11,9 +11,10 @@ interface GlobalHeaderProps {
     showBackButton?: boolean;
     style?: React.CSSProperties;
     rightContent?: React.ReactNode;
+    backButtonClassName?: string;
 }
 
-export default function GlobalHeader({ title, subtitle, className = "", onBack, showBackButton, style, rightContent }: GlobalHeaderProps) {
+export default function GlobalHeader({ title, subtitle, className = "", onBack, showBackButton, style, rightContent, backButtonClassName = "" }: GlobalHeaderProps) {
     const router = useRouter();
 
     const handleBack = () => {
@@ -36,7 +37,7 @@ export default function GlobalHeader({ title, subtitle, className = "", onBack, 
                 {(showBackButton || onBack) && (
                     <button
                         onClick={handleBack}
-                        className="mr-3 sm:mr-6 p-2 rounded-full hover:bg-[#181818] transition-colors flex-shrink-0"
+                        className={`mr-3 sm:mr-6 p-2 rounded-full hover:bg-[var(--app-card-hover)] transition-colors flex-shrink-0 ${backButtonClassName}`}
                     >
                         <ArrowLeftIcon className="w-5 h-5" style={{ color: "var(--app-body-text)" }} />
                     </button>

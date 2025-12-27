@@ -497,6 +497,33 @@ export default function UserProfilePage() {
     }
   };
 
+  const handleBlock = async () => {
+    if (!profile?.id) return;
+    const isBlocking = (profile as any).isBlocking;
+
+    if (isBlocking) {
+      if (confirm(`@${profile.username} engelini kaldırmak istiyor musunuz?`)) {
+        try {
+          await deleteApi(`/blocks?userId=${profile.id}`);
+          window.location.reload();
+        } catch (e) {
+          console.error("Engel kaldırılamadı:", e);
+          alert('Hata oluştu');
+        }
+      }
+    } else {
+      if (confirm(`@${profile.username} kişisini engellemek istiyor musunuz?`)) {
+        try {
+          await postApi('/blocks', { userId: profile.id });
+          window.location.reload();
+        } catch (e) {
+          console.error("Engellenemedi:", e);
+          alert('Hata oluştu');
+        }
+      }
+    }
+  };
+
   const LoadingContent = () => (
     <div className="flex items-center justify-center py-20">
       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1DCD9F]"></div>
@@ -576,12 +603,21 @@ export default function UserProfilePage() {
 
             <div className="flex items-center gap-2">
               {!isOwnProfile && (
-                <button
-                  onClick={() => router.push(`/messages?user=${profile!.username}`)}
-                  className="w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors"
-                >
-                  <IconMail className="w-5 h-5" />
-                </button>
+                <>
+                  <button
+                    onClick={() => router.push(`/messages?user=${profile!.username}`)}
+                    className="w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors"
+                  >
+                    <IconMail className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleBlock}
+                    className={`w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors ${(profile as any).isBlocking ? "text-red-500 border-red-500 bg-red-500/10" : ""}`}
+                    title={(profile as any).isBlocking ? "Engeli Kaldır" : "Engelle"}
+                  >
+                    <IconUserCancel className="w-5 h-5" />
+                  </button>
+                </>
               )}
               <button
                 onClick={() => isOwnProfile ? setIsEditModalOpen(true) : handleFollow()}
@@ -705,188 +741,234 @@ export default function UserProfilePage() {
         </div>
 
 
-        <div className="flex border-t border-theme-border">
-          <button
-            onClick={() => setActiveTab("posts")}
-            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "posts" ? "font-bold" : "text-theme-text"}`}
-            style={{ color: activeTab === "posts" ? "var(--app-global-link-color)" : undefined }}
-          >
-            Gönderiler
-            {activeTab === "posts" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("replies")}
-            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "replies" ? "font-bold" : "text-theme-text"}`}
-            style={{ color: activeTab === "replies" ? "var(--app-global-link-color)" : undefined }}
-          >
-            Yanıtlar
-            {activeTab === "replies" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("media")}
-            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "media" ? "font-bold" : "text-theme-text"}`}
-            style={{ color: activeTab === "media" ? "var(--app-global-link-color)" : undefined }}
-          >
-            Medya
-            {activeTab === "media" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("likes")}
-            className={`flex-1 py-4 text-center font-medium relative ${activeTab === "likes" ? "font-bold" : "text-theme-text"}`}
-            style={{ color: activeTab === "likes" ? "var(--app-global-link-color)" : undefined }}
-          >
-            Beğeniler
-            {activeTab === "likes" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
-            )}
-          </button>
+        {/* Tabs - Only show if NOT blocked */}
+        {!((profile as any).isBlocked || (profile as any).isBlocking) && (profile!.postsCount > 0 || isOwnProfile) && (
+          <div className="flex border-t border-theme-border mt-2">
+            <button
+              onClick={() => setActiveTab("posts")}
+              className={`flex-1 py-4 text-center font-medium relative ${activeTab === "posts" ? "font-bold" : "text-theme-text"}`}
+              style={{ color: activeTab === "posts" ? "var(--app-global-link-color)" : undefined }}
+            >
+              Gönderiler
+              {activeTab === "posts" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("replies")}
+              className={`flex-1 py-4 text-center font-medium relative ${activeTab === "replies" ? "font-bold" : "text-theme-text"}`}
+              style={{ color: activeTab === "replies" ? "var(--app-global-link-color)" : undefined }}
+            >
+              Yanıtlar
+              {activeTab === "replies" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("media")}
+              className={`flex-1 py-4 text-center font-medium relative ${activeTab === "media" ? "font-bold" : "text-theme-text"}`}
+              style={{ color: activeTab === "media" ? "var(--app-global-link-color)" : undefined }}
+            >
+              Medya
+              {activeTab === "media" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("likes")}
+              className={`flex-1 py-4 text-center font-medium relative ${activeTab === "likes" ? "font-bold" : "text-theme-text"}`}
+              style={{ color: activeTab === "likes" ? "var(--app-global-link-color)" : undefined }}
+            >
+              Beğeniler
+              {activeTab === "likes" && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full" style={{ backgroundColor: "var(--app-global-link-color)" }}></div>
+              )}
+            </button>
+          </div>
+        )}
+
+      </div>
+
+      {/* Blocked Content View */}
+      {((profile as any).isBlocked || (profile as any).isBlocking) && (
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center border-t border-theme-border">
+          <div className="bg-white/5 p-4 rounded-full mb-4">
+            <span className="text-3xl">🚫</span>
+          </div>
+          {(profile as any).isBlocked ? (
+            <>
+              <h3 className="text-xl font-bold mb-2" style={{ color: "var(--app-body-text)" }}>Bu kullanıcıyı engelledin</h3>
+              <p className="text-[15px] mb-6 max-w-md" style={{ color: "var(--app-subtitle)" }}>
+                Engellenen kullanıcıların gönderilerini göremezsin ve onlar da senin gönderilerini göremez.
+              </p>
+              <button
+                onClick={async () => {
+                  if (confirm(`@${profile!.username} engelini kaldırmak istiyor musunuz?`)) {
+                    try {
+                      await deleteApi(`/blocks?userId=${profile!.id}`);
+                      window.location.reload();
+                    } catch (e) {
+                      alert('Hata oluştu');
+                    }
+                  }
+                }}
+                className="px-6 py-2 bg-[#ff0000] text-white rounded-full font-bold hover:bg-[#d40000] transition-colors"
+              >
+                Engeli Kaldır
+              </button>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold mb-2" style={{ color: "var(--app-body-text)" }}>Bu kullanıcı seni engelledi</h3>
+              <p className="text-[15px] mb-6 max-w-md" style={{ color: "var(--app-subtitle)" }}>
+                Bu kullanıcının gönderilerini göremezsin.
+              </p>
+            </>
+          )}
         </div>
-      </div>
+      )}
 
-      <div className="overflow-hidden">
-        {activeTab === "posts" && (
-          <>
-            {posts.length > 0 ? (
-              <>
-                <PostList posts={posts} currentUserId={currentUser?.id} />
-                {postsHasMore && postsLoading && (
-                  <div className="flex justify-center py-4">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-                      <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+      {/* Normal Content (Only if NOT blocked) */}
+      {!((profile as any).isBlocked || (profile as any).isBlocking) && (
+        <div className="overflow-hidden">
+          {activeTab === "posts" && (
+            <>
+              {posts.length > 0 ? (
+                <>
+                  <PostList posts={posts} currentUserId={currentUser?.id} />
+                  {postsHasMore && postsLoading && (
+                    <div className="flex justify-center py-4">
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-sm text-gray-500">Daha fazla post yükleniyor...</p>
+                      </div>
                     </div>
-                  </div>
-                )}
-                {!postsHasMore && posts.length > 0 && (
-                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm postlar yüklendi</div>
-                )}
-              </>
-            ) : (
-              <div className="p-4">
-                <p style={{ color: "#6e767d" }}>Henuz gonderi yok.</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === "replies" && (
-          <>
-            {replyPosts.length > 0 ? (
-              <>
-                <div>
-                  {(() => {
-                    const threadGroups: { [key: string]: any[] } = {};
-                    const noThreadReplies: any[] = [];
-
-                    replyPosts.forEach((reply: any) => {
-                      if (reply.threadRoot) {
-                        const rootId = reply.threadRoot.id;
-                        if (!threadGroups[rootId]) {
-                          threadGroups[rootId] = [];
-                        }
-                        threadGroups[rootId].push(reply);
-                      } else {
-                        noThreadReplies.push(reply);
-                      }
-                    });
-
-                    const groupedPreviews = Object.values(threadGroups).sort((a: any[], b: any[]) => new Date(b[0].createdAt).getTime() - new Date(a[0].createdAt).getTime()).map((replies: any[]) => {
-                      const latestReply = replies[0];
-                      return (
-                        <ReplyThreadPreview
-                          key={latestReply.threadRoot.id}
-                          threadRoot={latestReply.threadRoot}
-                          userReply={latestReply}
-                          middlePostsCount={latestReply.middlePostsCount || 0}
-                          threadRepliesCount={latestReply.threadRepliesCount || 0}
-                        />
-                      );
-                    });
-
-                    return (
-                      <>
-                        {groupedPreviews}
-                        {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} currentUserId={currentUser?.id} />}
-                      </>
-                    );
-                  })()}
+                  )}
+                  {!postsHasMore && posts.length > 0 && (
+                    <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm postlar yüklendi</div>
+                  )}
+                </>
+              ) : (
+                <div className="p-4">
+                  <p style={{ color: "#6e767d" }}>Henuz gonderi yok.</p>
                 </div>
-                {repliesHasMore && repliesLoading && (
-                  <div className="flex justify-center py-4">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-                      <p className="mt-2 text-sm text-gray-500">Daha fazla yanıt yükleniyor...</p>
-                    </div>
-                  </div>
-                )}
-                {!repliesHasMore && replyPosts.length > 0 && (
-                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm yanıtlar yüklendi</div>
-                )}
-              </>
-            ) : (
-              <div className="p-4">
-                <p style={{ color: "#6e767d" }}>Henuz yanit yok.</p>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
 
-        {activeTab === "media" && (
-          <>
-            {mediaPosts.length > 0 ? (
-              <>
-                <PostList posts={mediaPosts} currentUserId={currentUser?.id} />
-                {mediaHasMore && mediaLoading && (
-                  <div className="flex justify-center py-4">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-                      <p className="mt-2 text-sm text-gray-500">Daha fazla medya yükleniyor...</p>
-                    </div>
-                  </div>
-                )}
-                {!mediaHasMore && mediaPosts.length > 0 && (
-                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm medya yüklendi</div>
-                )}
-              </>
-            ) : (
-              <div className="p-4">
-                <p style={{ color: "#6e767d" }}>Henuz medya paylasimi yok.</p>
-              </div>
-            )}
-          </>
-        )}
+          {activeTab === "replies" && (
+            <>
+              {replyPosts.length > 0 ? (
+                <>
+                  <div>
+                    {(() => {
+                      const threadGroups: { [key: string]: any[] } = {};
+                      const noThreadReplies: any[] = [];
 
-        {activeTab === "likes" && (
-          <>
-            {likedPosts.length > 0 ? (
-              <>
-                <PostList posts={likedPosts} currentUserId={currentUser?.id} />
-                {likesHasMore && likesLoading && (
-                  <div className="flex justify-center py-4">
-                    <div className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
-                      <p className="mt-2 text-sm text-gray-500">Daha fazla beğeni yükleniyor...</p>
-                    </div>
+                      replyPosts.forEach((reply: any) => {
+                        if (reply.threadRoot) {
+                          const rootId = reply.threadRoot.id;
+                          if (!threadGroups[rootId]) {
+                            threadGroups[rootId] = [];
+                          }
+                          threadGroups[rootId].push(reply);
+                        } else {
+                          noThreadReplies.push(reply);
+                        }
+                      });
+
+                      const groupedPreviews = Object.values(threadGroups).sort((a: any[], b: any[]) => new Date(b[0].createdAt).getTime() - new Date(a[0].createdAt).getTime()).map((replies: any[]) => {
+                        const latestReply = replies[0];
+                        return (
+                          <ReplyThreadPreview
+                            key={latestReply.threadRoot.id}
+                            threadRoot={latestReply.threadRoot}
+                            userReply={latestReply}
+                            middlePostsCount={latestReply.middlePostsCount || 0}
+                            threadRepliesCount={latestReply.threadRepliesCount || 0}
+                          />
+                        );
+                      });
+
+                      return (
+                        <>
+                          {groupedPreviews}
+                          {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} currentUserId={currentUser?.id} />}
+                        </>
+                      );
+                    })()}
                   </div>
-                )}
-                {!likesHasMore && likedPosts.length > 0 && (
-                  <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm beğeniler yüklendi</div>
-                )}
-              </>
-            ) : (
-              <div className="p-4">
-                <p style={{ color: "#6e767d" }}>Henuz begenilen gonderi yok.</p>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+                  {repliesHasMore && repliesLoading && (
+                    <div className="flex justify-center py-4">
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-sm text-gray-500">Daha fazla yanıt yükleniyor...</p>
+                      </div>
+                    </div>
+                  )}
+                  {!repliesHasMore && replyPosts.length > 0 && (
+                    <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm yanıtlar yüklendi</div>
+                  )}
+                </>
+              ) : (
+                <div className="p-4">
+                  <p style={{ color: "#6e767d" }}>Henuz yanit yok.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTab === "media" && (
+            <>
+              {mediaPosts.length > 0 ? (
+                <>
+                  <PostList posts={mediaPosts} currentUserId={currentUser?.id} />
+                  {mediaHasMore && mediaLoading && (
+                    <div className="flex justify-center py-4">
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-sm text-gray-500">Daha fazla medya yükleniyor...</p>
+                      </div>
+                    </div>
+                  )}
+                  {!mediaHasMore && mediaPosts.length > 0 && (
+                    <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm medya yüklendi</div>
+                  )}
+                </>
+              ) : (
+                <div className="p-4">
+                  <p style={{ color: "#6e767d" }}>Henuz medya paylasimi yok.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTab === "likes" && (
+            <>
+              {likedPosts.length > 0 ? (
+                <>
+                  <PostList posts={likedPosts} currentUserId={currentUser?.id} />
+                  {likesHasMore && likesLoading && (
+                    <div className="flex justify-center py-4">
+                      <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-sm text-gray-500">Daha fazla beğeni yükleniyor...</p>
+                      </div>
+                    </div>
+                  )}
+                  {!likesHasMore && likedPosts.length > 0 && (
+                    <div className="flex justify-center py-4 text-gray-500 text-sm">Tüm beğeniler yüklendi</div>
+                  )}
+                </>
+              ) : (
+                <div className="p-4">
+                  <p style={{ color: "#6e767d" }}>Henuz begenilen gonderi yok.</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </>
   );
 

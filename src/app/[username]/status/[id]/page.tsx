@@ -57,7 +57,17 @@ export default function PostDetailPage() {
     const [ancestors, setAncestors] = useState<EnrichedPost[]>([]);
     const heroRef = useRef<HTMLDivElement>(null);
     const timelineRef = useRef<HTMLElement>(null); // For listening to timeline scroll
-    const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+    const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem("userInfo");
+            try {
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isCommentBoxFocused, setIsCommentBoxFocused] = useState(false);
@@ -153,6 +163,40 @@ export default function PostDetailPage() {
         </div>
     );
 
+    const handlePostDeleted = (deletedPost: EnrichedPost) => {
+        // Eger silinen post bu sayfanin ana postu ise
+        if (deletedPost.id === post?.id) {
+            // Ana sayfaya veya bir onceki sayfaya yonlendir
+            router.push('/home');
+            return;
+        }
+
+        // Eger silinen bir yorum ise listeden cikar (recursive filter)
+        if (post) {
+            // Helper function to recursively remove logic
+            const removePostFromTree = (items: any[]): any[] => {
+                return items.filter(item => {
+                    if (item.id === deletedPost.id) return false;
+
+                    // PostWithReplies uses 'comments' for nested replies in this specific page architecture
+                    if (item.comments && item.comments.length > 0) {
+                        item.comments = removePostFromTree(item.comments);
+                    }
+                    // Some interfaces might use 'replies'
+                    if (item.replies && item.replies.length > 0) {
+                        item.replies = removePostFromTree(item.replies);
+                    }
+                    return true;
+                });
+            }
+
+            setPost({
+                ...post,
+                comments: removePostFromTree(post.comments)
+            });
+        }
+    };
+
     // Main Content Logic (Inlined to prevent Remounts)
     const postDetailContent = post ? (
         <>
@@ -169,6 +213,7 @@ export default function PostDetailPage() {
                             isThread={true}
                             showThreadFooter={false}
                             currentUserId={currentUser?.id}
+                            onPostDeleted={handlePostDeleted}
                         />
                     </div>
                 );
@@ -208,6 +253,7 @@ export default function PostDetailPage() {
                     isHero={true}
                     className="!border-b-0"
                     onCommentAdded={handleCommentAdded}
+                    onPostDeleted={handlePostDeleted}
                 />
             </div>
 
@@ -272,6 +318,7 @@ export default function PostDetailPage() {
                                             isThread={false}
                                             showThreadFooter={false}
                                             currentUserId={currentUser?.id}
+                                            onPostDeleted={handlePostDeleted}
                                         />
                                     </div>
                                     {/* Render nested replies recursively */}

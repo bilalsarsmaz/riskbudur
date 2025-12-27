@@ -45,6 +45,22 @@ export async function GET(req: NextRequest) {
     };
 
     // If timeline is "following", only show posts from followed users
+
+    // START BLOCK LOGIC
+    let excludedUserIds: string[] = [];
+    if (userId) {
+      const blocks = await prisma.block.findMany({
+        where: {
+          OR: [
+            { blockerId: userId },
+            { blockedId: userId }
+          ]
+        }
+      });
+      excludedUserIds = blocks.map(b => b.blockerId === userId ? b.blockedId : b.blockerId);
+    }
+    // END BLOCK LOGIC
+
     if (timeline === "following" && userId) {
       // Get list of followed user IDs
       const followedUsers = await prisma.follow.findMany({
@@ -59,11 +75,17 @@ export async function GET(req: NextRequest) {
       const followedUserIds = followedUsers.map(f => f.followingId);
 
       // Exclude user's own ID from the list (user shouldn't see their own posts in Following)
-      const filteredFollowedUserIds = followedUserIds.filter(id => id !== userId);
+      // AND exclude blocked users
+      const filteredFollowedUserIds = followedUserIds.filter(id => id !== userId && !excludedUserIds.includes(id));
 
       // Add author filter
       whereClause.authorId = {
         in: filteredFollowedUserIds
+      };
+    } else if (userId && excludedUserIds.length > 0) {
+      // Public feed but excluding blocked users
+      whereClause.authorId = {
+        notIn: excludedUserIds
       };
     }
 

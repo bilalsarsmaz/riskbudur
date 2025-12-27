@@ -45,9 +45,11 @@ export async function GET(
     }
 
 
-    // Token varsa takip durumunu kontrol et
+    // Token varsa takip ve blok durumunu kontrol et
     let isFollowing = false;
     let followsYou = false;
+    let isBlocked = false;   // Current user blocked this profile
+    let isBlocking = false;  // This profile blocked current user (Renaming to avoid confusion: blockedByTarget)
 
     const authHeader = req.headers.get("authorization");
     if (authHeader) {
@@ -57,12 +59,14 @@ export async function GET(
           const { verifyToken } = await import("@/lib/auth");
           const decoded: any = await verifyToken(token);
 
-          if (decoded) {
+          if (decoded && decoded.userId) {
+            const currentUserId = decoded.userId;
+
             // Oturum açan kullanıcının bu kişiyi takip edip etmediği
             const follow = await prisma.follow.findUnique({
               where: {
                 followerId_followingId: {
-                  followerId: decoded.userId,
+                  followerId: currentUserId,
                   followingId: user.id
                 }
               }
@@ -70,16 +74,58 @@ export async function GET(
             isFollowing = !!follow;
 
             // Bu kişinin oturum açan kullanıcıyı takip edip etmediği (Seni takip ediyor)
-            if (decoded.userId !== user.id) {
+            if (currentUserId !== user.id) {
               const followsYouResult = await prisma.follow.findUnique({
                 where: {
                   followerId_followingId: {
                     followerId: user.id,
-                    followingId: decoded.userId
+                    followingId: currentUserId
                   }
                 }
               });
               followsYou = !!followsYouResult;
+
+              // Check if current user blocked this profile
+              const block1 = await prisma.block.findUnique({
+                where: {
+                  blockerId_blockedId: {
+                    blockerId: currentUserId,
+                    blockedId: user.id
+                  }
+                }
+              });
+              isBlocked = !!block1;
+
+              // Check if this profile blocked current user
+              const block2 = await prisma.block.findUnique({
+                where: {
+                  blockerId_blockedId: {
+                    blockerId: user.id,
+                    blockedId: currentUserId
+                  }
+                }
+              });
+              isBlocking = !!block2;
+            }
+
+            // --- Record Profile Visit (Dikizleyenler) ---
+            if (currentUserId !== user.id) {
+              // Update or create visit record
+              await prisma.profileVisit.upsert({
+                where: {
+                  visitorId_visitedId: {
+                    visitorId: currentUserId,
+                    visitedId: user.id
+                  }
+                },
+                update: {
+                  visitedAt: new Date()
+                },
+                create: {
+                  visitorId: currentUserId,
+                  visitedId: user.id
+                }
+              });
             }
           }
         } catch (e) {
@@ -87,6 +133,29 @@ export async function GET(
         }
       }
     }
+
+    // Fetch recent visitors (Dikizleyenler)
+    // Only distinct users, ordered by visitedAt desc
+    const recentVisits = await prisma.profileVisit.findMany({
+      where: { visitedId: user.id },
+      orderBy: { visitedAt: 'desc' },
+      take: 10,
+      include: {
+        visitor: {
+          select: {
+            nickname: true,
+            fullName: true,
+            profileImage: true
+          }
+        }
+      }
+    });
+
+    const visitors = recentVisits.map(v => ({
+      nickname: v.visitor.nickname,
+      fullName: v.visitor.fullName,
+      profileImage: v.visitor.profileImage
+    }));
 
     const joinDate = new Date(user.createdAt || new Date()).toLocaleDateString('tr-TR', {
       year: 'numeric',
@@ -111,7 +180,10 @@ export async function GET(
       profileImage: user.profileImage,
       isFollowing,
       followsYou,
-      isBanned: user.isBanned
+      isBanned: user.isBanned,
+      isBlocked,
+      isBlocking,
+      visitors: visitors // Include visitors in response
     });
   } catch (error) {
     console.error("Kullanıcı bilgisi getirme hatası:", error);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hasPermission, Permission, Role } from "@/lib/permissions";
+import { verifyToken } from "@/lib/auth";
 
 export async function GET(
   req: Request,
@@ -8,6 +9,36 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
+
+    // Check for current user to filter blocked content
+    const authHeader = req.headers.get("Authorization");
+    let currentUserId: string | null = null;
+    let excludedUserIds: string[] = [];
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      const payload = await verifyToken(token);
+      if (payload) {
+        currentUserId = payload.userId;
+
+        const blocks = await prisma.block.findMany({
+          where: {
+            OR: [
+              { blockerId: currentUserId },
+              { blockedId: currentUserId },
+            ],
+          },
+          select: {
+            blockerId: true,
+            blockedId: true,
+          },
+        });
+
+        excludedUserIds = blocks.map((b) =>
+          b.blockerId === currentUserId ? b.blockedId : b.blockerId
+        );
+      }
+    }
 
     const post = await prisma.post.findUnique({
       where: { id: BigInt(id) },
@@ -57,15 +88,25 @@ export async function GET(
       );
     }
 
+    // Filter if main post is from blocked user
+    if (excludedUserIds.includes(post.author.id)) {
+      return NextResponse.json(
+        { message: "Post bulunamadi" },
+        { status: 404 }
+      );
+    }
+
     const threadRepliesCount = await prisma.post.count({
       where: {
         threadRootId: post.id,
+        authorId: { notIn: excludedUserIds }
       },
     });
 
     const directReplies = await prisma.post.findMany({
       where: {
-        parentPostId: BigInt(id)
+        parentPostId: BigInt(id),
+        authorId: { notIn: excludedUserIds }
       },
       orderBy: { createdAt: "asc" },
       include: {
@@ -91,7 +132,10 @@ export async function GET(
 
     const fetchNestedReplies = async (parentId: bigint): Promise<any[]> => {
       const replies = await prisma.post.findMany({
-        where: { parentPostId: parentId },
+        where: {
+          parentPostId: parentId,
+          authorId: { notIn: excludedUserIds }
+        },
         orderBy: { createdAt: "asc" },
         include: {
           author: {
@@ -194,21 +238,25 @@ export async function GET(
       linkPreview: post.linkPreview,
       author: post.author,
       comments: allReplies,
-      parentPost: post.parentPost ? {
-        id: post.parentPost.id.toString(),
-        content: post.parentPost.content,
-        author: post.parentPost.author,
-      } : null,
-      quotedPost: quote && quote.quotedPost ? {
-        id: quote.quotedPost.id.toString(),
-        content: quote.quotedPost.content,
-        createdAt: quote.quotedPost.createdAt,
-        imageUrl: quote.quotedPost.imageUrl,
-        mediaUrl: quote.quotedPost.mediaUrl,
-        linkPreview: quote.quotedPost.linkPreview,
-        isAnonymous: quote.quotedPost.isAnonymous,
-        author: quote.quotedPost.author,
-      } : null,
+      parentPost: post.parentPost ? (
+        (!excludedUserIds.includes(post.parentPost.author.id)) ? {
+          id: post.parentPost.id.toString(),
+          content: post.parentPost.content,
+          author: post.parentPost.author,
+        } : null
+      ) : null,
+      quotedPost: quote && quote.quotedPost ? (
+        (!excludedUserIds.includes(quote.quotedPost.author.id)) ? {
+          id: quote.quotedPost.id.toString(),
+          content: quote.quotedPost.content,
+          createdAt: quote.quotedPost.createdAt,
+          imageUrl: quote.quotedPost.imageUrl,
+          mediaUrl: quote.quotedPost.mediaUrl,
+          linkPreview: quote.quotedPost.linkPreview,
+          isAnonymous: quote.quotedPost.isAnonymous,
+          author: quote.quotedPost.author,
+        } : null
+      ) : null,
       _count: {
         likes: post._count.likes,
         comments: post._count.replies,

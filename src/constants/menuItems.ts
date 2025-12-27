@@ -26,6 +26,16 @@ export interface MenuItem {
 
 export const menuItems: MenuItem[] = [
     {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: IconHomeCog,
+        iconFilled: IconHomeCog,
+        href: "/admincp",
+        hasFilled: false,
+        showInMobile: false, // Not in bottom nav, but in drawer
+        isAdmin: true,
+    },
+    {
         id: "home",
         label: "Ana Sayfa",
         icon: IconHome,
@@ -72,7 +82,7 @@ export const menuItems: MenuItem[] = [
     },
     {
         id: "bookmarks",
-        label: "Kaydedilenler",
+        label: "Çivilenenler",
         icon: IconTargetArrow,
         iconFilled: IconTargetArrow,
         href: "/i/bookmarks",
@@ -87,15 +97,5 @@ export const menuItems: MenuItem[] = [
         href: (nickname?: string) => nickname ? `/${nickname}` : "/profile",
         hasFilled: true,
         showInMobile: false, // Removed from bottom nav
-    },
-    {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: IconHomeCog,
-        iconFilled: IconHomeCog,
-        href: "/admincp",
-        hasFilled: false,
-        showInMobile: false, // Not in bottom nav, but in drawer
-        isAdmin: true,
     },
 ];
