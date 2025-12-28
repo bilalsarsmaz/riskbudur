@@ -454,7 +454,7 @@ export async function POST(req: NextRequest) {
             }
           }
         } : undefined,
-        isCensored: shouldCensorContent(content.trim()),
+        isCensored: (decoded.isBanned || shouldCensorContent(content.trim())),
       },
       include: {
         author: {

@@ -75,6 +75,7 @@ export async function POST(req: Request) {
         linkPreview: linkPreview || undefined,
         imageUrl: imageUrl || null,
         mediaUrl: mediaUrl || null,
+        isCensored: (decoded.isBanned || false), // Banned users' replies are auto-censored
       },
       include: {
         author: {

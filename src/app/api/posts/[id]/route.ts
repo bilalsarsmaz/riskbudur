@@ -52,6 +52,7 @@ export async function GET(
             fullName: true,
             profileImage: true,
             role: true,
+            isBanned: true,
           },
         },
         parentPost: {
@@ -63,6 +64,7 @@ export async function GET(
                 fullName: true,
                 verificationTier: true,
                 role: true,
+                isBanned: true,
               }
             }
           }
@@ -119,6 +121,7 @@ export async function GET(
             profileImage: true,
             fullName: true,
             role: true,
+            isBanned: true,
           },
         },
         _count: {
@@ -147,6 +150,7 @@ export async function GET(
               profileImage: true,
               fullName: true,
               role: true,
+              isBanned: true,
             },
           },
           _count: {
@@ -221,6 +225,7 @@ export async function GET(
                 fullName: true,
                 profileImage: true,
                 role: true,
+                isBanned: true,
               },
             },
           },
