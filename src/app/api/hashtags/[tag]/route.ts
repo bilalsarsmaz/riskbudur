@@ -40,12 +40,9 @@ export async function GET(
                 verificationTier: true,
                 profileImage: true,
                 role: true,
-                profileImage: true,
-                role: true,
                 isBanned: true,
               },
             },
-            linkPreview: true,
             _count: {
               select: {
                 likes: true,
