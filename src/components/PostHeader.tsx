@@ -11,17 +11,20 @@ import {
     IconUserMinus,
     IconBan,
     IconFlag,
-    IconAlertTriangleFilled
+    IconAlertTriangleFilled,
+    IconTrashX
 } from "@tabler/icons-react";
 import { useState, useRef, useEffect } from "react";
 import { EnrichedPost } from "@/types/post";
 import { formatCustomDate } from "@/utils/date";
 import VerificationBadge from "./VerificationBadge";
 import AdminBadge from "./AdminBadge";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 interface PostHeaderProps {
     post: EnrichedPost;
     currentUserId?: string;
+    currentUserRole?: string;
     isAnonymous: boolean;
     isFollowing: boolean;
     onFollowToggle: () => void;
@@ -37,6 +40,7 @@ interface PostHeaderProps {
 export default function PostHeader({
     post,
     currentUserId,
+    currentUserRole,
     isAnonymous,
     isFollowing,
     onFollowToggle,
@@ -195,6 +199,15 @@ export default function PostHeader({
                             </>
                         ) : (
                             <>
+                                {currentUserId && currentUserRole && post.author.id !== currentUserId && hasPermission(currentUserRole as Role, Permission.DELETE_USER_POST) && (
+                                    <button
+                                        onClick={() => handleMenuAction(onDelete)}
+                                        className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors border-b border-theme-border"
+                                    >
+                                        <IconTrashX className="w-5 h-5 mr-3" />
+                                        Gönderiyi sil
+                                    </button>
+                                )}
                                 {!isAnonymous && (
                                     <>
                                         <button

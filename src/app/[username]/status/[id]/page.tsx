@@ -31,6 +31,7 @@ interface CurrentUser {
     id: string;
     nickname: string;
     profileImage?: string;
+    role?: string;
 }
 
 // Tum yanitlari duz liste haline getir (nested'i flatten et)
@@ -213,6 +214,7 @@ export default function PostDetailPage() {
                             isThread={true}
                             showThreadFooter={false}
                             currentUserId={currentUser?.id}
+                            currentUserRole={currentUser?.role}
                             onPostDeleted={handlePostDeleted}
                         />
                     </div>
@@ -250,6 +252,7 @@ export default function PostDetailPage() {
                     isThread={isThread || ancestors.length > 0}
                     showThreadFooter={false}
                     currentUserId={currentUser?.id}
+                    currentUserRole={currentUser?.role}
                     isHero={true}
                     className="!border-b-0"
                     onCommentAdded={handleCommentAdded}
@@ -318,6 +321,7 @@ export default function PostDetailPage() {
                                             isThread={false}
                                             showThreadFooter={false}
                                             currentUserId={currentUser?.id}
+                                            currentUserRole={currentUser?.role}
                                             onPostDeleted={handlePostDeleted}
                                         />
                                     </div>

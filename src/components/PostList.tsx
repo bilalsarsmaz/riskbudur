@@ -6,11 +6,12 @@ import { EnrichedPost } from "@/types/post";
 interface PostListProps {
   posts: EnrichedPost[];
   currentUserId?: string;
+  currentUserRole?: string;
   onPostDeleted?: (post: EnrichedPost) => void;
   onPostCreated?: (post: EnrichedPost) => void;
 }
 
-export default function PostList({ posts, currentUserId, onPostDeleted, onPostCreated }: PostListProps) {
+export default function PostList({ posts, currentUserId, currentUserRole, onPostDeleted, onPostCreated }: PostListProps) {
   if (posts.length === 0) {
     return (
       <div className="p-8 text-center">
@@ -22,12 +23,14 @@ export default function PostList({ posts, currentUserId, onPostDeleted, onPostCr
 
   return (
     <div className="w-full">
+
       {posts.map((post, index) => (
         <PostItem
           key={post.id}
           post={post}
           isFirst={index === 0}
           currentUserId={currentUserId}
+          currentUserRole={currentUserRole}
           onPostDeleted={onPostDeleted}
           onPostCreated={onPostCreated}
           isThread={post.isThread || false}

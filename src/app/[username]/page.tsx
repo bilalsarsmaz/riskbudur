@@ -22,10 +22,12 @@ import {
   IconArrowUp,
   IconRosetteDiscountCheckFilled,
   IconUserCancel,
-  IconMail
+  IconMail,
+  IconUserCog
 } from "@tabler/icons-react";
 // import DirectMessageModal from "@/components/DirectMessageModal";
 import { fetchApi, postApi, deleteApi } from "@/lib/api";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 import PostList from "@/components/PostList";
 import { EnrichedPost } from "@/types/post";
 import ReplyThreadPreview from "@/components/ReplyThreadPreview";
@@ -642,6 +644,17 @@ export default function UserProfilePage() {
                     : "Kovala"
                 }
               </button>
+
+              {/* Admin Edit Button for other users */}
+              {!isOwnProfile && currentUser && hasPermission(currentUser.role as Role, Permission.MANAGE_USER_FULLNAME) && (
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors ml-2"
+                  title="Kullanıcıyı Düzenle (Admin)"
+                >
+                  <IconUserCog className="w-5 h-5" style={{ color: 'var(--app-body-text)' }} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -727,7 +740,7 @@ export default function UserProfilePage() {
                           {visitor.profileImage ? (
                             <img src={visitor.profileImage} alt={visitor.nickname} className="w-full h-full object-cover" />) : (
                             <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                              <span className="text-sm font-bold text-gray-400">{visitor.nickname[0].toUpperCase()}</span>
+                              <span className="text-sm font-bold text-gray-400">{visitor?.nickname?.[0]?.toUpperCase() || "?"}</span>
                             </div>
                           )}
                         </div>
@@ -835,7 +848,8 @@ export default function UserProfilePage() {
             <>
               {posts.length > 0 ? (
                 <>
-                  <PostList posts={posts} currentUserId={currentUser?.id} />
+
+                  <PostList posts={posts} currentUserId={currentUser?.id} currentUserRole={currentUser?.role} />
                   {postsHasMore && postsLoading && (
                     <div className="flex justify-center py-4">
                       <div className="text-center">
@@ -893,7 +907,7 @@ export default function UserProfilePage() {
                       return (
                         <>
                           {groupedPreviews}
-                          {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} currentUserId={currentUser?.id} />}
+                          {noThreadReplies.length > 0 && <PostList posts={noThreadReplies} currentUserId={currentUser?.id} currentUserRole={currentUser?.role} />}
                         </>
                       );
                     })()}
@@ -922,7 +936,7 @@ export default function UserProfilePage() {
             <>
               {mediaPosts.length > 0 ? (
                 <>
-                  <PostList posts={mediaPosts} currentUserId={currentUser?.id} />
+                  <PostList posts={mediaPosts} currentUserId={currentUser?.id} currentUserRole={currentUser?.role} />
                   {mediaHasMore && mediaLoading && (
                     <div className="flex justify-center py-4">
                       <div className="text-center">
@@ -947,7 +961,7 @@ export default function UserProfilePage() {
             <>
               {likedPosts.length > 0 ? (
                 <>
-                  <PostList posts={likedPosts} currentUserId={currentUser?.id} />
+                  <PostList posts={likedPosts} currentUserId={currentUser?.id} currentUserRole={currentUser?.role} />
                   {likesHasMore && likesLoading && (
                     <div className="flex justify-center py-4">
                       <div className="text-center">
@@ -1024,7 +1038,8 @@ export default function UserProfilePage() {
         <ProfileContent />
       </StandardPageLayout>
 
-      {isOwnProfile && profile && (
+      {/* Modal condition: Own Profile OR Admin with Permission */}
+      {(isOwnProfile || (currentUser && hasPermission(currentUser.role as Role, Permission.MANAGE_USER_FULLNAME))) && profile && (
         <EditProfileModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
@@ -1032,10 +1047,12 @@ export default function UserProfilePage() {
             fullName: profile.fullName,
             bio: profile.bio || "",
             website: profile.website || "",
+            // location: profile.location, // Location not in Profile interface currently in this file, ignoring
             profileImage: profile.profileImage,
             coverImage: profile.coverImage,
           }}
           onProfileUpdated={handleProfileUpdated}
+          targetUserId={!isOwnProfile ? profile.id : undefined}
         />
       )}
 

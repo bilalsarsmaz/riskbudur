@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EnrichedPost } from "@/types/post";
 import { postApi, deleteApi } from "@/lib/api";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 import MinimalCommentModal from "./MinimalCommentModal";
 import QuoteModal from "./QuoteModal";
 import PostHeader from "./PostHeader";
@@ -28,6 +29,7 @@ import {
   IconPlayerPlay,
   IconLibraryPlusFilled,
   IconTrash,
+  IconTrashX,
   IconChartBar,
   IconCode,
   IconUserPlus,
@@ -41,6 +43,7 @@ interface PostItemProps {
   post: EnrichedPost;
   isFirst?: boolean;
   currentUserId?: string;
+  currentUserRole?: string;
   onPostDeleted?: (post: EnrichedPost) => void;
   onPostCreated?: (post: EnrichedPost) => void;
   onCommentAdded?: (comment: any) => void;
@@ -58,6 +61,7 @@ export default function PostItem({
   post,
   isFirst = false,
   currentUserId,
+  currentUserRole,
   onPostDeleted,
   onPostCreated,
   onCommentAdded,
@@ -284,9 +288,12 @@ export default function PostItem({
   };
 
   const handleDelete = async () => {
+    console.log("Delete requested for post:", post.id);
     if (confirm("Bu gönderiyi silmek istediğinize emin misiniz?")) {
       try {
+        console.log("Sending delete request...");
         await deleteApi(`/posts/${post.id}`);
+        console.log("Delete successful");
         if (onPostDeleted) {
           onPostDeleted(post);
         }
@@ -629,6 +636,18 @@ export default function PostItem({
                     </>
                   ) : (
                     <>
+                      {/* Debug Log for Admin Button */}
+
+
+                      {currentUserId && currentUserRole && post.author.id !== currentUserId && hasPermission(currentUserRole as Role, Permission.DELETE_USER_POST) && (
+                        <button
+                          onClick={() => { handleDelete(); setHeaderMenuOpen(false); }}
+                          className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors border-b border-theme-border"
+                        >
+                          <IconTrashX className="w-5 h-5 mr-3" />
+                          Gönderiyi sil
+                        </button>
+                      )}
                       {!isAnonymous && (
                         <>
                           <button
@@ -1074,6 +1093,7 @@ export default function PostItem({
             <PostHeader
               post={post}
               currentUserId={currentUserId}
+              currentUserRole={currentUserRole}
               isAnonymous={isAnonymous}
               isFollowing={isFollowing}
               onFollowToggle={handleFollowToggle}

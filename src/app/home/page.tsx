@@ -26,6 +26,7 @@ export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTimeline, setActiveTimeline] = useState<TimelineType>("all");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [newPostCount, setNewPostCount] = useState(0);
   const [isMobileComposeOpen, setIsMobileComposeOpen] = useState(false);
   const loadingRef = useRef(false);
@@ -46,6 +47,9 @@ export default function HomePage() {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.userId) {
         setCurrentUserId(payload.userId);
+      }
+      if (payload.role) {
+        setCurrentUserRole(payload.role);
       }
     } catch (e) {
       console.error("Token parse hatası:", e);
@@ -244,9 +248,11 @@ export default function HomePage() {
           </div>
         ) : (
           <>
+
             <PostList
               posts={posts}
               currentUserId={currentUserId || undefined}
+              currentUserRole={(currentUserRole as any) || undefined}
               onPostDeleted={(deletedPost) => {
                 setPosts(prevPosts => {
                   const filtered = prevPosts.filter(p => p.id !== deletedPost.id);

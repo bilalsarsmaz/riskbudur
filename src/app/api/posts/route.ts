@@ -340,7 +340,14 @@ export async function GET(req: NextRequest) {
       return basePost;
     }));
 
-    return NextResponse.json(formattedPosts);
+    return NextResponse.json(formattedPosts, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
   } catch (error) {
     console.error("Posts fetch error:", error);
     return NextResponse.json({ error: "Posts yuklenirken hata olustu", details: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined }, { status: 500 });

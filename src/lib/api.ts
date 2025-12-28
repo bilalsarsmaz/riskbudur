@@ -36,7 +36,17 @@ export const fetchApi = async (endpoint: string) => {
         // Auto-logout on 401 (Unauthorized / Banned)
         localStorage.removeItem('token');
         document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-        window.location.href = '/login';
+
+        // Redirect to login ONLY if we are on a protected route
+        // We shouldn't redirect if the user is already on a public page (landing, login, register)
+        const currentPath = window.location.pathname;
+        const publicPaths = ['/', '/login', '/register', '/riskbudur']; // Added /riskbudur just in case, though it's likely a user profile
+
+        // Simple check: if path is NOT in publicPaths, redirect
+        // We use exact match for these. 
+        if (!publicPaths.includes(currentPath)) {
+          window.location.href = '/login';
+        }
         return; // Stop execution
       }
       throw new Error(`API hatası: ${response.status}`);
@@ -69,7 +79,13 @@ export const postApi = async <T>(endpoint: string, data: Record<string, unknown>
       if (response.status === 401 && typeof window !== 'undefined') {
         localStorage.removeItem('token');
         document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-        window.location.href = '/login';
+
+        const currentPath = window.location.pathname;
+        const publicPaths = ['/', '/login', '/register'];
+
+        if (!publicPaths.includes(currentPath)) {
+          window.location.href = '/login';
+        }
         return null as any;
       }
       const errorData = await response.json().catch(() => ({}));

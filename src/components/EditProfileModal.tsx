@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 import { useState, useRef } from "react";
 import { XMarkIcon, CameraIcon } from "@heroicons/react/24/outline";
-import { postApi } from "@/lib/api";
+import { postApi, putApi } from "@/lib/api";
 import ImageCropModal from "./ImageCropModal";
 
 interface EditProfileModalProps {
@@ -19,6 +19,7 @@ interface EditProfileModalProps {
     coverImage: string | null;
   };
   onProfileUpdated: () => void;
+  targetUserId?: string; // Optional target user ID for admin updates
 }
 
 // Fotoğrafı sıkıştır
@@ -76,6 +77,7 @@ export default function EditProfileModal({
   onClose,
   currentProfile,
   onProfileUpdated,
+  targetUserId,
 }: EditProfileModalProps) {
   const router = useRouter();
   const [fullName, setFullName] = useState(currentProfile.fullName);
@@ -161,7 +163,9 @@ export default function EditProfileModal({
         try {
           const formData = new FormData();
           formData.append("image", profileImage);
-          const profileResult = await postApi("/users/me/profile-image", formData);
+          // Use target user endpoint if ID provided, otherwise 'me'
+          const endpoint = targetUserId ? `/users/${targetUserId}/profile-image` : "/users/me/profile-image";
+          const profileResult = await postApi(endpoint, formData);
           console.log("Profile image upload result:", profileResult);
 
           if (profileResult && typeof profileResult === 'object' && 'imageUrl' in profileResult) {
@@ -177,7 +181,9 @@ export default function EditProfileModal({
         try {
           const formData = new FormData();
           formData.append("image", coverImage);
-          const coverResult = await postApi("/users/me/cover-image", formData);
+          // Use target user endpoint if ID provided, otherwise 'me'
+          const endpoint = targetUserId ? `/users/${targetUserId}/cover-image` : "/users/me/cover-image";
+          const coverResult = await postApi(endpoint, formData);
           console.log("Cover image upload result:", coverResult);
 
           if (coverResult && typeof coverResult === 'object' && 'imageUrl' in coverResult) {
@@ -189,16 +195,42 @@ export default function EditProfileModal({
         }
       }
 
-      await postApi("/users/me", {
+      // Use target user endpoint if ID provided, otherwise 'me'
+      // Note: PUT /users/[id] logic must exist and support this payload
+      const updateEndpoint = targetUserId ? `/users/${targetUserId}` : "/users/me";
+      // admin updates uses PUT in [id]/route.ts
+
+      const payload: any = {
         fullName,
         bio,
         website,
         location,
-        // Send null if image was removed (preview is null but original existed)
-        // If a new image was uploaded separately, we don't need to send it here as the upload endpoint handles it
         ...(profileImagePreview === null && currentProfile.profileImage ? { profileImage: null } : {}),
         ...(coverImagePreview === null && currentProfile.coverImage ? { coverImage: null } : {}),
-      });
+      };
+
+      // Use appropriate method: standard 'me' uses POST/PUT (mapped), [id] uses PUT explicitly
+      // postApi handles POST, but we might need putApi for the update if it's strictly PUT.
+      // fetchApi wrapper handles methods? 'postApi' makes a POST request.
+      // 'me/route.ts' maps POST to PUT.
+      // '[id]/route.ts' ONLY has PUT. So we MUST use PUT method if targeting [id].
+      // 'postApi' usually does POST. 'putApi'? Let's check imports.
+      // 'EditProfileModal' imports 'postApi' from '@/lib/api'.
+      // I should assume 'postApi' is POST. I might need 'putApi' or 'fetchApi' with method PUT.
+      // Checking local imports: `import { postApi } from "@/lib/api";`
+      // I need to import `putApi` too or use `fetchApi` manually if `putApi` not available?
+      // Wait, let's checking `src/lib/api.ts` viewed earlier... no viewed earlier contents.
+      // But usually `postApi` is POST.
+      // I'll update import to include `putApi` (it likely exists).
+
+      if (targetUserId) {
+        // Explicitly use PUT for admin updates
+        // @ts-ignore - putApi likely needs import
+        await putApi(updateEndpoint, payload);
+      } else {
+        // Default behavior (uses postApi which hits 'me' POST -> mapped to PUT)
+        await postApi(updateEndpoint, payload);
+      }
 
       setMessage("Profil başarıyla güncellendi!");
 

@@ -14,6 +14,12 @@ export default function BanChecker() {
                 return;
             }
 
+            // Don't check on public paths
+            const pathname = window.location.pathname;
+            if (['/', '/login', '/register'].includes(pathname)) {
+                return;
+            }
+
             try {
                 await fetchApi('/auth/status');
             } catch (error) {
