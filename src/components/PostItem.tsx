@@ -875,6 +875,12 @@ export default function PostItem({
                             src={thumbnail || ''}
                             alt={post.linkPreview.title}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (videoId && !target.src.includes('hqdefault')) {
+                                target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                              }
+                            }}
                           />
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="bg-[var(--app-global-link-color)] rounded-full p-2">
