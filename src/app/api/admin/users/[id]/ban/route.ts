@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyAdmin } from "@/lib/adminAuth";
 import { hasPermission, Permission, canManageRole, Role } from "@/lib/permissions";
+import { shouldCensorContent } from "@/lib/moderation";
 
 export async function POST(
   request: Request,
@@ -36,9 +37,18 @@ export async function POST(
     }
 
     // Kullanıcıyı banla
-    await prisma.user.update({
-      where: { id: targetUserId },
-      data: { isBanned: true }
+    await prisma.$transaction(async (tx) => {
+      // 1. Kullanıcıyı banla
+      await tx.user.update({
+        where: { id: targetUserId },
+        data: { isBanned: true }
+      });
+
+      // 2. Kullanıcının tüm postlarını sansürle
+      await tx.post.updateMany({
+        where: { authorId: targetUserId },
+        data: { isCensored: true }
+      });
     });
 
     return NextResponse.json({ success: true });
@@ -86,10 +96,42 @@ export async function DELETE(
       return NextResponse.json({ error: "Yetkisiz işlem: Yetkiniz yetersiz." }, { status: 403 });
     }
 
-    // Banı kaldır
-    await prisma.user.update({
-      where: { id: targetUserId },
-      data: { isBanned: false }
+    await prisma.$transaction(async (tx) => {
+      // 1. Banı kaldır
+      await tx.user.update({
+        where: { id: targetUserId },
+        data: { isBanned: false }
+      });
+
+      // 2. Postların sansürünü akıllıca kaldır
+      // Önce sansürlü postları çek
+      const censoredPosts = await tx.post.findMany({
+        where: {
+          authorId: targetUserId,
+          isCensored: true
+        },
+        select: { id: true, content: true }
+      });
+
+      // Hangi postların açılması gerektiğine karar ver
+      const postsToUncensorIds: bigint[] = [];
+
+      for (const post of censoredPosts) {
+        // Eğer içerik politik küfür vs. içermiyorsa sansürünü kaldır
+        if (!shouldCensorContent(post.content)) {
+          postsToUncensorIds.push(post.id);
+        }
+      }
+
+      // Toplu güncelleme ile güvenli postları aç
+      if (postsToUncensorIds.length > 0) {
+        await tx.post.updateMany({
+          where: {
+            id: { in: postsToUncensorIds }
+          },
+          data: { isCensored: false }
+        });
+      }
     });
 
     return NextResponse.json({ success: true });

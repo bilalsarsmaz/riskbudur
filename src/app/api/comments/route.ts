@@ -85,6 +85,7 @@ export async function POST(req: Request) {
             hasBlueTick: true,
             verificationTier: true,
             profileImage: true,
+            isBanned: true,
           },
         },
         parentPost: {
