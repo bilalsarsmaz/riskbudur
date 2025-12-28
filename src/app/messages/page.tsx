@@ -33,9 +33,27 @@ function MessagesContent() {
 
     // Load user info
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "/login";
+            return;
+        }
+
         const storedUser = localStorage.getItem("userInfo");
         if (storedUser) {
             setCurrentUser(JSON.parse(storedUser));
+        } else {
+            // Fallback: fetch user from API if not in localStorage
+            fetchApi("/users/me")
+                .then((user) => {
+                    setCurrentUser(user);
+                    localStorage.setItem("userInfo", JSON.stringify(user));
+                })
+                .catch(() => {
+                    // Start loading conversations anyway to trigger failure/redirect if needed
+                    // Or set loading false to show error
+                    setLoading(false);
+                });
         }
     }, []);
 
@@ -50,21 +68,37 @@ function MessagesContent() {
             .catch(console.error);
     }, [userParam, currentUser]);
 
+    // Fetch target user if userParam exists
+    useEffect(() => {
+        if (!userParam) return; // Removed currentUser dependency to allow parallel fetching
+
+        fetchApi(`/users/${userParam}`)
+            .then((data: any) => {
+                setTargetUser(data);
+            })
+            .catch(console.error);
+    }, [userParam]);
+
     // Fetch conversations
     const refreshConversations = async () => {
-        if (!currentUser) return;
+        // If we don't have a user yet, we can't really fetch specific conversations logically
+        // BUT the API infers user from token. So we CAN fetch conversations even if currentUser state is null.
+        // However, the UI needs currentUser.id.
+
         try {
             const data = await fetchApi("/conversations");
             setConversations(data.conversations || []);
-            setLoading(false);
         } catch (error) {
             console.error("Failed to refresh conversations", error);
+        } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        refreshConversations();
+        if (currentUser || localStorage.getItem("token")) {
+            refreshConversations();
+        }
     }, [currentUser]);
 
     // Fetch messages when conversation is selected
