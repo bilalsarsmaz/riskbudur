@@ -40,9 +40,12 @@ export async function GET(
                 verificationTier: true,
                 profileImage: true,
                 role: true,
+                profileImage: true,
+                role: true,
                 isBanned: true,
-              }
+              },
             },
+            linkPreview: true,
             _count: {
               select: {
                 likes: true,
@@ -81,6 +84,7 @@ export async function GET(
       id: post.id.toString(),
       content: post.content,
       mediaUrl: post.mediaUrl,
+      linkPreview: post.linkPreview,
       createdAt: post.createdAt.toISOString(),
       isAnonymous: post.isAnonymous,
       isLiked: post.likes && post.likes.length > 0,
