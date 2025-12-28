@@ -39,7 +39,13 @@ export default function MobileBottomNav() {
 
   // Map menu items for mobile (only items with showInMobile=true)
   const navItems = baseMenuItems
-    .filter(item => item.showInMobile)
+    .filter(item => {
+      if (!item.showInMobile) return false;
+      if (item.isAdmin) {
+        return ['MODERATOR', 'LEAD', 'ADMIN', 'ROOTADMIN'].includes(userInfo?.role);
+      }
+      return true;
+    })
     .map(item => ({
       href: typeof item.href === 'function' ? item.href(userInfo?.nickname) : item.href,
       icon: item.icon,

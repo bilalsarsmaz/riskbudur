@@ -89,24 +89,26 @@ export default function AdminSidebar() {
       label: "Kullanıcılar",
       icon: IconUserSearch,
       href: "/admincp/users",
-      // Moderator+ can access users to ban/edit basics.
-      // We assume basic admin access implies viewing users.
-      // Matrix didn't restrict viewing users explicitly, only "View Moderators" logic.
-      visible: true
+      // Visible to anyone who can manage users or ban them (Moderator+)
+      visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_USER_FULLNAME) ||
+        hasPermission(userInfo?.role as Role, Permission.BAN_USER)
     },
     {
       id: "posts",
       label: "Gönderiler",
       icon: IconMessage2Search,
       href: "/admincp/posts",
-      visible: true // Or check permission if needed
+      // Visible to anyone who can delete posts (Moderator+)
+      visible: hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
     },
     {
       id: "reports",
       label: "Şikayetler",
       icon: IconMessageReport,
       href: "/admincp/reports",
-      visible: true // Moderators need this
+      // Visible to anyone who deals with user content (Moderator+)
+      visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER) ||
+        hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
     },
     {
       id: "approve-users",
@@ -141,7 +143,8 @@ export default function AdminSidebar() {
       label: "Ayarlar",
       icon: IconSettings,
       href: "/admincp/settings",
-      visible: true
+      // Settings usually implies high-level site config (Admin+)
+      visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
     },
     {
       id: "back-to-platform",
