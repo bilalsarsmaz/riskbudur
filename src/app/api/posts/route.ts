@@ -267,6 +267,7 @@ export async function GET(req: NextRequest) {
                   verificationTier: true,
                   role: true,
                   isBanned: true,
+                  isBanned: true,
                 },
               },
             },
