@@ -6,6 +6,7 @@ export interface Author {
     hasBlueTick: boolean;
     verificationTier?: 'NONE' | 'GREEN' | 'GOLD' | 'GRAY';
     role?: string;
+    isBanned?: boolean;
 }
 
 export interface LinkPreview {

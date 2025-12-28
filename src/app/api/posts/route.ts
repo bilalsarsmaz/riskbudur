@@ -106,6 +106,7 @@ export async function GET(req: NextRequest) {
             hasBlueTick: true,
             verificationTier: true,
             role: true,
+            isBanned: true,
           },
         },
         _count: {
@@ -126,6 +127,7 @@ export async function GET(req: NextRequest) {
                 id: true,
                 nickname: true,
                 role: true,
+                isBanned: true,
                 isBanned: true,
               },
             },
@@ -266,6 +268,7 @@ export async function GET(req: NextRequest) {
                   hasBlueTick: true,
                   verificationTier: true,
                   role: true,
+                  isBanned: true,
                   isBanned: true,
                 },
               },
@@ -465,6 +468,7 @@ export async function POST(req: NextRequest) {
             hasBlueTick: true,
             verificationTier: true,
             role: true,
+            isBanned: true,
           },
         },
         _count: {
