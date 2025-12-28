@@ -704,9 +704,21 @@ export default function PostItem({
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm block" style={{ color: "var(--app-subtitle)" }}>
-                    Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
-                  </span>
+                  <>
+                    {/* @ts-ignore */}
+                    {(post.author && (post.author as any).isBanned) ? (
+                      <div className="text-center py-6 px-4 bg-red-900/10 rounded-xl border border-red-900/30">
+                        <h3 className="text-lg font-bold text-red-500 mb-2">Bu hesap sınır dışı edildi!</h3>
+                        <p className="text-sm text-[var(--app-subtitle)]">
+                          Kurallara uymadığı için RiskBudur Özel Tim'i tarafından yaka paça sınır dışı edildi.
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-sm block" style={{ color: "var(--app-subtitle)" }}>
+                        Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
+                      </span>
+                    )}
+                  </>
                 )
               ) : (
                 parseContent(post.content)

@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 export async function verifyToken(token: string) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    return decoded as { userId: string; email: string; role: string };
+    return decoded as { userId: string; email: string; role: string; isBanned?: boolean };
   } catch {
     return null;
   }
