@@ -40,6 +40,7 @@ export async function GET(
                 verificationTier: true,
                 profileImage: true,
                 role: true,
+                isBanned: true,
               }
             },
             _count: {
@@ -84,6 +85,7 @@ export async function GET(
       isAnonymous: post.isAnonymous,
       isLiked: post.likes && post.likes.length > 0,
       isBookmarked: post.bookmarks && post.bookmarks.length > 0,
+      isCensored: (post as any).isCensored || false,
       author: {
         id: post.author.id,
         nickname: post.author.nickname,
@@ -92,6 +94,7 @@ export async function GET(
         verificationTier: post.author.verificationTier,
         profileImage: post.author.profileImage,
         role: post.author.role,
+        isBanned: (post.author as any).isBanned,
       },
       _count: {
         likes: post._count.likes,
