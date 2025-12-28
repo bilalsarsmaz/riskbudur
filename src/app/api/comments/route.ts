@@ -138,6 +138,7 @@ export async function POST(req: Request) {
       isLiked: false,
       imageUrl: reply.imageUrl,
       mediaUrl: reply.mediaUrl,
+      linkPreview: reply.linkPreview,
     };
 
     return NextResponse.json(formattedReply, { status: 201 });
