@@ -213,14 +213,6 @@ export default function HomePage() {
         </Suspense>
         <AnnouncementBanner />
 
-        {/* Desktop ComposeBox */}
-        <div className="hidden lg:block">
-          <ComposeBox
-            onPostCreated={handlePostCreated}
-            className="border-t-0"
-          />
-        </div>
-
         <TimelineTabs
           activeTab={activeTimeline}
           onTabChange={(tab: TimelineType) => {
@@ -230,6 +222,14 @@ export default function HomePage() {
             loadPosts(0, true);
           }}
         />
+
+        {/* Desktop ComposeBox */}
+        <div className="hidden lg:block">
+          <ComposeBox
+            onPostCreated={handlePostCreated}
+            className="border-t-0"
+          />
+        </div>
 
         {newPostCount > 0 && (
           <div
