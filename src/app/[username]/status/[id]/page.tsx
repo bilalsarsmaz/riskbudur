@@ -306,6 +306,18 @@ export default function PostDetailPage() {
                             }
                         }
 
+                        // Also check ancestors (thread history) if available
+                        // Since we are in the detail page, 'ancestors' state holds the thread history.
+                        if (ancestors && ancestors.length > 0) {
+                            ancestors.forEach(ancestor => {
+                                if (ancestor.author) mentions.add(ancestor.author.nickname);
+                                if (ancestor.content) {
+                                    const matches = ancestor.content.match(/@([a-zA-Z0-9_]+)/g);
+                                    if (matches) matches.forEach(m => mentions.add(m.substring(1)));
+                                }
+                            });
+                        }
+
                         let recipients = Array.from(mentions);
                         // Ensure main author is first
                         if (post.author) {

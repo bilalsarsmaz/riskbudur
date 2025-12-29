@@ -28,16 +28,18 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
       setThreadLineHeight(`${containerHeight - 40}px`);
     }
 
-    // Fetch parent post to find implicit mentions if we are replying to a reply
+    // Fetch parent post (and potentially root post) to find implicit mentions
     const fetchParentPost = async () => {
       if (post.parentPostId && isOpen) {
         try {
+          // 1. Fetch immediate parent
           const parentPost = await fetchApi(`/posts/${post.parentPostId}`) as EnrichedPost;
+
           if (parentPost) {
             setAdditionalRecipients(prev => {
               const newRecipients = new Set(prev);
 
-              // Add parent author
+              // Add parent author (author of the post we are replying to)
               if (parentPost.author) {
                 newRecipients.add(parentPost.author.nickname);
               }
@@ -53,6 +55,29 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
 
               return Array.from(newRecipients);
             });
+
+            // 2. recursive check: if parent is ALSO a reply, fetch ITS parent (or thread root)
+            // This covers the case: Root (Mentions A, B) -> Reply 1 (No mentions) -> Reply 2 (You are here)
+            // Reply 1 has no mentions, so we miss A and B unless we go up.
+            if (parentPost.parentPostId || parentPost.threadRootId) {
+              const rootId = parentPost.threadRootId || parentPost.parentPostId;
+              if (rootId && rootId !== parentPost.id) {
+                const rootPost = await fetchApi(`/posts/${rootId}`) as EnrichedPost;
+                if (rootPost) {
+                  setAdditionalRecipients(prev => {
+                    const newRecipients = new Set(prev);
+                    // Add root author
+                    if (rootPost.author) newRecipients.add(rootPost.author.nickname);
+                    // Add root content mentions
+                    if (rootPost.content) {
+                      const matches = rootPost.content.match(/@([a-zA-Z0-9_]+)/g);
+                      if (matches) matches.forEach(m => newRecipients.add(m.substring(1)));
+                    }
+                    return Array.from(newRecipients);
+                  });
+                }
+              }
+            }
           }
         } catch (error) {
           console.error("Parent post fetch error:", error);
