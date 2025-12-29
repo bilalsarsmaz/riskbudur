@@ -20,6 +20,7 @@ import GlobalHeader from "@/components/GlobalHeader";
 import VerificationBadge from "@/components/VerificationBadge";
 import PostItem from "@/components/PostItem";
 import StandardPageLayout from "@/components/StandardPageLayout";
+import { parseContent } from "@/utils/text";
 
 interface Actor {
     id: string;
@@ -334,7 +335,7 @@ export default function Notifications() {
                                 actionText = group.post?.parentPostId ? 'yanıtını beğendi' : 'gönderini beğendi';
                                 contentBody = group.post?.content ? (
                                     <div className="text-[15px] text-theme-subtitle mt-0.5 max-w-full line-clamp-2">
-                                        {group.post.content}
+                                        {parseContent(group.post.content, undefined, { disablePostLinks: true })}
                                     </div>
                                 ) : null;
                                 break;
