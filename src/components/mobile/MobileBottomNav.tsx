@@ -15,6 +15,28 @@ export default function MobileBottomNav() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
+  const fetchNotificationCount = async () => {
+    try {
+      const res = await fetchApi("/notifications/count");
+      if (res && typeof res.count === 'number') {
+        setNotificationCount(res.count);
+      }
+    } catch (error) {
+      console.error("Bildirim sayısı alınamadı:", error);
+    }
+  };
+
+  const fetchUnreadMessagesCount = async () => {
+    try {
+      const res = await fetchApi("/conversations/unread-count");
+      if (res && typeof res.count === 'number') {
+        setUnreadMessagesCount(res.count);
+      }
+    } catch (error) {
+      console.error("Okunmamış mesaj sayısı alınamadı:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -36,28 +58,6 @@ export default function MobileBottomNav() {
       }
     };
 
-    const fetchNotificationCount = async () => {
-      try {
-        const res = await fetchApi("/notifications/count");
-        if (res && typeof res.count === 'number') {
-          setNotificationCount(res.count);
-        }
-      } catch (error) {
-        console.error("Bildirim sayısı alınamadı:", error);
-      }
-    };
-
-    const fetchUnreadMessagesCount = async () => {
-      try {
-        const res = await fetchApi("/conversations/unread-count");
-        if (res && typeof res.count === 'number') {
-          setUnreadMessagesCount(res.count);
-        }
-      } catch (error) {
-        console.error("Okunmamış mesaj sayısı alınamadı:", error);
-      }
-    };
-
     fetchUserData();
     fetchNotificationCount();
     fetchUnreadMessagesCount();
@@ -73,16 +73,21 @@ export default function MobileBottomNav() {
 
   useEffect(() => {
     const handleMessagesRead = () => {
-      fetchApi("/conversations/unread-count")
-        .then(res => {
-          if (res && typeof res.count === 'number') {
-            setUnreadMessagesCount(res.count);
-          }
-        })
-        .catch(console.error);
+      fetchUnreadMessagesCount();
     };
+
+    const handleFocus = () => {
+      fetchNotificationCount();
+      fetchUnreadMessagesCount();
+    };
+
     window.addEventListener('messagesRead', handleMessagesRead);
-    return () => window.removeEventListener('messagesRead', handleMessagesRead);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('messagesRead', handleMessagesRead);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Map menu items for mobile (only items with showInMobile=true)
