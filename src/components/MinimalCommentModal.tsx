@@ -33,12 +33,25 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
       if (post.parentPostId && isOpen) {
         try {
           const parentPost = await fetchApi(`/posts/${post.parentPostId}`) as EnrichedPost;
-          if (parentPost && parentPost.author) {
+          if (parentPost) {
             setAdditionalRecipients(prev => {
-              if (!prev.includes(parentPost.author.nickname)) {
-                return [...prev, parentPost.author.nickname];
+              const newRecipients = new Set(prev);
+
+              // Add parent author
+              if (parentPost.author) {
+                newRecipients.add(parentPost.author.nickname);
               }
-              return prev;
+
+              // Add mentions found in parent post content
+              if (parentPost.content) {
+                const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+                const matches = parentPost.content.match(mentionRegex);
+                if (matches) {
+                  matches.forEach(match => newRecipients.add(match.substring(1)));
+                }
+              }
+
+              return Array.from(newRecipients);
             });
           }
         } catch (error) {
