@@ -88,24 +88,20 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
     // Convert to array
     let recipients = Array.from(mentions);
 
+    // Ensure the main author is first
+    recipients = recipients.filter(r => r !== post.author.nickname);
+    recipients.unshift(post.author.nickname);
+
     if (recipients.length === 0) return "";
 
     if (recipients.length === 1) {
       return <span className="text-sm text-gray-500">@{recipients[0]} adlı kullanıcıya yanıt olarak</span>;
     }
 
-    if (recipients.length === 2) {
-      return (
-        <span className="text-sm text-gray-500">
-          <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> ve <span className="text-[var(--app-global-link-color)]">@{recipients[1]}</span> adlı kullanıcılara yanıt olarak
-        </span>
-      );
-    }
-
-    // More than 2
+    // More than 1 recipients
     return (
       <span className="text-sm text-gray-500">
-        <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> ve diğer <span className="text-[var(--app-global-link-color)]">{recipients.length - 1} kişiye</span> yanıt olarak
+        <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> ve diğer kullanıcılara yanıt olarak
       </span>
     );
   };
