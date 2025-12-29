@@ -12,6 +12,8 @@ export default function MobileBottomNav() {
   const router = useRouter();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [isMobileComposeOpen, setIsMobileComposeOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -34,7 +36,53 @@ export default function MobileBottomNav() {
       }
     };
 
+    const fetchNotificationCount = async () => {
+      try {
+        const res = await fetchApi("/notifications/count");
+        if (res && typeof res.count === 'number') {
+          setNotificationCount(res.count);
+        }
+      } catch (error) {
+        console.error("Bildirim sayısı alınamadı:", error);
+      }
+    };
+
+    const fetchUnreadMessagesCount = async () => {
+      try {
+        const res = await fetchApi("/conversations/unread-count");
+        if (res && typeof res.count === 'number') {
+          setUnreadMessagesCount(res.count);
+        }
+      } catch (error) {
+        console.error("Okunmamış mesaj sayısı alınamadı:", error);
+      }
+    };
+
     fetchUserData();
+    fetchNotificationCount();
+    fetchUnreadMessagesCount();
+
+    // Polling interval
+    const interval = setInterval(() => {
+      fetchNotificationCount();
+      fetchUnreadMessagesCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleMessagesRead = () => {
+      fetchApi("/conversations/unread-count")
+        .then(res => {
+          if (res && typeof res.count === 'number') {
+            setUnreadMessagesCount(res.count);
+          }
+        })
+        .catch(console.error);
+    };
+    window.addEventListener('messagesRead', handleMessagesRead);
+    return () => window.removeEventListener('messagesRead', handleMessagesRead);
   }, []);
 
   // Map menu items for mobile (only items with showInMobile=true)
@@ -82,10 +130,22 @@ export default function MobileBottomNav() {
                 key={item.href}
                 href={item.href}
                 onClick={(e) => handleItemClick(e, item.id)}
-                className="flex flex-col items-center justify-center flex-1 h-full hover:bg-[#151515] transition-colors"
+                className="flex flex-col items-center justify-center flex-1 h-full hover:bg-[#151515] transition-colors relative"
                 aria-label={item.label}
               >
-                <IconComponent className={`nav-icon ${active ? "active" : ""}`} size={24} stroke={1.8} />
+                <div className="relative">
+                  <IconComponent className={`nav-icon ${active ? "active" : ""}`} size={24} stroke={1.8} />
+                  {item.id === 'notifications' && notificationCount > 0 && (
+                    <div className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center bg-[var(--app-global-link-color)] text-black text-[10px] font-bold rounded-full border border-theme-bg">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </div>
+                  )}
+                  {item.id === 'messages' && unreadMessagesCount > 0 && (
+                    <div className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center bg-[var(--app-global-link-color)] text-black text-[10px] font-bold rounded-full border border-theme-bg">
+                      {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                    </div>
+                  )}
+                </div>
               </Link>
             );
           })}
