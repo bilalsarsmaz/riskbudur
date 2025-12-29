@@ -292,6 +292,46 @@ export default function PostDetailPage() {
                 </div>
             ) : (
                 <div className="p-4 border-b border-theme-border bg-theme-bg">
+                    {(() => {
+                        if (!post) return null;
+
+                        const mentions = new Set<string>();
+                        if (post.author) mentions.add(post.author.nickname);
+
+                        if (post.content) {
+                            const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+                            const matches = post.content.match(mentionRegex);
+                            if (matches) {
+                                matches.forEach(match => mentions.add(match.substring(1)));
+                            }
+                        }
+
+                        let recipients = Array.from(mentions);
+                        // Ensure main author is first
+                        if (post.author) {
+                            recipients = recipients.filter(r => r !== post.author.nickname);
+                            recipients.unshift(post.author.nickname);
+                        }
+
+                        if (recipients.length === 0) return null;
+
+                        let text;
+                        if (recipients.length === 1) {
+                            text = <span className="text-sm text-gray-500">@{recipients[0]} adlı kullanıcıya yanıt olarak</span>;
+                        } else {
+                            text = (
+                                <span className="text-sm text-gray-500">
+                                    <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> ve diğer kullanıcılara yanıt olarak
+                                </span>
+                            );
+                        }
+
+                        return (
+                            <div className="mb-2 ml-[52px]">
+                                {text}
+                            </div>
+                        );
+                    })()}
                     <CommentComposeBox
                         postId={postId}
                         onCommentAdded={handleCommentAdded}
