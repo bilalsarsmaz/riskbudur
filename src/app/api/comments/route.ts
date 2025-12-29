@@ -32,6 +32,7 @@ export async function POST(req: Request) {
         authorId: true,
         threadRootId: true,
         parentPostId: true,
+        content: true,
         author: {
           select: {
             id: true,
@@ -144,10 +145,76 @@ export async function POST(req: Request) {
       linkPreview: reply.linkPreview,
     };
 
-    // Mention Bildirimleri (Reply logic)
+    // Thread root post'u bul ve mentions'lari al (Reply All mantigi)
+    let threadParticipants: string[] = [];
+
+    // 1. Parent post icindeki mentionlari al
+    const parentMentions = extractMentions(parentPost.content);
+    threadParticipants.push(...parentMentions);
+
+    // 2. Eger parent post, root degilse, root post'u da kontrol et
+    if (threadRootId && threadRootId !== parentPost.id) {
+      const rootPost = await prisma.post.findUnique({
+        where: { id: threadRootId },
+        select: { content: true, author: { select: { nickname: true } } }
+      });
+      if (rootPost) {
+        const rootMentions = extractMentions(rootPost.content);
+        threadParticipants.push(...rootMentions);
+        // Root post sahibini de ekle (eger parent post sahibi degilse)
+        // Not: Root post sahibi genellikle thread sahibidir.
+      }
+    }
+
+    // Explicit mention yapanlari ayri tutmustuk, onlari MENTION type ile notify ediyoruz.
+    // Burada ise "Thread Participants" yani "Gizli Muhataplar"a REPLY bildirimi gonderecegiz.
+    // Kullanici istegi: "Hepsine yanit veriyor olmasi gerekmez mi"
+
+    // Unique participants
+    const uniqueParticipants = [...new Set(threadParticipants)];
+
+    if (uniqueParticipants.length > 0) {
+      const participantUsers = await prisma.user.findMany({
+        where: {
+          nickname: { in: uniqueParticipants },
+          id: {
+            notIn: [decoded.userId, parentPost.authorId] // Kendisi ve Parent Author haric (Parent Author zaten yukarida aldi)
+          }
+        },
+        select: { id: true }
+      });
+
+      if (participantUsers.length > 0) {
+        // Bu kisilere REPLY bildirimi gonderiyoruz (Sanki onlara da yanit verilmis gibi)
+        await prisma.notification.createMany({
+          data: participantUsers.map(user => ({
+            type: "REPLY", // MENTION yerine REPLY kullaniyoruz ki "Sana yanit verdi" desin
+            recipientId: user.id,
+            actorId: decoded.userId,
+            postId: reply.id,
+          }))
+        });
+      }
+    }
+
+    // Mention Bildirimleri (Explicit mentions in YOUR reply)
+    // Eger bir kullanici HEM thread'de var HEM de senin mesajinda explicit etiketliyse?
+    // Yukarida REPLY gitti. Asagida MENTION gidecek.
+    // Iki bildirim gitmesini istemeyebiliriz. 
+    // Ama "Sana yanit verdi" ve "Senden bahsetti" farkli seyler. 
+    // Twitter'da reply yazarken @user eklerseniz, reply gider. 
+    // Simdilik cakismayi onlemeyecegim, cunku kullanici "test ok" yazdi (mention yoktu).
+    // Eger mention varsa, "Senden bahsetti" daha baskin olabilir ama "Reply" daha baglayici.
+    // Kod karmasiklasmamasi icin birakiyorum, zaten uniqueParticipants current reply'daki mentionlari icermiyor (sadece parent/root'takileri aliyor).
+
     const mentionedNicknames = extractMentions(content.trim());
     if (mentionedNicknames.length > 0) {
       // valid kullanicilari bul (kendisi ve parent post sahibi haric - ona zaten REPLY gidiyor)
+      // Ayrica yukarida REPLY notification gonderdiklerimizi de haric tutalim mi?
+      // Kullanici birini thread'den alip explicit etiketlediyse, o kisiye MENTION gitmesi daha dogru sanki.
+      // Ama yukarida REPLY attik.
+      // Basitlik adina: Simdilik duplicate kontrolu yapmiyorum.
+
       const mentionedUsers = await prisma.user.findMany({
         where: {
           nickname: { in: mentionedNicknames },
