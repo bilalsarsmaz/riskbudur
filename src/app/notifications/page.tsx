@@ -194,7 +194,9 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
 
 export default function Notifications() {
     const router = useRouter();
+    const [notifications, setNotifications] = useState<GroupedNotification[]>([]);
     const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(true);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
 
