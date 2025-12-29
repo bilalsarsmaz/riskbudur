@@ -304,7 +304,7 @@ export default function Notifications() {
                                 icon = <IconHeartFilled className="w-7 h-7 text-[#F91880]" />;
                                 actionText = group.post?.parentPostId ? 'yanıtını beğendi' : 'gönderini beğendi';
                                 contentBody = group.post?.content ? (
-                                    <div className="text-[15px] text-theme-subtitle mt-0.5 max-w-full truncate">
+                                    <div className="text-[15px] text-theme-subtitle mt-0.5 max-w-full line-clamp-2">
                                         {group.post.content}
                                     </div>
                                 ) : null;
