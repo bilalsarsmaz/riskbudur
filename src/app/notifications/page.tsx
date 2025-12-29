@@ -194,38 +194,65 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
 
 export default function Notifications() {
     const router = useRouter();
-    const [notifications, setNotifications] = useState<GroupedNotification[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const fetchNotifications = async (pageNum: number) => {
+        try {
+            if (pageNum === 1) setLoading(true);
+            else setLoadingMore(true);
+
+            const token = localStorage.getItem("token");
+            if (!token) {
+                router.push("/");
+                return;
+            }
+
+            const res = await fetch(`/api/notifications?page=${pageNum}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const newNotifications = groupNotifications(data.notifications);
+
+                if (data.notifications.length === 0) {
+                    setHasMore(false);
+                } else {
+                    setNotifications(prev => pageNum === 1 ? newNotifications : [...prev, ...newNotifications]);
+                    setHasMore(true);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
 
     useEffect(() => {
-        console.log("Notification Page Loaded - Grouping Fix Active");
-        const fetchNotifications = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                if (!token) {
-                    router.push("/");
-                    return;
-                }
+        fetchNotifications(1);
+    }, []);
 
-                const res = await fetch("/api/notifications?page=1", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+    // Scroll handler for infinite loading
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !loading && !loadingMore && hasMore) {
+                setPage(prev => {
+                    const nextPage = prev + 1;
+                    fetchNotifications(nextPage);
+                    return nextPage;
                 });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    setNotifications(groupNotifications(data.notifications));
-                }
-            } catch (error) {
-                console.error("Error fetching notifications:", error);
-            } finally {
-                setLoading(false);
             }
         };
 
-        fetchNotifications();
-    }, [router]);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loading, loadingMore, hasMore]);
 
     const formatDate = (dateString: string) => {
         return formatDistanceToNowStrict(new Date(dateString), { addSuffix: true, locale: tr });
