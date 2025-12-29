@@ -40,6 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             createdAt: true,
             authorId: true,
             parentPostId: true,
+            threadRootId: true,
             author: {
                 select: {
                     id: true,
@@ -178,7 +179,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                     expiresAt: post.poll.expiresAt,
                     totalVotes: post.poll.options.reduce((acc: number, curr: any) => acc + curr.voteCount, 0),
                     isVoted: post.poll.votes?.length > 0
-                } : null
+                } : null,
+                parentPostId: post.parentPostId ? post.parentPostId.toString() : null,
+                threadRootId: post.threadRootId ? post.threadRootId.toString() : null,
             };
         };
 
