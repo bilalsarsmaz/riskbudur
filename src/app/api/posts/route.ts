@@ -4,21 +4,8 @@ import jwt from "jsonwebtoken";
 import { verifyTokenAndUpdateActivity } from "@/lib/auth";
 import { shouldCensorContent } from "@/lib/moderation";
 
-// Hashtag'leri cikar
-function extractHashtags(content: string): string[] {
-  const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
-  const matches = content.match(hashtagRegex);
-  if (!matches) return [];
-  return [...new Set(matches.map(tag => tag.slice(1).toLowerCase()))];
-}
+import { extractHashtags, extractMentions } from "@/lib/textUtils";
 
-// Mention'lari cikar
-function extractMentions(content: string): string[] {
-  const mentionRegex = /@[\w_]+/g;
-  const matches = content.match(mentionRegex);
-  if (!matches) return [];
-  return [...new Set(matches.map(tag => tag.slice(1)))];
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -511,6 +498,31 @@ export async function POST(req: NextRequest) {
           isAnonymous: isAnonymous || false
         }
       });
+    }
+
+    // Mention Bildirimleri
+    const mentionedNicknames = extractMentions(content.trim());
+    if (mentionedNicknames.length > 0) {
+      // Gecerli kullanicilari bul
+      const mentionedUsers = await prisma.user.findMany({
+        where: {
+          nickname: { in: mentionedNicknames },
+          id: { not: userId } // Kendini etiketleyenlere bildirim gitmesin
+        },
+        select: { id: true }
+      });
+
+      // Her biri icin bildirim olustur
+      if (mentionedUsers.length > 0) {
+        await prisma.notification.createMany({
+          data: mentionedUsers.map(user => ({
+            type: "MENTION",
+            recipientId: user.id,
+            actorId: userId,
+            postId: post.id,
+          }))
+        });
+      }
     }
 
     // BigInt serialization icin

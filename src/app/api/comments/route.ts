@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyTokenAndUpdateActivity } from "@/lib/auth";
+import { extractMentions } from "@/lib/textUtils";
 
 // Yeni yanit (reply) ekle - artik Post olarak kaydediliyor
 export async function POST(req: Request) {
@@ -142,6 +143,30 @@ export async function POST(req: Request) {
       mediaUrl: reply.mediaUrl,
       linkPreview: reply.linkPreview,
     };
+
+    // Mention Bildirimleri (Reply logic)
+    const mentionedNicknames = extractMentions(content.trim());
+    if (mentionedNicknames.length > 0) {
+      // valid kullanicilari bul (kendisi ve parent post sahibi haric - ona zaten REPLY gidiyor)
+      const mentionedUsers = await prisma.user.findMany({
+        where: {
+          nickname: { in: mentionedNicknames },
+          id: { notIn: [decoded.userId, parentPost.authorId] }
+        },
+        select: { id: true }
+      });
+
+      if (mentionedUsers.length > 0) {
+        await prisma.notification.createMany({
+          data: mentionedUsers.map(user => ({
+            type: "MENTION",
+            recipientId: user.id,
+            actorId: decoded.userId,
+            postId: reply.id,
+          }))
+        });
+      }
+    }
 
     return NextResponse.json(formattedReply, { status: 201 });
   } catch (error) {
