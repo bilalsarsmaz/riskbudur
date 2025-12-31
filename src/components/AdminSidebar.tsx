@@ -10,7 +10,6 @@ import {
   IconUserSearch,
   IconMessage2Search,
   IconMessageReport,
-  IconRosetteDiscountCheckFilled,
   IconRosetteDiscountCheck,
   IconSitemap,
   IconSettings,
@@ -22,11 +21,29 @@ import {
   IconSun,
   IconMoon,
   IconSunFilled,
-  IconMoonFilled
+  IconMoonFilled,
+  IconUsersGroup, // User requested
+  IconTimelineEventText, // User requested
+  IconWorldCog, // User requested (if exists, otherwise fallback to IconWorld or similar, but trusting user)
+  IconChevronDown,
+  IconChevronRight,
+  IconBan,
+  IconVocabulary,
+  IconEyeOff,
+  IconServer
 } from "@tabler/icons-react";
 import VerificationBadge from "@/components/VerificationBadge";
 import AdminBadge from "@/components/AdminBadge";
 import { hasPermission, Permission, Role } from "@/lib/permissions";
+
+interface MenuItem {
+  id: string;
+  label: string;
+  icon?: any;
+  href?: string;
+  visible: boolean;
+  children?: MenuItem[];
+}
 
 export default function AdminSidebar() {
   const router = useRouter();
@@ -34,6 +51,11 @@ export default function AdminSidebar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    'user-management': true,
+    'content-moderation': true,
+    'system-technical': true
+  });
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -55,6 +77,13 @@ export default function AdminSidebar() {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -69,7 +98,7 @@ export default function AdminSidebar() {
     fetchUserData();
   }, []);
 
-  const menuItems = [
+  const menuStructure: MenuItem[] = [
     {
       id: "dashboard",
       label: "Dashboard",
@@ -78,72 +107,112 @@ export default function AdminSidebar() {
       visible: true
     },
     {
-      id: "announcements",
-      label: "Duyurular",
-      icon: IconSpeakerphone,
-      href: "/admincp/announcements",
-      visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
+      id: "user-management",
+      label: "Kullanıcı Yönetimi",
+      icon: IconUsersGroup,
+      visible: true,
+      children: [
+        {
+          id: "users-list",
+          label: "Kullanıcı Listesi",
+          href: "/admincp/users",
+          visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_USER_FULLNAME) || hasPermission(userInfo?.role as Role, Permission.BAN_USER)
+        },
+        {
+          id: "approve-users",
+          label: "Üye Onay Havuzu",
+          href: "/admincp/approveuser",
+          visible: hasPermission(userInfo?.role as Role, Permission.APPROVE_USER)
+        },
+        {
+          id: "badges",
+          label: "Rozet Talepleri",
+          href: "/admincp/badges",
+          visible: hasPermission(userInfo?.role as Role, Permission.GRANT_BADGES)
+        },
+        {
+          id: "bans",
+          label: "Cezalı Hesaplar",
+          href: "/admincp/bans",
+          visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER)
+        },
+        {
+          id: "multi-accounts",
+          label: "Multi-Hesap Kontrolü",
+          href: "/admincp/multi-accounts",
+          visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER)
+        }
+      ]
     },
     {
-      id: "users",
-      label: "Kullanıcılar",
-      icon: IconUserSearch,
-      href: "/admincp/users",
-      // Visible to anyone who can manage users or ban them (Moderator+)
-      visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_USER_FULLNAME) ||
-        hasPermission(userInfo?.role as Role, Permission.BAN_USER)
+      id: "content-moderation",
+      label: "İçerik Yönetimi", // Changed from plan to match user request "İçerik Yönetimi"
+      icon: IconTimelineEventText,
+      visible: true,
+      children: [
+        {
+          id: "posts",
+          label: "Gönderi Yönetimi",
+          href: "/admincp/posts",
+          visible: hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
+        },
+        {
+          id: "reports",
+          label: "Şikayetler",
+          href: "/admincp/reports",
+          visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER) || hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
+        },
+        {
+          id: "sensitive",
+          label: "Hassas İçerik",
+          href: "/admincp/sensitive-content",
+          visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS) // Placeholder permission
+        },
+        {
+          id: "filter",
+          label: "Sözlük & Filtre",
+          href: "/admincp/filter",
+          visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS) // Placeholder permission
+        }
+      ]
     },
     {
-      id: "posts",
-      label: "Gönderiler",
-      icon: IconMessage2Search,
-      href: "/admincp/posts",
-      // Visible to anyone who can delete posts (Moderator+)
-      visible: hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
-    },
-    {
-      id: "reports",
-      label: "Şikayetler",
-      icon: IconMessageReport,
-      href: "/admincp/reports",
-      // Visible to anyone who deals with user content (Moderator+)
-      visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER) ||
-        hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
-    },
-    {
-      id: "approve-users",
-      label: "Üyeleri Onayla",
-      icon: IconUserCheck,
-      href: "/admincp/approveuser",
-      visible: hasPermission(userInfo?.role as Role, Permission.APPROVE_USER)
-    },
-    {
-      id: "badges",
-      label: "Rozet Talepleri",
-      icon: IconRosetteDiscountCheck,
-      href: "/admincp/badges",
-      visible: hasPermission(userInfo?.role as Role, Permission.GRANT_BADGES)
-    },
-    {
-      id: "ghost-message",
-      label: "Ghost Mesaj",
-      icon: IconMailSpark,
-      href: "/admincp/ghostmessage",
-      visible: hasPermission(userInfo?.role as Role, Permission.GHOST_MESSAGE)
-    },
-    {
-      id: "pages",
-      label: "Sayfalar",
-      icon: IconSitemap,
-      href: "/admincp/pages",
-      visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
+      id: "system-technical",
+      label: "Sistem Yönetimi", // Changed from plan to match user request "Sistem Yönetimi"
+      icon: IconWorldCog,
+      visible: true,
+      children: [
+        {
+          id: "status",
+          label: "Sunucu Durumu",
+          href: "/admincp/status",
+          visible: true
+        },
+        {
+          id: "announcements",
+          label: "Duyuru Yönetimi",
+          href: "/admincp/announcements",
+          visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
+        },
+        {
+          id: "pages",
+          label: "Sayfa Yönetimi",
+          href: "/admincp/pages",
+          visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
+        },
+        {
+          id: "ghost-message",
+          label: "Ghost Mesaj",
+          href: "/admincp/ghostmessage",
+          visible: hasPermission(userInfo?.role as Role, Permission.GHOST_MESSAGE)
+        }
+      ]
     },
     {
       id: "settings",
       label: "Ayarlar",
       icon: IconSettings,
       href: "/admincp/settings",
-      // Settings usually implies high-level site config (Admin+)
       visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
     },
     {
@@ -165,7 +234,7 @@ export default function AdminSidebar() {
   const activeMenuId = pathname === "/admincp" ? "dashboard" : pathname.split("/")[2] || "";
 
   return (
-    <div className="px-2 lg:px-4 pb-4 sticky top-0 flex flex-col h-screen overflow-y-auto">
+    <div className="px-2 lg:px-4 pb-4 sticky top-0 flex flex-col h-screen overflow-y-auto w-[280px]">
       <div className="flex-1">
         <div className="mb-6 px-2">
           <Link href="/admincp" className="flex items-start justify-center xl:justify-start py-2 xl:pr-2 xl:pl-0">
@@ -182,25 +251,77 @@ export default function AdminSidebar() {
         </div>
 
         <nav className="space-y-1">
-          {menuItems.filter(item => item.visible).map((item) => {
+          {menuStructure.map((item) => {
+            if (!item.visible) return null;
+            if (item.children && item.children.filter(c => c.visible).length === 0) return null; // Hide empty groups
+
             const Icon = item.icon;
-            const isActive = activeMenuId === item.id;
+            // For simple links
+            if (!item.children) {
+              const isActive = item.href === "/admincp"
+                ? pathname === "/admincp"
+                : pathname.startsWith(item.href || "");
+
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href || "#"}
+                  className={`flex items-center px-3 py-3 rounded-xl transition-all w-fit xl:w-full mb-1 group hover:bg-[#1A1A1A] ${isActive ? "bg-[#1A1A1A]" : ""}`}
+                >
+                  <div className="relative flex items-center w-full">
+                    {Icon && <Icon className={`w-[22px] h-[22px] mr-3 ${isActive ? "text-[#f97316]" : "text-gray-400 group-hover:text-gray-200"}`} stroke={2} />}
+                    <span className={`hidden xl:block text-[15px] ${isActive ? "font-bold text-white" : "font-medium text-gray-400 group-hover:text-gray-200"}`}>
+                      {item.label}
+                    </span>
+                  </div>
+                </Link>
+              );
+            }
+
+            // For groups
+            const isExpanded = expandedGroups[item.id];
+            // Check if any child is active
+            const isChildActive = item.children.some(child =>
+              child.href && pathname.startsWith(child.href)
+            );
 
             return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={`flex items-center px-3 py-3 rounded-full transition-all w-fit xl:w-full ${isActive ? "font-bold" : ""
-                  }`}
-              >
-                <div className="relative flex items-center">
-                  <Icon className={`w-[26.25px] h-[26.25px] ${isActive ? "" : ""}`} style={{ color: isActive ? "var(--app-body-text)" : "var(--app-body-text)" }} stroke={isActive ? 2.5 : 2} />
-                  <span className={`hidden xl:block ml-4 text-[20px] ${isActive ? "font-bold" : "font-normal"}`} style={{ color: isActive ? "var(--app-body-text)" : "var(--app-body-text)" }}>
-                    {item.label}
-                  </span>
-                </div>
-              </Link>
+              <div key={item.id} className="mb-2">
+                <button
+                  onClick={() => toggleGroup(item.id)}
+                  className={`flex items-center justify-between w-full px-3 py-3 rounded-xl transition-all hover:bg-[#1A1A1A] ${isChildActive ? "bg-[#1A1A1A]/50" : ""}`}
+                >
+                  <div className="flex items-center">
+                    {Icon && <Icon className={`w-[22px] h-[22px] mr-3 ${isChildActive ? "text-[#f97316]" : "text-gray-400"}`} stroke={2} />}
+                    <span className={`hidden xl:block text-[15px] font-bold ${isChildActive ? "text-white" : "text-gray-300"}`}>
+                      {item.label}
+                    </span>
+                  </div>
+                  <div className="hidden xl:block">
+                    {isExpanded ? <IconChevronDown size={16} className="text-gray-500" /> : <IconChevronRight size={16} className="text-gray-500" />}
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-1 ml-4 xl:ml-3 space-y-0.5 border-l-2 border-[#333] pl-2">
+                    {item.children.filter(c => c.visible).map(child => {
+                      const isItemActive = pathname === child.href;
+                      return (
+                        <Link
+                          key={child.id}
+                          href={child.href || "#"}
+                          className={`flex items-center px-3 py-2 rounded-lg transition-all w-full text-[14px] ${isItemActive ? "text-[#f97316] font-medium bg-[#f97316]/10" : "text-gray-400 hover:text-gray-200 hover:bg-[#1A1A1A]"}`}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50"></div>
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
+
           })}
         </nav>
       </div>
