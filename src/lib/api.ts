@@ -41,7 +41,7 @@ export const fetchApi = async (endpoint: string) => {
         // Redirect to login ONLY if we are on a protected route
         // We shouldn't redirect if the user is already on a public page (landing, login, register)
         const currentPath = window.location.pathname;
-        const publicPaths = ['/', '/login', '/register', '/riskbudur']; // Added /riskbudur just in case, though it's likely a user profile
+        const publicPaths = ['/', '/login', '/register', '/riskbudur', '/setup']; // Added /setup to prevent redirect loop during registration
 
         // Simple check: if path is NOT in publicPaths, redirect
         // We use exact match for these. 

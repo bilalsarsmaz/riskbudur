@@ -66,7 +66,9 @@ export default function ComposeBox({
 
   // Mention State
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+
   const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [allowAnonymous, setAllowAnonymous] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -119,7 +121,32 @@ export default function ComposeBox({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [content]);
+
+  // Fetch settings to check anonymous posting capability
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("/api/settings", {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {}
+        });
+        if (res.ok) {
+          const settings = await res.json();
+          if (settings["enable_anonymous_posting"] === "false") {
+            setAllowAnonymous(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // URL algılama ve link preview
   useEffect(() => {
@@ -274,7 +301,7 @@ export default function ComposeBox({
       if (onPostCreated) {
         onPostCreated(data);
       }
-      router.refresh(); // Hashtagler ve feed icin server componentleri guncelle
+      // router.refresh(); // Removed: Client side update via onPostCreated is enough for immediate feedback
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bir hata oluştu");
     } finally {
@@ -717,8 +744,8 @@ export default function ComposeBox({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            {/* Yanıt veya Alıntı değilse anonim butonu göster */}
-            {(!isReply && !quotedPostId) && (
+            {/* Yanıt veya Alıntı değilse VE anonim paylaşıma izin veriliyorsa anonim butonu göster */}
+            {(!isReply && !quotedPostId && allowAnonymous) && (
               <button
                 type="button"
                 className={`cursor-pointer hover:opacity-80 ${isAnonymous ? 'text-white' : ''}`}

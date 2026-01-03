@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { hasPermission, Permission, Role } from "@/lib/permissions";
 import { verifyToken } from "@/lib/auth";
 
+
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> }
@@ -184,7 +185,7 @@ export async function GET(
       return result;
     };
 
-    let allReplies: any[] = [];
+    const allReplies: any[] = [];
     for (const reply of directReplies) {
       allReplies.push({
         id: reply.id.toString(),
@@ -233,6 +234,23 @@ export async function GET(
       },
     });
 
+
+
+    // Filter quoted post content if exists
+    let formattedQuotedPost = null;
+    if (quote && quote.quotedPost && !excludedUserIds.includes(quote.quotedPost.author.id)) {
+      formattedQuotedPost = {
+        id: quote.quotedPost.id.toString(),
+        content: quote.quotedPost.content,
+        createdAt: quote.quotedPost.createdAt,
+        imageUrl: quote.quotedPost.imageUrl,
+        mediaUrl: quote.quotedPost.mediaUrl,
+        linkPreview: quote.quotedPost.linkPreview,
+        isAnonymous: quote.quotedPost.isAnonymous,
+        author: quote.quotedPost.author,
+      };
+    }
+
     const formattedPost = {
       id: post.id.toString(),
       content: post.content,
@@ -246,22 +264,11 @@ export async function GET(
       parentPost: post.parentPost ? (
         (!excludedUserIds.includes(post.parentPost.author.id)) ? {
           id: post.parentPost.id.toString(),
-          content: post.parentPost.content,
+          content: post.parentPost.content, // Filter removed
           author: post.parentPost.author,
         } : null
       ) : null,
-      quotedPost: quote && quote.quotedPost ? (
-        (!excludedUserIds.includes(quote.quotedPost.author.id)) ? {
-          id: quote.quotedPost.id.toString(),
-          content: quote.quotedPost.content,
-          createdAt: quote.quotedPost.createdAt,
-          imageUrl: quote.quotedPost.imageUrl,
-          mediaUrl: quote.quotedPost.mediaUrl,
-          linkPreview: quote.quotedPost.linkPreview,
-          isAnonymous: quote.quotedPost.isAnonymous,
-          author: quote.quotedPost.author,
-        } : null
-      ) : null,
+      quotedPost: formattedQuotedPost,
       _count: {
         likes: post._count.likes,
         comments: post._count.replies,

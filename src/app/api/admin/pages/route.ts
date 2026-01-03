@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPages, updatePage, deletePage } from "@/lib/pageContent";
 import { verifyToken } from "@/lib/auth";
+import { hasPermission, Permission } from "@/lib/permissions";
 
 export async function GET(req: NextRequest) {
     try {
@@ -8,7 +9,8 @@ export async function GET(req: NextRequest) {
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const decoded = await verifyToken(token);
-        if (!decoded || decoded.role !== "ADMIN") {
+        // Use hasPermission to allow ROOTADMIN and ADMIN
+        if (!decoded || !hasPermission(decoded.role as any, Permission.MANAGE_PAGES)) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const decoded = await verifyToken(token);
-        if (!decoded || decoded.role !== "ADMIN") {
+        if (!decoded || !hasPermission(decoded.role as any, Permission.MANAGE_PAGES)) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -54,7 +56,7 @@ export async function DELETE(req: NextRequest) {
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const decoded = await verifyToken(token);
-        if (!decoded || decoded.role !== "ADMIN") {
+        if (!decoded || !hasPermission(decoded.role as any, Permission.MANAGE_PAGES)) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

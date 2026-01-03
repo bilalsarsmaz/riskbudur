@@ -40,6 +40,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [visitorsLoading, setVisitorsLoading] = useState(false);
+  const [showPopularPosts, setShowPopularPosts] = useState(true);
 
   useEffect(() => {
     if (isProfilePage) {
@@ -87,6 +88,26 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     };
 
     fetchTrendingHashtags();
+
+    // Fetch System Settings
+    const fetchSettings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("/api/settings", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const settings = await res.json();
+          if (settings["enable_popular_posts"] === "false") {
+            setShowPopularPosts(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+
   }, [hideHashtags, pathname]); // pathname degisince de guncelle
 
   return (
@@ -161,12 +182,12 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
             </>
           )}
         </div>
-      ) : (
+      ) : showPopularPosts ? (
         <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-surface)' }}>
           <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Popüler Postlar</h2>
           <PopularPostsSlider />
         </div>
-      )}
+      ) : null}
 
       {/* Footer */}
       <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-footer-bg)' }}>
@@ -180,6 +201,6 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
           <p>© 2026 RiskBudur</p>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

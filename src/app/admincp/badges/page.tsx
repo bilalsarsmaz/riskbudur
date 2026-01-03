@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AdmStandardPageLayout from "@/components/AdmStandardPageLayout";
 import AdminSidebar from "@/components/AdminSidebar";
+import GlobalHeader from "@/components/GlobalHeader";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 interface VerificationRequest {
@@ -196,9 +197,7 @@ export default function AdminBadgesPage() {
     return (
         <AdmStandardPageLayout sidebarContent={<AdminSidebar />}>
             <div className="text-white">
-                <div className="p-4 border-b border-theme-border sticky top-0 bg-black/80 backdrop-blur-md z-10">
-                    <h1 className="text-xl font-bold">Mavi Tik Başvuruları</h1>
-                </div>
+                <GlobalHeader title="Rozet Talepleri" subtitle="Popüleride sevdalıları" />
 
                 <div className="p-4">
                     {requests.length === 0 ? (

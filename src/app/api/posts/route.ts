@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import { verifyTokenAndUpdateActivity } from "@/lib/auth";
-import { shouldCensorContent } from "@/lib/moderation";
+import { hasSensitiveContent } from "@/lib/filter";
 
 import { extractHashtags, extractMentions } from "@/lib/textUtils";
 
@@ -272,6 +272,7 @@ export async function GET(req: NextRequest) {
 
       const isThread = threadRepliesCount >= 4;
 
+      // Filter content removed - using isCensored flag instead
       const basePost = {
         id: post.id.toString(),
         content: post.content,
@@ -441,7 +442,7 @@ export async function POST(req: NextRequest) {
             }
           }
         } : undefined,
-        isCensored: (decoded.isBanned || shouldCensorContent(content.trim())),
+        isCensored: (decoded.isBanned || await hasSensitiveContent(content.trim())),
       },
       include: {
         author: {

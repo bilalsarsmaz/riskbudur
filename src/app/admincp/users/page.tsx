@@ -42,7 +42,7 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'ALL' | 'BANNED' | 'VERIFIED' | 'MODERATION'>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'VERIFIED' | 'MODERATION'>('ALL');
   const [currentUserRole, setCurrentUserRole] = useState<Role | null>(null);
 
   useEffect(() => {
@@ -202,7 +202,6 @@ export default function AdminUsers() {
     if (!matchesSearch) return false;
 
     // tab filter
-    if (activeTab === 'BANNED') return user.isBanned;
     if (activeTab === 'VERIFIED') return user.hasBlueTick || user.verificationTier !== 'NONE';
     if (activeTab === 'MODERATION') return user.role === 'ADMIN' || user.role === 'MODERATOR' || user.role === 'LEAD' || user.role === 'ROOTADMIN';
 
@@ -268,7 +267,6 @@ export default function AdminUsers() {
       <div className="flex border-b border-theme-border">
         {[
           { id: 'ALL', label: 'Tümü' },
-          { id: 'BANNED', label: 'Banlılar' },
           { id: 'VERIFIED', label: 'Onaylılar' },
           { id: 'MODERATION', label: 'Yöneticiler' }
         ].map((tab) => (

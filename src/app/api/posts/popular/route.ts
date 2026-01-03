@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -86,25 +87,27 @@ export async function GET(req: Request) {
     const topPosts = scoredPosts.slice(0, limit);
 
     // Format response
-    const formattedPosts = topPosts.map(({ post }) => ({
-      id: post.id.toString(),
-      content: post.content,
-      imageUrl: post.imageUrl,
-      createdAt: post.createdAt,
-      author: post.author,
-      _count: post._count,
-      poll: post.poll ? {
-        id: post.poll.id,
-        options: post.poll.options.map(opt => ({
-          id: opt.id,
-          text: opt.text,
-          voteCount: opt.voteCount,
-          isVoted: false // No auth context in this route currently
-        })),
-        expiresAt: post.poll.expiresAt,
-        totalVotes: post.poll.options.reduce((acc, curr) => acc + curr.voteCount, 0),
-        isVoted: false
-      } : null
+    const formattedPosts = await Promise.all(topPosts.map(async ({ post }) => {
+      return {
+        id: post.id.toString(),
+        content: post.content,
+        imageUrl: post.imageUrl,
+        createdAt: post.createdAt,
+        author: post.author,
+        _count: post._count,
+        poll: post.poll ? {
+          id: post.poll.id,
+          options: post.poll.options.map(opt => ({
+            id: opt.id,
+            text: opt.text,
+            voteCount: opt.voteCount,
+            isVoted: false // No auth context in this route currently
+          })),
+          expiresAt: post.poll.expiresAt,
+          totalVotes: post.poll.options.reduce((acc, curr) => acc + curr.voteCount, 0),
+          isVoted: false
+        } : null
+      };
     }));
 
     return NextResponse.json({ posts: formattedPosts });

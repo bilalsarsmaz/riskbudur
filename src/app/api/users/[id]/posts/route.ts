@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
+
 // Mention'lari cikar
 function extractMentions(content: string): string[] {
   const mentionRegex = /@[\w_]+/g;

@@ -34,6 +34,7 @@ export default function HomePage() {
   const hasMoreRef = useRef(true);
   const scrollRef = useRef(0);
   const activeTimelineRef = useRef<TimelineType>("all");
+  const [showTimelineTabs, setShowTimelineTabs] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -54,6 +55,27 @@ export default function HomePage() {
     } catch (e) {
       console.error("Token parse hatası:", e);
     }
+
+    // Fetch System Settings
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const settings = await res.json();
+          if (settings["enable_timeline_tabs"] === "false") {
+            setShowTimelineTabs(false);
+            setActiveTimeline("all");
+            activeTimelineRef.current = "all";
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+
   }, [router]);
 
 
@@ -213,15 +235,19 @@ export default function HomePage() {
         </Suspense>
         <AnnouncementBanner />
 
-        <TimelineTabs
-          activeTab={activeTimeline}
-          onTabChange={(tab: TimelineType) => {
-            setActiveTimeline(tab);
-            activeTimelineRef.current = tab;
-            feedCache.clear();
-            loadPosts(0, true);
-          }}
-        />
+
+
+        {showTimelineTabs && (
+          <TimelineTabs
+            activeTab={activeTimeline}
+            onTabChange={(tab: TimelineType) => {
+              setActiveTimeline(tab);
+              activeTimelineRef.current = tab;
+              feedCache.clear();
+              loadPosts(0, true);
+            }}
+          />
+        )}
 
         {/* Desktop ComposeBox */}
         <div className="hidden lg:block">

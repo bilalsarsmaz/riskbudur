@@ -45,7 +45,17 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  return NextResponse.next();
+  // Pass pathname to headers for Server Components (RootLayout)
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-current-path', request.nextUrl.pathname);
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  return response;
 }
 
 export const config = {

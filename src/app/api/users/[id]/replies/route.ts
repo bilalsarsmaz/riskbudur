@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
+
 async function findThreadRoot(postId: bigint): Promise<any> {
   const post = await prisma.post.findUnique({
     where: { id: postId },

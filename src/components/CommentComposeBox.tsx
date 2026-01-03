@@ -128,7 +128,7 @@ export default function CommentComposeBox({
     try {
       if (onSubmit) {
         await onSubmit(content.trim());
-        router.refresh();
+        // router.refresh();
       } else {
         const response = await postApi("/comments", {
           postId,
@@ -140,7 +140,7 @@ export default function CommentComposeBox({
         setContent("");
         setPreviewUrl(null);
         onCommentAdded(response);
-        router.refresh();
+        // router.refresh();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bir hata oluştu");

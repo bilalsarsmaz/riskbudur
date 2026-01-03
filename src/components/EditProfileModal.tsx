@@ -244,7 +244,7 @@ export default function EditProfileModal({
       }
 
       setTimeout(() => {
-        router.refresh(); // Server componentleri guncelle
+        // router.refresh(); // Removed to prevent reload, onProfileUpdated handles local state
         onProfileUpdated();
         onClose();
       }, 1000);

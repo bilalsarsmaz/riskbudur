@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
+import { verifyToken } from "@/lib/auth";
+
 
 // Thread'in tum postlarini getir
 export async function GET(
@@ -16,8 +17,10 @@ export async function GET(
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-        userId = decoded.userId;
+        const decoded = await verifyToken(token);
+        if (decoded) {
+          userId = decoded.userId;
+        }
       } catch (error) {
         // Token gecersiz
       }
@@ -136,37 +139,41 @@ export async function GET(
       },
     });
 
-    const formattedThreadPosts = threadPosts.map((post, index) => ({
-      id: post.id.toString(),
-      content: post.content,
-      createdAt: post.createdAt,
-      imageUrl: post.imageUrl,
-      mediaUrl: post.mediaUrl,
-      linkPreview: post.linkPreview,
-      isAnonymous: post.isAnonymous,
-      author: post.author,
-      isLiked: likedPostIds.includes(post.id.toString()),
-      isBookmarked: bookmarkedPostIds.includes(post.id.toString()),
-      _count: {
-        likes: post._count.likes,
-        comments: post._count.comments + post._count.replies,
-        quotes: post._count.quotes || 0,
-      },
-      isThreadRoot: index === 0,
-      threadPosition: index + 1,
+    const formattedThreadPosts = await Promise.all(threadPosts.map(async (post, index) => {
+      return {
+        id: post.id.toString(),
+        content: post.content,
+        createdAt: post.createdAt,
+        imageUrl: post.imageUrl,
+        mediaUrl: post.mediaUrl,
+        linkPreview: post.linkPreview,
+        isAnonymous: post.isAnonymous,
+        author: post.author,
+        isLiked: likedPostIds.includes(post.id.toString()),
+        isBookmarked: bookmarkedPostIds.includes(post.id.toString()),
+        _count: {
+          likes: post._count.likes,
+          comments: post._count.comments + post._count.replies,
+          quotes: post._count.quotes || 0,
+        },
+        isThreadRoot: index === 0,
+        threadPosition: index + 1,
+      };
     }));
 
-    const formattedOtherReplies = otherReplies.map(reply => ({
-      id: reply.id.toString(),
-      content: reply.content,
-      createdAt: reply.createdAt,
-      imageUrl: reply.imageUrl,
-      mediaUrl: reply.mediaUrl,
-      author: reply.author,
-      _count: {
-        likes: reply._count.likes,
-        comments: reply._count.replies,
-      },
+    const formattedOtherReplies = await Promise.all(otherReplies.map(async (reply) => {
+      return {
+        id: reply.id.toString(),
+        content: reply.content,
+        createdAt: reply.createdAt,
+        imageUrl: reply.imageUrl,
+        mediaUrl: reply.mediaUrl,
+        author: reply.author,
+        _count: {
+          likes: reply._count.likes,
+          comments: reply._count.replies,
+        },
+      };
     }));
 
     return NextResponse.json({

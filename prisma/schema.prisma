@@ -27,6 +27,8 @@ model User {
   birthday              DateTime?
   gender                String?
   lastSeen              DateTime?             @default(now())
+  // ipAddress removed
+  // deviceId removed
   isApproved            Boolean               @default(false)
   announcements         Announcement[]
   bookmarks             Bookmark[]
@@ -324,4 +326,18 @@ model Block {
   blocked User @relation("blockedBy", fields: [blockedId], references: [id])
 
   @@id([blockerId, blockedId])
+}
+
+model SensitiveWord {
+  id        String   @id @default(cuid())
+  word      String   @unique
+  createdAt DateTime @default(now())
+  createdBy String?
+}
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
 }

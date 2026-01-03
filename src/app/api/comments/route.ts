@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyTokenAndUpdateActivity } from "@/lib/auth";
 import { extractMentions } from "@/lib/textUtils";
+import { hasSensitiveContent } from "@/lib/filter";
 
 // Yeni yanit (reply) ekle - artik Post olarak kaydediliyor
 export async function POST(req: Request) {
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
         linkPreview: linkPreview || undefined,
         imageUrl: imageUrl || null,
         mediaUrl: mediaUrl || null,
-        isCensored: (decoded.isBanned || false), // Banned users' replies are auto-censored
+        isCensored: (decoded.isBanned || await hasSensitiveContent(content)), // Banned users or sensitive content
       },
       include: {
         author: {
@@ -123,6 +124,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // filteredContent kaldirildi, direct content donuluyor
     const formattedReply = {
       id: reply.id.toString(),
       content: reply.content,

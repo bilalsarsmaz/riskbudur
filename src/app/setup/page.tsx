@@ -110,21 +110,28 @@ export default function SetupPage() {
     const [isCheckingNick, setIsCheckingNick] = useState(false);
     const [isNickAvailable, setIsNickAvailable] = useState<boolean | null>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [fetchError, setFetchError] = useState(false);
 
     useEffect(() => {
-        // Kullanıcı bilgilerini çek (Token yoksa login'e atar)
+        // Kullanıcı bilgilerini çek (Token yoksa ya da hata alırsa hata göster)
         fetchApi("/users/me")
             .then(data => {
-                if (!data) router.push("/login");
-                setUserInfo(data);
-                if (data.nickname && !data.nickname.startsWith("user_")) {
-                    setNickname(data.nickname);
-                }
-                if (data.profileImage) {
-                    setFinalProfileImage(data.profileImage);
+                if (!data) {
+                    setFetchError(true);
+                } else {
+                    setUserInfo(data);
+                    if (data.nickname && !data.nickname.startsWith("user_")) {
+                        setNickname(data.nickname);
+                    }
+                    if (data.profileImage) {
+                        setFinalProfileImage(data.profileImage);
+                    }
                 }
             })
-            .catch(() => router.push("/login"));
+            .catch((err) => {
+                console.error("Setup page fetch error:", err);
+                setFetchError(true);
+            });
     }, []);
 
     const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
@@ -195,6 +202,33 @@ export default function SetupPage() {
             setLoading(false);
         }
     };
+
+    if (fetchError) {
+        return (
+            <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+                <div className="text-center max-w-md">
+                    <h2 className="text-2xl font-bold mb-4 text-red-500">Kimlik Doğrulanamadı</h2>
+                    <p className="mb-6 text-gray-400">
+                        Kayıt sonrası bilgileriniz alınırken bir sorun oluştu. Lütfen sayfayı yenilemeyi veya tekrar giriş yapmayı deneyin.
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-gray-200"
+                        >
+                            Yenile
+                        </button>
+                        <button
+                            onClick={() => router.push("/login")}
+                            className="px-6 py-2 border border-gray-700 rounded-full font-bold hover:bg-white/10"
+                        >
+                            Giriş'e Dön
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <SetupLayout>

@@ -507,7 +507,9 @@ export default function UserProfilePage() {
       if (confirm(`@${profile.username} engelini kaldırmak istiyor musunuz?`)) {
         try {
           await deleteApi(`/blocks?userId=${profile.id}`);
-          window.location.reload();
+          // Optimistic update or refetch
+          setProfile(prev => prev ? { ...prev, isBlocking: false } : null);
+          handleProfileUpdated();
         } catch (e) {
           console.error("Engel kaldırılamadı:", e);
           alert('Hata oluştu');
@@ -517,7 +519,9 @@ export default function UserProfilePage() {
       if (confirm(`@${profile.username} kişisini engellemek istiyor musunuz?`)) {
         try {
           await postApi('/blocks', { userId: profile.id });
-          window.location.reload();
+          // Optimistic update or refetch
+          setProfile(prev => prev ? { ...prev, isBlocking: true } : null);
+          handleProfileUpdated();
         } catch (e) {
           console.error("Engellenemedi:", e);
           alert('Hata oluştu');

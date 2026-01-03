@@ -48,6 +48,8 @@ export async function POST(req: Request) {
       );
     }
 
+
+
     // JWT token oluştur (365 gün geçerli)
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },

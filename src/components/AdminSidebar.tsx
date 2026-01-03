@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/lib/api";
@@ -96,7 +96,7 @@ export default function AdminSidebar() {
         fetchUserData();
     }, []);
 
-    const menuStructure: MenuItem[] = [
+    const menuStructure: MenuItem[] = useMemo(() => [
         {
             id: "dashboard",
             label: "Dashboard",
@@ -134,12 +134,7 @@ export default function AdminSidebar() {
                     href: "/admincp/bans",
                     visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER)
                 },
-                {
-                    id: "multi-accounts",
-                    label: "Multi-Hesap Kontrolü",
-                    href: "/admincp/multi-accounts",
-                    visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER)
-                }
+
             ]
         },
         {
@@ -166,12 +161,7 @@ export default function AdminSidebar() {
                     href: "/admincp/sensitive-content",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
                 },
-                {
-                    id: "filter",
-                    label: "Sözlük & Filtre",
-                    href: "/admincp/filter",
-                    visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
-                }
+
             ]
         },
         {
@@ -220,7 +210,22 @@ export default function AdminSidebar() {
             href: "/home",
             visible: true
         }
-    ];
+    ], [userInfo]);
+
+    // Auto-expand groups based on active path
+    useEffect(() => {
+        menuStructure.forEach(item => {
+            if (item.children) {
+                const hasActiveChild = item.children.some(child => child.href === pathname);
+                if (hasActiveChild) {
+                    setExpandedGroups(prev => ({
+                        ...prev,
+                        [item.id]: true
+                    }));
+                }
+            }
+        });
+    }, [pathname, menuStructure]);
 
     const handleLogout = () => {
         localStorage.removeItem("token");

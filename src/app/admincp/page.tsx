@@ -10,7 +10,8 @@ import {
   IconFileText,
   IconFlag,
   IconChartBar,
-  IconUserCheck
+  IconUserCheck,
+  IconRosetteDiscountCheck
 } from "@tabler/icons-react";
 
 import { fetchApi } from "@/lib/api";
@@ -23,7 +24,8 @@ export default function AdminDashboard() {
     totalPosts: 0,
     totalReports: 0,
     activeUsers: 0,
-    pendingUsers: 0
+    pendingUsers: 0,
+    pendingBadges: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -58,7 +60,8 @@ export default function AdminDashboard() {
     { label: "Toplam Gönderi", value: stats.totalPosts, icon: IconFileText, color: "text-green-500", bg: "bg-green-500/5", border: "border-green-500/20" },
     { label: "Şikayetler", value: stats.totalReports, icon: IconFlag, color: "text-red-500", bg: "bg-red-500/5", border: "border-red-500/20" },
     { label: "Aktif Kullanıcılar", value: stats.activeUsers, icon: IconChartBar, color: "text-yellow-500", bg: "bg-yellow-500/5", border: "border-yellow-500/20" },
-    { label: "Onay Bekleyen Kullanıcılar", value: stats.pendingUsers, icon: IconUserCheck, color: "text-purple-500", bg: "bg-purple-500/5", border: "border-purple-500/20" }
+    { label: "Onay Bekleyen Kullanıcılar", value: stats.pendingUsers, icon: IconUserCheck, color: "text-purple-500", bg: "bg-purple-500/5", border: "border-purple-500/20" },
+    { label: "Rozet Başvuruları", value: stats.pendingBadges || 0, icon: IconRosetteDiscountCheck, color: "text-orange-500", bg: "bg-orange-500/5", border: "border-orange-500/20" }
   ];
 
   return (

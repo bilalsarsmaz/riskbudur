@@ -356,7 +356,177 @@ export default function PostItem({
     return num.toString();
   };
 
+  // Post içeriğini parse edip hashtag ve linkleri tıklanabilir hale getir
+  const parseContent = (content: string) => {
+    if (!content) return null;
+    const postLinkRegex = /(?:https?:\/\/)?(?:www\.)?riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/gi;
 
+    // Önce içeriğin sadece post linki(leri) ve boşluklardan oluşup oluşmadığını kontrol et
+    const tempContent = content.trim();
+    const postLinks: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = postLinkRegex.exec(content)) !== null) {
+      postLinks.push(match[0]);
+    }
+
+    if (postLinks.length > 0) {
+      let contentWithoutLinks = content;
+      postLinks.forEach(link => {
+        contentWithoutLinks = contentWithoutLinks.replace(link, '');
+      });
+      if (!contentWithoutLinks.trim()) {
+        return null;
+      }
+    }
+
+    const parts: (string | React.ReactElement)[] = [];
+    let lastIndex = 0;
+    const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
+    const mentionRegex = /@[\w_]+/g;
+    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;
+    const matches: Array<{ type: 'hashtag' | 'mention' | 'link' | 'postlink'; start: number; end: number; text: string }> = [];
+
+    // Linkleri bul (Önce linkleri bul ki hashtag'ler linkin içindeki anchor'ları bozmasın)
+    while ((match = linkRegex.exec(content)) !== null) {
+      const m = match!;
+      const isPostLink = /riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/i.test(m[0]);
+
+      // Çakışma kontrolü (eğer başka bir eşleşme varsa - şu an ilk olduğu için gerek yok ama genel yapı bozulmasın diye bırakıyorum)
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+
+      if (!isPostLink && !isOverlapping) {
+        matches.push({ type: 'link', start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
+    }
+
+    // Hashtag'leri bul
+    while ((match = hashtagRegex.exec(content)) !== null) {
+      const m = match!;
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+
+      if (!isOverlapping) {
+        matches.push({ type: 'hashtag', start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
+    }
+
+    // Mention'ları bul
+    while ((match = mentionRegex.exec(content)) !== null) {
+      const m = match!;
+      // Mention bir email adresi parcası mı kontrol et
+      const isEmail = m.index > 0 && content[m.index - 1] !== ' ' && content[m.index - 1] !== '\n';
+
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+
+      if (!isEmail && !isOverlapping) {
+        matches.push({ type: 'mention', start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
+    }
+
+    // Post linklerini bul
+    while ((match = postLinkRegex.exec(content)) !== null) {
+      const m = match!;
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+        (m.index <= existing.start && existing.end <= m.index + m[0].length)
+      );
+      if (!isOverlapping) {
+        matches.push({ type: 'postlink', start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
+    }
+
+    matches.sort((a, b) => a.start - b.start);
+
+    matches.forEach((match, index) => {
+      if (match.start > lastIndex) {
+        parts.push(content.substring(lastIndex, match.start));
+      }
+
+      if (match.type === 'hashtag') {
+        const hashtag = match.text.slice(1);
+        parts.push(
+          <Link
+            key={`hashtag-${index}`}
+            href={`/hashtag/${encodeURIComponent(hashtag.toLowerCase())}`}
+            className="text-[var(--app-global-link-color)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {match.text}
+          </Link>
+        );
+        lastIndex = match.end;
+      } else if (match.type === 'mention') {
+        const username = match.text.slice(1);
+        const isValidMention = post.mentionedUsers ? post.mentionedUsers.includes(username) : true;
+
+        if (isValidMention) {
+          parts.push(
+            <Link
+              key={`mention-${index}`}
+              href={`/${username}`}
+              className="text-[var(--app-global-link-color)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {match.text}
+            </Link>
+          );
+        } else {
+          parts.push(
+            <span
+              key={`mention-${index}`}
+              className="text-[var(--app-body-text)]"
+            >
+              {match.text}
+            </span>
+          );
+        }
+        lastIndex = match.end;
+      } else if (match.type === 'link') {
+        let url = match.text;
+        if (url.startsWith('www.')) {
+          url = 'https://' + url;
+        } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        parts.push(
+          <a
+            key={`link-${index}`}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--app-global-link-color)] hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {match.text}
+          </a>
+        );
+        lastIndex = match.end;
+      } else if (match.type === 'postlink') {
+        lastIndex = match.end;
+      }
+    });
+
+    if (lastIndex < content.length) {
+      const remaining = content.substring(lastIndex);
+      if (remaining) {
+        parts.push(remaining);
+      }
+    }
+
+    return parts.length > 0 ? parts : content;
+  };
 
   // HERO LAYOUT RENDER
   if (isHero) {
@@ -1239,7 +1409,7 @@ export default function PostItem({
               <div className="post-actions flex items-center text-sm">
                 <button
                   onClick={handleCommentClick}
-                  className="post-action post-action-comment flex items-center mr-4"
+                  className="post-action post-action-comment flex items-center mr-8"
                   style={{ color: isCommented ? "#1d9bf0" : undefined }}
                 >
                   <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
@@ -1251,7 +1421,7 @@ export default function PostItem({
                 <button
                   onClick={handleLike}
                   disabled={isLiking}
-                  className="post-action post-action-like flex items-center mr-4"
+                  className="post-action post-action-like flex items-center mr-8"
                   style={{ color: isLiked ? "#FF0066" : undefined }}
                 >
                   {isLiked ? (
@@ -1266,7 +1436,7 @@ export default function PostItem({
 
                 <button
                   onClick={handleQuoteClick}
-                  className="post-action post-action-quote flex items-center mr-4"
+                  className="post-action post-action-quote flex items-center mr-8"
                   style={{ color: quoted ? "#1DCD9F" : undefined }}
                 >
                   <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
