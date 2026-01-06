@@ -171,7 +171,7 @@ export default function Home() {
         </button>
 
         <p className="text-xs text-gray-500 leading-relaxed">
-          RiskBudur'a kayıt olarak <a href="https://help.riskbudur.net/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Kullanım Şartları</a>'nı kabul etmiş olursun.
+          RiskBudur'a kayıt olarak <a href="https://riskbudur.net/help/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Kullanım Şartları</a>'nı kabul etmiş olursun.
         </p>
 
         <div className="mt-8 pt-4">
