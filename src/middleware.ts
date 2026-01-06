@@ -5,15 +5,9 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = request.headers.get("host") || "";
 
-  // Help Subdomain Logic (help.riskbudur.net -> /help)
-  // Localhost check for development: help.localhost:3000
-  if (hostname.startsWith("help.") && !url.pathname.startsWith('/api')) {
-    // Rewrite to the /help/ folder logic
-    // e.g. help.riskbudur.net/about -> internal /help/about
-    // We need to clone the URL and set pathname
-    url.pathname = `/help${url.pathname}`;
-    return NextResponse.rewrite(url);
-  }
+  // Help Subdomain Logic Removed
+  // The help subdomain is no longer used. Pages are accessed via /help path.
+
 
   // API route'ları için CORS header'ları ekle
   if (request.nextUrl.pathname.startsWith('/api/')) {
