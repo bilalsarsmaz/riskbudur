@@ -380,7 +380,7 @@ export default function Home() {
 
         <div className="mt-8">
           <p className="text-xs text-gray-500 mb-4">
-            Kaydolarak, <a href="https://help.riskbudur.net/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Kullanım Şartları</a>'nı, <a href="https://help.riskbudur.net/privacy" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Gizlilik Politikası</a>'nı ve <a href="https://help.riskbudur.net/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Çerez Kullanımı</a>'nı kabul etmiş olursun.
+            Kaydolarak, <a href="https://riskbudur.net/help/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Kullanım Şartları</a>'nı, <a href="https://riskbudur.net/help/privacy" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Gizlilik Politikası</a>'nı ve <a href="https://riskbudur.net/help/terms" className="text-[#DC5F00] hover:underline" target="_blank" rel="noopener noreferrer">Çerez Kullanımı</a>'nı kabul etmiş olursun.
           </p>
           <button
             type="submit"
