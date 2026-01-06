@@ -1,54 +1,51 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { notFound } from "next/navigation";
 import SecondaryLayout from "@/components/SecondaryLayout";
 import GlobalHeader from "@/components/GlobalHeader";
-import { getPage } from '@/lib/pageContent';
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Kullanım Şartları | Riskbudur",
-    description: "Riskbudur Kullanım Şartları",
-};
-
-import { cookies } from "next/headers";
-import { verifyToken } from "@/lib/auth";
+import HelpSidebar from "@/components/HelpSidebar";
 import { sanitizeHtml } from "@/lib/sanitize";
 
-export default async function TermsPage() {
-    const page = await getPage('terms');
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+export default function TermsPage() {
+    const [page, setPage] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Verify validity of the token and check if user actually exists
-    const isTokenPresent = !!token;
-    console.log(`[TermsPage] Token Present: ${isTokenPresent}, Is Authenticated: ${isAuthenticated}`);
-    if (token) {
-        const decoded = await verifyToken(token);
-        if (decoded?.userId) {
-            // Optional: You could check DB here if you want to be 100% sure user isn't deleted/banned
-            // const dbUser = await prisma.user.findUnique({ where: { id: decoded.userId } });
-            // isAuthenticated = !!dbUser;
-
-            // For now, let's assume valid token signature is enough, OR 
-            // if we are seeing 401s, maybe the cookie is valid but the user ID is wrong?
-            // Let's force a DB check since the user reported an issue.
-
+    useEffect(() => {
+        async function fetchPage() {
             try {
-                const prisma = (await import("@/lib/prisma")).default;
-                const dbUser = await prisma.user.findUnique({ where: { id: decoded.userId } });
-                isAuthenticated = !!dbUser;
-            } catch (e) {
-                console.error("User check failed", e);
-                isAuthenticated = false;
+                const response = await fetch('/api/pages/terms');
+                if (response.ok) {
+                    const data = await response.json();
+                    setPage(data);
+                }
+            } catch (error) {
+                console.error('Error fetching page:', error);
+            } finally {
+                setLoading(false);
             }
         }
+        fetchPage();
+    }, []);
+
+    if (loading) {
+        return (
+            <SecondaryLayout>
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                </div>
+            </SecondaryLayout>
+        );
+    }
+
+    if (!page) {
+        notFound();
     }
 
     return (
-        <SecondaryLayout
-            showLeftSidebar={isAuthenticated}
-            hideMobileElements={!isAuthenticated}
-        >
+        <SecondaryLayout sidebarContent={<HelpSidebar />}>
             <GlobalHeader title={page?.title || 'Kullanım Şartları'} subtitle={page?.subtitle} showBackButton={true} />
-            <div className="p-4 static-page-content">
+            <div className="p-4 static-page-content max-w-none text-[15px] leading-relaxed">
                 {page ? (
                     <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }} />
                 ) : (
