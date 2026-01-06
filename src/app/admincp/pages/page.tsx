@@ -82,7 +82,7 @@ export default function AdminPagesPage() {
                                 </div>
                                 <div className="flex gap-2 justify-end mt-auto pt-2 border-t border-theme-border/50">
                                     <a
-                                        href={`https://help.riskbudur.net/${page.slug}`}
+                                        href={`https://riskbudur.net/help/${page.slug}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         onClick={(e) => e.stopPropagation()}
