@@ -950,7 +950,7 @@ export default function PostItem({
           {/* Action Buttons: Standard Timeline Style */}
           {post.isCensored ? (
             <div className="py-3 border-b border-theme-border flex items-center">
-              <Link href="https://help.riskbudur.net/terms" className="text-xs font-bold flex items-center" style={{ color: "var(--app-link)" }}>
+              <Link href="https://riskbudur.net/help/terms" className="text-xs font-bold flex items-center" style={{ color: "var(--app-link)" }}>
                 Detaylar <IconSquareChevronRightFilled className="w-4 h-4 ml-1" />
               </Link>
             </div>
@@ -1401,7 +1401,7 @@ export default function PostItem({
 
             {post.isCensored ? (
               <div className="post-actions flex items-center text-sm py-1">
-                <Link href="https://help.riskbudur.net/terms" className="font-bold flex items-center text-xs" style={{ color: "var(--app-link)" }}>
+                <Link href="https://riskbudur.net/help/terms" className="font-bold flex items-center text-xs" style={{ color: "var(--app-link)" }}>
                   Detaylar <IconSquareChevronRightFilled className="w-4 h-4 ml-1" />
                 </Link>
               </div>
