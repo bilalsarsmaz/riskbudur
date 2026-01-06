@@ -1,42 +1,58 @@
-import { getPage } from '@/lib/pageContent';
-import { sanitizeHtml } from "@/lib/sanitize";
-import HelpLayout from "@/components/HelpLayout";
+"use client";
+
+import { useState, useEffect } from "react";
 import { notFound } from "next/navigation";
-import { Metadata } from 'next';
+import SecondaryLayout from "@/components/SecondaryLayout";
+import HelpSidebar from "@/components/HelpSidebar";
+import GlobalHeader from "@/components/GlobalHeader";
+import { sanitizeHtml } from "@/lib/sanitize";
 
-type Props = {
-    params: Promise<{ slug: string }>
-}
+export default function DynamicHelpPage({ params }: { params: { slug: string } }) {
+    const [page, setPage] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-export async function generateMetadata(
-    props: Props,
-): Promise<Metadata> {
-    const params = await props.params;
-    const page = await getPage(params.slug);
+    useEffect(() => {
+        async function fetchPage() {
+            try {
+                // Unwrap params if it's a Promise
+                const slug = typeof params === 'object' && 'then' in params
+                    ? (await params).slug
+                    : params.slug;
 
-    if (!page) {
-        return {
-            title: 'Sayfa Bulunamadı | Riskbudur Yardım',
+                const response = await fetch(`/api/pages/${slug}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setPage(data);
+                }
+            } catch (error) {
+                console.error('Error fetching page:', error);
+            } finally {
+                setLoading(false);
+            }
         }
-    }
+        fetchPage();
+    }, [params]);
 
-    return {
-        title: `${page.title} | Riskbudur Yardım`,
-        description: page.subtitle || `${page.title} hakkında bilgi.`,
+    if (loading) {
+        return (
+            <SecondaryLayout sidebarContent={<HelpSidebar />}>
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                </div>
+            </SecondaryLayout>
+        );
     }
-}
-
-export default async function DynamicHelpPage(props: Props) {
-    const params = await props.params;
-    const page = await getPage(params.slug);
 
     if (!page) {
         notFound();
     }
 
     return (
-        <HelpLayout title={page.title} subtitle={page.subtitle}>
-            <div className="static-page-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }} />
-        </HelpLayout>
+        <SecondaryLayout sidebarContent={<HelpSidebar />}>
+            <GlobalHeader title={page.title} subtitle={page.subtitle} showBackButton={true} />
+            <div className="p-4 static-page-content max-w-none text-[15px] leading-relaxed">
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }} />
+            </div>
+        </SecondaryLayout>
     );
 }

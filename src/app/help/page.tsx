@@ -12,28 +12,28 @@ const helpPages = [
         title: 'Hakkımızda',
         subtitle: 'RiskBudur hakkında bilgi edinin',
         icon: <IconInfoCircle className="w-8 h-8 mb-4 text-blue-500" />,
-        href: '/about'
+        href: '/help/about'
     },
     {
         slug: 'contact',
         title: 'İletişim',
         subtitle: 'Bizimle iletişime geçin',
         icon: <IconMail className="w-8 h-8 mb-4 text-purple-500" />,
-        href: '/contact'
+        href: '/help/contact'
     },
     {
         slug: 'terms',
         title: 'Kullanım Şartları',
         subtitle: 'Kullanım koşullarını inceleyin',
         icon: <IconBook className="w-8 h-8 mb-4 text-orange-500" />,
-        href: '/terms'
+        href: '/help/terms'
     },
     {
         slug: 'privacy',
         title: 'Gizlilik Politikası',
         subtitle: 'Gizlilik politikamızı okuyun',
         icon: <IconShield className="w-8 h-8 mb-4 text-green-500" />,
-        href: '/privacy'
+        href: '/help/privacy'
     }
 ];
 
