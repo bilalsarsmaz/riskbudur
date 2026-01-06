@@ -16,7 +16,7 @@ export default function BanChecker() {
 
             // Don't check on public paths
             const pathname = window.location.pathname;
-            if (['/', '/login', '/register'].includes(pathname)) {
+            if (['/', '/login', '/register'].includes(pathname) || pathname.startsWith('/help')) {
                 return;
             }
 

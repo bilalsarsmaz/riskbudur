@@ -64,7 +64,7 @@ export default function ApprovalGuard({ children }: { children: React.ReactNode 
     }
 
     // Allow public paths if logic flows here (though specific checks might be needed)
-    if (publicPaths.some(p => pathname === p || pathname?.startsWith("/api"))) {
+    if (publicPaths.some(p => pathname === p || pathname?.startsWith("/api") || pathname?.startsWith("/help"))) {
         return <>{children}</>;
     }
 
