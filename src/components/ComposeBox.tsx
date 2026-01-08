@@ -440,9 +440,9 @@ export default function ComposeBox({
   };
 
   return (
-    <div className={`composebox text-white w-full ${(isReply || quotedPostId) ? 'bg-transparent' : 'bg-black p-4 border-t border-b border-theme-border lg:w-[598px]'} ${className || ''}`}>
+    <div className={`composebox text-white w-full ${(isReply || quotedPostId) ? 'bg-transparent' : 'bg-black py-[11px] px-[13px] border-t border-b border-theme-border lg:w-[598px]'} ${className || ''}`}>
       <form onSubmit={handleSubmit} className="relative">
-        <div className="mb-3">
+        <div className="mb-1">
           {/* Standard Textarea */}
           <div className="w-full relative">
             <textarea
@@ -515,7 +515,7 @@ export default function ComposeBox({
               placeholder={isAnonymous ? "Anonim olarak paylaşacaksınız..." : placeholder}
               disabled={isLoading}
               style={{ color: "var(--app-body-text)" }}
-              className={`w-full bg-transparent text-lg placeholder-gray-500 resize-none outline-none overflow-hidden ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
+              className={`w-full bg-transparent text-lg resize-none outline-none overflow-hidden placeholder-[var(--app-subtitle)] ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
               onPaste={(e) => {
                 // ... logic for images ... 
                 if (e.clipboardData && e.clipboardData.items) {
@@ -743,7 +743,7 @@ export default function ComposeBox({
         )}
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* Yanıt veya Alıntı değilse VE anonim paylaşıma izin veriliyorsa anonim butonu göster */}
             {(!isReply && !quotedPostId && allowAnonymous) && (
               <button
@@ -762,7 +762,7 @@ export default function ComposeBox({
               </button>
             )}
 
-            <label htmlFor={photoUploadId} className={`cursor-pointer hover:opacity-80 ${(!isReply && !quotedPostId) ? 'ml-2 md:ml-3' : ''}`} style={{ color: 'var(--app-global-link-color)' }}>
+            <label htmlFor={photoUploadId} className={`cursor-pointer hover:opacity-80`} style={{ color: 'var(--app-global-link-color)' }}>
               <IconPhoto className="h-4 w-4 md:h-5 md:w-5" />
               <span className="sr-only">Fotoğraf ekle</span>
               <input
@@ -778,7 +778,7 @@ export default function ComposeBox({
 
             <button
               type="button"
-              className="cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
+              className="cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}
               onClick={toggleGifPicker}
               data-gif-button
               aria-label="GIF ekle"
@@ -789,7 +789,7 @@ export default function ComposeBox({
 
             <button
               type="button"
-              className="hidden md:block cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
+              className="hidden md:block cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}
               onClick={toggleEmojiPicker}
               data-emoji-button
               aria-label="Emoji ekle"
@@ -798,16 +798,14 @@ export default function ComposeBox({
               <IconMoodSmile className="h-4 w-4 md:h-5 md:w-5" />
             </button>
 
-            {!isMobileFullscreen && (
-              <button
-                type="button"
-                className="cursor-pointer hover:opacity-80 ml-2 md:ml-3" style={{ color: 'var(--app-global-link-color)' }}
-                onClick={togglePoll}
-                aria-label="Anket ekle"
-              >
-                <IconChartBar className="h-4 w-4 md:h-5 md:w-5" />
-              </button>
-            )}
+            <button
+              type="button"
+              className="cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}
+              onClick={togglePoll}
+              aria-label="Anket ekle"
+            >
+              <IconChartBar className="h-4 w-4 md:h-5 md:w-5" />
+            </button>
           </div>
 
           <div className="flex items-center gap-4">

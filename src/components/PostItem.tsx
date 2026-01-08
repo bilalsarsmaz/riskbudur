@@ -56,6 +56,7 @@ interface PostItemProps {
   className?: string;
   isHero?: boolean;
   isAdminView?: boolean;
+  hasActiveThread?: boolean;
 }
 
 export default function PostItem({
@@ -73,7 +74,8 @@ export default function PostItem({
   showThreadFooter = true,
   className = "",
   isHero = false,
-  isAdminView = false
+  isAdminView = false,
+  hasActiveThread = false
 }: PostItemProps) {
   const router = useRouter();
   const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
@@ -121,18 +123,66 @@ export default function PostItem({
   const heroMenuRef = useRef<HTMLDivElement>(null);
   const heroMenuButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Track previous prop values to avoid overwriting optimistic updates with stale props
+  const prevProps = useRef({
+    isLiked: post.isLiked,
+    likes: post._count?.likes,
+    comments: post._count?.comments,
+    quotes: post._count?.quotes || post.quoteCount,
+    isQuoted: post.isQuoted,
+    isCommented: post.isCommented,
+    isBookmarked: post.isBookmarked
+  });
+
   useEffect(() => {
     const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
     const counts = post._count || defaultCounts;
+    const prev = prevProps.current;
 
-    setIsLiked(post.isLiked || false);
-    setLikeCount(counts.likes);
-    setCommentCount(counts.comments);
-    setQuoteCount(counts.quotes || post.quoteCount || 0);
-    setQuoted(post.isQuoted || false);
-    setIsCommented(post.isCommented || false);
-    setIsBookmarked(post.isBookmarked || false);
-  }, [post.id, post.isLiked, post._count, post.isQuoted, post.isCommented, post.isBookmarked]);
+    // Only update local state if the prop value has actually changed from what it was previously.
+    // This prevents stale props (e.g. from parent re-renders that don't know about local likes)
+    // from overwriting our optimistic local state.
+
+    if (post.isLiked !== prev.isLiked) {
+      setIsLiked(post.isLiked || false);
+    }
+
+    if (counts.likes !== prev.likes) {
+      setLikeCount(counts.likes);
+    }
+
+    if (counts.comments !== prev.comments) {
+      setCommentCount(counts.comments);
+    }
+
+    const currentQuotes = counts.quotes || post.quoteCount || 0;
+    if (currentQuotes !== prev.quotes) {
+      setQuoteCount(currentQuotes);
+    }
+
+    if (post.isQuoted !== prev.isQuoted) {
+      setQuoted(post.isQuoted || false);
+    }
+
+    if (post.isCommented !== prev.isCommented) {
+      setIsCommented(post.isCommented || false);
+    }
+
+    if (post.isBookmarked !== prev.isBookmarked) {
+      setIsBookmarked(post.isBookmarked || false);
+    }
+
+    // Update refs for next run
+    prevProps.current = {
+      isLiked: post.isLiked,
+      likes: counts.likes,
+      comments: counts.comments,
+      quotes: currentQuotes,
+      isQuoted: post.isQuoted,
+      isCommented: post.isCommented,
+      isBookmarked: post.isBookmarked
+    };
+  }, [post]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -533,14 +583,13 @@ export default function PostItem({
     return (
       <>
         {/* Hero Post Container */}
-        <div className={`post-hero px-4 pt-3 pb-4 border-b border-theme-border bg-theme-bg relative ${className} ${post.poll ? 'postcard-vote' : ''}`} onClick={handlePostClick}>
+        <div className={`post-hero px-[13px] pt-3 pb-0 border-b border-theme-border bg-theme-bg relative ${className} ${post.poll ? 'postcard-vote' : ''}`} onClick={handlePostClick}>
 
           {/* Thread Line (Above Avatar) - only if connected to parent */}
           {/* Note: This relies on props. We might need to ensure page.tsx passes correct showThreadLine or similar for the top connection */}
           {showThreadLine && isThread && !isFirstInThread && (
             <div
-              className="absolute bg-[var(--app-global-link-color)]"
-              style={{ left: '35px', top: '0', height: '12px', width: '2px', zIndex: 0 }}
+              className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[29px] sm:left-[33px] top-0 h-[12px]"
             />
           )}
 
@@ -554,12 +603,12 @@ export default function PostItem({
                     <img
                       src="/Riskbudur-pp.png"
                       alt="Anonim"
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                       onError={(e) => { (e.target as HTMLImageElement).src = '/Riskbudur-first.png'; }}
                     />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#151515] flex items-center justify-center border border-theme-border overflow-hidden">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#151515] flex items-center justify-center border border-theme-border overflow-hidden">
                     {post.author.profileImage ? (
                       <img
                         src={post.author.profileImage}
@@ -577,7 +626,7 @@ export default function PostItem({
               {/* Name & Handle (Stacked) */}
               <div className="flex flex-col">
                 <div className="flex items-center gap-1">
-                  <span className="post-author-name font-bold text-[15px] leading-tight">
+                  <span className="post-author-name font-bold text-sm sm:text-[15px] leading-tight">
                     {isAnonymous ? 'Anonim Kullanıcı' : (post.author.fullName || post.author.nickname)}
                   </span>
                   {!isAnonymous && (
@@ -595,7 +644,12 @@ export default function PostItem({
                     </>
                   )}
                 </div>
-                <span className="post-author-username text-[15px] leading-tight mt-0.5" style={{ color: "var(--app-subtitle)" }}>@{isAnonymous ? 'anonimkullanici' : post.author.nickname}</span>
+                <span className="post-author-username text-sm sm:text-[15px] leading-tight mt-0.5" style={{ color: "var(--app-subtitle)" }}>@{isAnonymous ? 'anonimkullanici' : post.author.nickname}</span>
+                {hasActiveThread && (
+                  <span className="ml-2 text-[10px] font-bold text-[var(--app-global-link-color)] bg-[var(--app-global-link-color)]/10 px-1.5 py-0.5 rounded-md">
+                    Thread
+                  </span>
+                )}
               </div>
             </div>
 
@@ -692,8 +746,8 @@ export default function PostItem({
           </div>
 
           {/* Content */}
-          <div className="mt-4 mb-3">
-            <div className="post-content text-xl leading-normal whitespace-pre-wrap break-words break-all">
+          <div className="mt-3 sm:mt-4 mb-2 sm:mb-3">
+            <div className="post-content text-[15px] sm:text-xl leading-normal whitespace-pre-wrap break-words break-all">
               {post.isCensored ? (
                 isAdminView ? (
                   <div className="p-4 border border-red-500/40 bg-red-500/10 rounded-xl">
@@ -930,7 +984,7 @@ export default function PostItem({
           </div>
 
           {/* Meta: Time & Date */}
-          <div className="py-4 border-b border-theme-border flex items-center gap-1 text-[15px] post-date" style={{ color: "var(--app-subtitle)" }}>
+          <div className="py-2 sm:py-4 border-b border-theme-border flex items-center gap-1 text-[13px] sm:text-[15px] post-date" style={{ color: "var(--app-subtitle)" }}>
             <span>
               {(() => {
                 const d = new Date(post.createdAt);
@@ -955,7 +1009,7 @@ export default function PostItem({
               </Link>
             </div>
           ) : (
-            <div className="py-2 border-b border-theme-border flex items-center text-sm">
+            <div className="py-2 flex items-center text-sm sm:border-b sm:border-theme-border">
               <button
                 onClick={handleCommentClick}
                 className="post-action post-action-comment flex items-center mr-6"
@@ -963,7 +1017,7 @@ export default function PostItem({
               >
                 <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
                 {commentCount > 0 && (
-                  <span className={`post-action-count ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
+                  <span className={`post-action-count font-extrabold ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
                 )}
               </button>
 
@@ -979,7 +1033,7 @@ export default function PostItem({
                   <IconHeart className="interaction-icon w-5 h-5 mr-1" />
                 )}
                 {likeCount > 0 && (
-                  <span className={`post-action-count ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
+                  <span className={`post-action-count font-extrabold ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
                 )}
               </button>
 
@@ -990,7 +1044,7 @@ export default function PostItem({
               >
                 <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
                 {quoteCount > 0 && (
-                  <span className={`post-action-count ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
+                  <span className={`post-action-count font-extrabold ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
                 )}
               </button>
 
@@ -1027,7 +1081,7 @@ export default function PostItem({
           post={post}
           isOpen={isCommentModalOpen}
           onClose={() => setIsCommentModalOpen(false)}
-          onCommentAdded={onPostCreated || (() => { })}
+          onCommentAdded={handleCommentAdded}
           currentUserId={currentUserId}
         />
         <QuoteModal
@@ -1048,7 +1102,7 @@ export default function PostItem({
   return (
     <>
       <div
-        className={`post p-3 sm:p-4 relative cursor-pointer transition-colors ${isThread ? "" : "border-b border-theme-border"} ${className}`}
+        className={`post py-[11px] px-[13px] relative cursor-pointer transition-colors ${isThread ? "" : "border-b border-theme-border"} ${className}`}
         style={{ zIndex: (showShareMenu || headerMenuOpen) ? 9999 : 'auto' }}
         onClick={handlePostClick}
       >
@@ -1057,17 +1111,17 @@ export default function PostItem({
           <>
             {isFirstInThread && !isLastInThread && (
               <div
-                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[28px] sm:left-[36px] top-[44px] sm:top-[56px] bottom-0"
+                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[29px] sm:left-[33px] top-[43px] sm:top-[51px] bottom-0"
               />
             )}
             {!isFirstInThread && !isLastInThread && (
               <div
-                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[28px] sm:left-[36px] top-0 bottom-0"
+                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[29px] sm:left-[33px] top-0 bottom-0"
               />
             )}
             {isLastInThread && !isFirstInThread && (
               <div
-                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[28px] sm:left-[36px] top-0 h-[28px] sm:h-[36px]"
+                className="absolute bg-[var(--app-global-link-color)] w-[2px] z-0 left-[29px] sm:left-[33px] top-0 h-[27px] sm:h-[31px]"
               />
             )}
           </>
@@ -1414,7 +1468,7 @@ export default function PostItem({
                 >
                   <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
                   {commentCount > 0 && (
-                    <span className={`post-action-count ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
+                    <span className={`post-action-count font-extrabold ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
                   )}
                 </button>
 
@@ -1430,7 +1484,7 @@ export default function PostItem({
                     <IconHeart className="interaction-icon w-5 h-5 mr-1" />
                   )}
                   {likeCount > 0 && (
-                    <span className={`post-action-count ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
+                    <span className={`post-action-count font-extrabold ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
                   )}
                 </button>
 
@@ -1441,7 +1495,7 @@ export default function PostItem({
                 >
                   <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
                   {quoteCount > 0 && (
-                    <span className={`post-action-count ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
+                    <span className={`post-action-count font-extrabold ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
                   )}
                 </button>
 

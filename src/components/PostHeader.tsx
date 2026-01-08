@@ -180,22 +180,6 @@ export default function PostHeader({
                                     <IconTrash className="w-5 h-5 mr-3" />
                                     Gönderiyi sil
                                 </button>
-                                <button
-                                    onClick={safeOnViewStats}
-                                    className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                                    style={{ color: "var(--app-body-text)" }}
-                                >
-                                    <IconChartBar className="w-5 h-5 mr-3" />
-                                    Gönderi etkileşimlerini görüntüle
-                                </button>
-                                <button
-                                    onClick={safeOnPin}
-                                    className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                                    style={{ color: "var(--app-body-text)" }}
-                                >
-                                    <IconCode className="w-5 h-5 mr-3" />
-                                    Gönderiyi yerleştir
-                                </button>
                             </>
                         ) : (
                             <>
@@ -233,22 +217,6 @@ export default function PostHeader({
                                         >
                                             <IconBan className="w-5 h-5 mr-3" />
                                             @{post.author.nickname} adlı kişiyi engelle
-                                        </button>
-                                        <button
-                                            onClick={safeOnViewStats}
-                                            className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                                            style={{ color: "var(--app-body-text)" }}
-                                        >
-                                            <IconChartBar className="w-5 h-5 mr-3" />
-                                            Gönderi etkileşimlerini görüntüle
-                                        </button>
-                                        <button
-                                            onClick={safeOnPin}
-                                            className="w-full text-left px-4 py-3 flex items-center transition-colors"
-                                            style={{ color: "var(--app-body-text)" }}
-                                        >
-                                            <IconCode className="w-5 h-5 mr-3" />
-                                            Gönderiyi yerleştir
                                         </button>
                                     </>
                                 )}

@@ -1,7 +1,6 @@
-"use client";
-
-import { useState } from "react";
-import { IconX, IconAlertCircle } from "@tabler/icons-react";
+import { createPortal } from "react-dom";
+import { useState, useEffect } from "react";
+import { IconX, IconAlertCircle, IconArrowLeft } from "@tabler/icons-react";
 import { postApi } from "@/lib/api";
 
 interface ReportModalProps {
@@ -77,8 +76,14 @@ export default function ReportModal({ isOpen, onClose, postId }: ReportModalProp
     const [selectedReason, setSelectedReason] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
-    if (!isOpen) return null;
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    if (!isOpen || !mounted) return null;
 
     const handleSubmit = async () => {
         if (!selectedReason) return;
@@ -105,16 +110,17 @@ export default function ReportModal({ isOpen, onClose, postId }: ReportModalProp
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    return createPortal(
+        <div className="fixed inset-0 z-[99999] sm:z-[100] flex items-center justify-center p-0 sm:p-4 bg-[var(--app-body-bg)] sm:bg-transparent">
+            {/* Backdrop for Desktop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm hidden sm:block"
                 onClick={onClose}
             />
 
-            <div className="relative bg-[#1e1e1e] border border-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 shrink-0">
+            <div className="relative bg-[#1e1e1e] border-0 sm:border border-gray-800 rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-lg sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                {/* Header (Desktop) */}
+                <div className="hidden sm:flex items-center justify-between px-6 py-4 border-b border-gray-800 shrink-0">
                     <h2 className="text-xl font-bold text-white">Gönderiyi Bildir</h2>
                     <button
                         onClick={onClose}
@@ -122,6 +128,20 @@ export default function ReportModal({ isOpen, onClose, postId }: ReportModalProp
                     >
                         <IconX size={20} />
                     </button>
+                </div>
+
+                {/* Header (Mobile) */}
+                <div className="flex sm:hidden items-center justify-between px-4 h-[56px] border-b border-gray-800 shrink-0">
+                    <button
+                        onClick={onClose}
+                        className="p-2 -ml-2 rounded-full hover:bg-gray-800 text-gray-400 transition-colors"
+                    >
+                        <IconArrowLeft size={24} />
+                    </button>
+                    <span className="text-[16px] font-bold text-white">
+                        Sorun Bildir
+                    </span>
+                    <div className="w-8"></div>
                 </div>
 
                 {/* Content */}
@@ -147,14 +167,14 @@ export default function ReportModal({ isOpen, onClose, postId }: ReportModalProp
                                     <label
                                         key={item.id}
                                         className={`flex items-start p-3 rounded-xl border cursor-pointer transition-all ${selectedReason === item.id
-                                                ? 'border-[var(--app-global-link-color)] bg-[var(--app-global-link-color)]/10'
-                                                : 'border-gray-800 hover:border-gray-600'
+                                            ? 'border-[var(--app-global-link-color)] bg-[var(--app-global-link-color)]/10'
+                                            : 'border-gray-800 hover:border-gray-600'
                                             }`}
                                     >
                                         <div className="mt-0.5 mr-3 shrink-0">
                                             <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedReason === item.id
-                                                    ? 'border-[var(--app-global-link-color)]'
-                                                    : 'border-gray-500'
+                                                ? 'border-[var(--app-global-link-color)]'
+                                                : 'border-gray-500'
                                                 }`}>
                                                 {selectedReason === item.id && (
                                                     <div className="w-2.5 h-2.5 rounded-full bg-[var(--app-global-link-color)]" />
@@ -186,8 +206,8 @@ export default function ReportModal({ isOpen, onClose, postId }: ReportModalProp
                             onClick={handleSubmit}
                             disabled={!selectedReason || isSubmitting}
                             className={`w-full py-3 rounded-full font-bold text-white transition-all ${!selectedReason || isSubmitting
-                                    ? 'bg-gray-700 opacity-50 cursor-not-allowed'
-                                    : 'bg-[var(--app-global-link-color)] hover:opacity-90 active:scale-[0.98]'
+                                ? 'bg-gray-700 opacity-50 cursor-not-allowed'
+                                : 'bg-[var(--app-global-link-color)] hover:opacity-90 active:scale-[0.98]'
                                 }`}
                         >
                             {isSubmitting ? 'Bildiriliyor...' : 'Bildir'}
@@ -195,6 +215,7 @@ export default function ReportModal({ isOpen, onClose, postId }: ReportModalProp
                     </div>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

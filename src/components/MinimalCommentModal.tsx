@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import ComposeBox from "./ComposeBox";
-import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
+import { IconRosetteDiscountCheckFilled, IconArrowLeft, IconX } from "@tabler/icons-react";
 import { formatCustomDate } from "@/utils/date";
 import { fetchApi } from "@/lib/api";
+import { createPortal } from "react-dom";
 
 import { EnrichedPost } from "@/types/post";
 
@@ -19,8 +20,14 @@ interface MinimalCommentModalProps {
 export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAdded, currentUserId }: MinimalCommentModalProps) {
   const [threadLineHeight, setThreadLineHeight] = useState("0px");
   const [additionalRecipients, setAdditionalRecipients] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -133,25 +140,29 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
     if (recipients.length === 0) return "";
 
     if (recipients.length === 1) {
-      return <span className="text-sm text-gray-500">@{recipients[0]} adlı kullanıcıya yanıt olarak</span>;
+      return (
+        <span className="text-sm" style={{ color: "var(--app-subtitle)" }}>
+          <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> adlı kullanıcıya yanıt olarak
+        </span>
+      );
     }
 
     // More than 1 recipients
     return (
-      <span className="text-sm text-gray-500">
+      <span className="text-sm" style={{ color: "var(--app-subtitle)" }}>
         <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> ve diğer kullanıcılara yanıt olarak
       </span>
     );
   };
 
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Desktop Modal */}
       <div
-        className="hidden md:flex fixed inset-0 z-50 items-center justify-center backdrop-blur-md bg-black/50"
+        className="hidden md:flex fixed inset-0 z-[9999] items-center justify-center backdrop-blur-md bg-black/50"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             onClose();
@@ -172,18 +183,7 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
               title="Kapat"
               aria-label="Kapat"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <IconX className="w-5 h-5" />
             </button>
           </div>
           <hr className="border-theme-border" />
@@ -242,44 +242,28 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
         </div>
       </div>
 
-      {/* Mobile Modal (Full Screen) */}
-      <div className="md:hidden fixed inset-0 z-[9999] bg-[var(--app-body-bg)] flex flex-col">
+      {/* Mobile Modal (Full Screen) - Portal ensures it's on top */}
+      <div className="md:hidden fixed inset-0 z-[99999] bg-[var(--app-body-bg)] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
-          <div className="flex items-center gap-2">
-            <img
-              src="/riskbudurlogo.png?v=2"
-              alt="riskbudur"
-              className="h-5"
-            />
-            <span className="text-[15px] font-medium" style={{ color: "var(--app-body-text)" }}>
-              Yanıtla
-            </span>
-          </div>
+        <div className="flex items-center justify-between px-4 h-[56px] border-b flex-shrink-0" style={{ borderColor: "var(--app-border)" }}>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[#151515] transition-colors"
+            className="p-2 -ml-2 rounded-full hover:bg-[var(--app-card-hover)] transition-colors"
+            title="Geri"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-gray-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <IconArrowLeft className="w-5 h-5" style={{ color: "var(--app-icon-compose)" }} />
           </button>
+
+          <span className="text-[16px] font-bold" style={{ color: "var(--app-body-text)" }}>
+            Yanıtla
+          </span>
         </div>
 
         {/* Scrollable Content (Thread Preview) */}
-        <div className="overflow-y-auto px-4 py-4 border-b" style={{ borderColor: "var(--app-border)" }}>
-          <div className="flex items-start mb-4">
+        <div className="overflow-y-auto px-4 py-4 flex-1">
+          <div className="flex items-start mb-4 relative">
             <div className="relative flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-[#151515] border border-theme-border flex items-center justify-center text-gray-400 mr-3 relative">
+              <div className="w-10 h-10 rounded-full bg-[#151515] border border-theme-border flex items-center justify-center text-gray-400 mr-3 relative z-10">
                 {post.isAnonymous ?
                   "A" :
                   (post.author.profileImage ?
@@ -287,8 +271,8 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
                     post.author.nickname.charAt(0).toUpperCase())
                 }
               </div>
-              {/* Thread line - mobilde de görünsün ki bağlam belli olsun */}
-              <div className="absolute left-5 top-10 bottom-0 w-0.5 bg-[var(--app-border)] -ml-px h-full"></div>
+              {/* Thread line - mobilde de görünsün */}
+              <div className="absolute left-5 top-10 bottom-0 w-0.5 bg-[var(--app-global-link-color)] -ml-px min-h-[50px]"></div>
             </div>
 
             <div className="flex-1 pb-2">
@@ -298,14 +282,14 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
                 </span>
                 <span className="text-xs text-gray-500">@{post.author.nickname} · {formattedDate}</span>
               </div>
-              <p className="text-sm" style={{ color: 'var(--app-body-text)' }}>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--app-body-text)' }}>
                 {post.content}
               </p>
             </div>
           </div>
 
           {/* Compose Area - Moved inside scrollable area */}
-          <div className="pt-[12px]">
+          <div className="pt-6">
             <div className="px-0 pb-2">
               {getReplyingToText()}
             </div>
@@ -318,13 +302,12 @@ export default function MinimalCommentModal({ post, isOpen, onClose, onCommentAd
               isMobileFullscreen={true}
               className="!bg-transparent !border-none !rounded-none !p-0"
             />
-            {/* Alt border kaldırıldı, çünkü üst container'da border-b var */}
           </div>
         </div>
 
-        {/* Keyboard Spacer */}
-        <div className="flex-1" />
+        {/* Keyboard Spacer (ComposeBox already handles safe area? Check) */}
       </div>
-    </>
+    </>,
+    document.body
   );
 }

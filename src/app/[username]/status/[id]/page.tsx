@@ -201,8 +201,8 @@ export default function PostDetailPage() {
     // Main Content Logic (Inlined to prevent Remounts)
     const postDetailContent = post ? (
         <>
-            {/* Ancestors Chain - only render if user scrolled to top */}
-            {showAncestors && ancestors.map((ancestor, index) => {
+            {/* Ancestors Chain - X.com pattern: Always show inline */}
+            {ancestors.length > 0 && ancestors.map((ancestor, index) => {
                 return (
                     <div key={ancestor.id} className="post-thread-item">
                         <PostItem
@@ -220,21 +220,6 @@ export default function PostDetailPage() {
                     </div>
                 );
             })}
-
-            {/* Button to load conversation */}
-            {!showAncestors && ancestors.length > 0 && (
-                <div
-                    className="w-full border-b border-theme-border flex flex-col items-center justify-center cursor-pointer hover:bg-[#0a0a0a] transition-colors py-4"
-                    onClick={() => setShowAncestors(true)}
-                >
-                    <div className="flex items-center gap-2 text-[var(--app-global-link-color)] text-sm font-medium">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                        </svg>
-                        <span>Konuşmayı göster ({ancestors.length})</span>
-                    </div>
-                </div>
-            )}
 
             {/* Ana Post (Hero) */}
             {/* Wrapped in ref for scrolling via ID or Ref */}
@@ -254,143 +239,183 @@ export default function PostDetailPage() {
                     currentUserId={currentUser?.id}
                     currentUserRole={currentUser?.role}
                     isHero={true}
-                    className="!border-b-0"
+                    className="sm:!border-b-0 border-b border-theme-border"
                     onCommentAdded={handleCommentAdded}
                     onPostDeleted={handlePostDeleted}
                 />
             </div>
 
-            {/* Yanit Yazma Alani */}
-            {!isCommentBoxFocused ? (
-                <div className="p-4 border-b border-theme-border bg-theme-bg pt-0">
-                    <div className="flex items-center justify-between">
-                        <div
-                            onClick={() => setIsCommentBoxFocused(true)}
-                            className="flex items-center flex-1 cursor-pointer hover:bg-[#151515] p-2 rounded-lg"
-                        >
-                            {currentUser?.profileImage && !imageError ? (
-                                <img
-                                    src={currentUser.profileImage}
-                                    alt={currentUser.nickname}
-                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-3"
-                                    onError={() => setImageError(true)}
-                                />
-                            ) : (
-                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3">
-                                    {currentUser?.nickname?.charAt(0).toUpperCase() || "U"}
-                                </div>
-                            )}
-                            <span style={{ color: "#6e767d" }}>Yanıtını yaz...</span>
-                        </div>
-                        <button
-                            disabled
-                            className="px-4 py-2 rounded-full text-black font-medium opacity-50 cursor-not-allowed bg-[var(--app-global-link-color)]"
-                        >
-                            Yanıtla
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <div className="p-4 border-b border-theme-border bg-theme-bg">
-                    {(() => {
-                        if (!post) return null;
-
-                        const mentions = new Set<string>();
-                        if (post.author) mentions.add(post.author.nickname);
-
-                        if (post.content) {
-                            const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-                            const matches = post.content.match(mentionRegex);
-                            if (matches) {
-                                matches.forEach(match => mentions.add(match.substring(1)));
-                            }
-                        }
-
-                        // Also check ancestors (thread history) if available
-                        // Since we are in the detail page, 'ancestors' state holds the thread history.
-                        if (ancestors && ancestors.length > 0) {
-                            ancestors.forEach(ancestor => {
-                                if (ancestor.author) mentions.add(ancestor.author.nickname);
-                                if (ancestor.content) {
-                                    const matches = ancestor.content.match(/@([a-zA-Z0-9_]+)/g);
-                                    if (matches) matches.forEach(m => mentions.add(m.substring(1)));
-                                }
-                            });
-                        }
-
-                        let recipients = Array.from(mentions);
-                        // Ensure main author is first
-                        if (post.author) {
-                            recipients = recipients.filter(r => r !== post.author.nickname);
-                            recipients.unshift(post.author.nickname);
-                        }
-
-                        if (recipients.length === 0) return null;
-
-                        let text;
-                        if (recipients.length === 1) {
-                            text = <span className="text-sm text-gray-500">@{recipients[0]} adlı kullanıcıya yanıt olarak</span>;
-                        } else {
-                            text = (
-                                <span className="text-sm text-gray-500">
-                                    <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> ve diğer kullanıcılara yanıt olarak
-                                </span>
-                            );
-                        }
-
-                        return (
-                            <div className="mb-2 ml-[52px]">
-                                {text}
+            {/* Yanit Yazma Alani - Sadece Desktop/Tablet */}
+            <div className="hidden sm:block">
+                {!isCommentBoxFocused ? (
+                    <div className="py-[11px] px-[13px] border-b border-theme-border bg-theme-bg">
+                        <div className="flex items-center justify-between">
+                            <div
+                                onClick={() => setIsCommentBoxFocused(true)}
+                                className="flex items-center flex-1 cursor-pointer hover:bg-[#151515] p-2 rounded-lg"
+                            >
+                                {currentUser?.profileImage && !imageError ? (
+                                    <img
+                                        src={currentUser.profileImage}
+                                        alt={currentUser.nickname}
+                                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover mr-3"
+                                        onError={() => setImageError(true)}
+                                    />
+                                ) : (
+                                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3">
+                                        {currentUser?.nickname?.charAt(0).toUpperCase() || "U"}
+                                    </div>
+                                )}
+                                <span style={{ color: "#6e767d" }}>Yanıtını yaz...</span>
                             </div>
-                        );
-                    })()}
-                    <CommentComposeBox
-                        postId={postId}
-                        onCommentAdded={handleCommentAdded}
-                        onCancel={() => setIsCommentBoxFocused(false)}
-                        hideAvatar={true}
-                        textareaClassName="border-0 focus:ring-0"
-                    />
-                </div>
-            )}
+                            <button
+                                disabled
+                                className="px-4 py-2 rounded-full text-black font-medium opacity-50 cursor-not-allowed bg-[var(--app-global-link-color)]"
+                            >
+                                Yanıtla
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="py-[11px] px-[13px] border-b border-theme-border bg-theme-bg">
+                        {(() => {
+                            if (!post) return null;
+
+                            const mentions = new Set<string>();
+                            if (post.author) mentions.add(post.author.nickname);
+
+                            if (post.content) {
+                                const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+                                const matches = post.content.match(mentionRegex);
+                                if (matches) {
+                                    matches.forEach(match => mentions.add(match.substring(1)));
+                                }
+                            }
+
+                            // Also check ancestors (thread history) if available
+                            // Since we are in the detail page, 'ancestors' state holds the thread history.
+                            if (ancestors && ancestors.length > 0) {
+                                ancestors.forEach(ancestor => {
+                                    if (ancestor.author) mentions.add(ancestor.author.nickname);
+                                    if (ancestor.content) {
+                                        const matches = ancestor.content.match(/@([a-zA-Z0-9_]+)/g);
+                                        if (matches) matches.forEach(m => mentions.add(m.substring(1)));
+                                    }
+                                });
+                            }
+
+                            let recipients = Array.from(mentions);
+                            // Ensure main author is first
+                            if (post.author) {
+                                recipients = recipients.filter(r => r !== post.author.nickname);
+                                recipients.unshift(post.author.nickname);
+                            }
+
+                            if (recipients.length === 0) return null;
+
+                            let text;
+                            if (recipients.length === 1) {
+                                text = <span className="text-sm text-gray-500">@{recipients[0]} adlı kullanıcıya yanıt olarak</span>;
+                            } else {
+                                text = (
+                                    <span className="text-sm text-gray-500">
+                                        <span className="text-[var(--app-global-link-color)]">@{recipients[0]}</span> ve diğer kullanıcılara yanıt olarak
+                                    </span>
+                                );
+                            }
+
+                            return (
+                                <div className="mb-2 ml-[52px]">
+                                    {text}
+                                </div>
+                            );
+                        })()}
+                        <CommentComposeBox
+                            postId={postId}
+                            onCommentAdded={handleCommentAdded}
+                            onCancel={() => setIsCommentBoxFocused(false)}
+                            hideAvatar={true}
+                            textareaClassName="border-0 focus:ring-0"
+                        />
+                    </div>
+                )}
+            </div>
 
             {/* Yanitlar - with nested replies support */}
             {hasReplies ? (
                 <div>
                     {(() => {
-                        // Recursive function to render reply with all its nested replies
-                        const renderReplyWithNested = (reply: any, depth: number = 0): React.ReactNode => {
-                            const nestedReplies = reply.comments || [];
+                        // HYBRID DISPLAY LOGIC (X.com pattern):
+                        // - If focus is ROOT (no ancestors): Show only 1st level replies
+                        // - If focus is REPLY (has ancestors): Show full recursive tree with thread lines
+                        const isReplyFocus = ancestors.length > 0;
 
-                            return (
-                                <div key={reply.id}>
-                                    <div className="post-thread-item">
+                        if (isReplyFocus) {
+                            // Recursive function for full conversation tree
+                            const renderReplyWithNested = (reply: any, depth: number = 0, isFirst: boolean = true, isLast: boolean = true): React.ReactNode => {
+                                const nestedReplies = reply.comments || [];
+                                const hasNested = nestedReplies.length > 0;
+                                // Show thread line if: has children OR is not the first in chain (connects to parent)
+                                const shouldShowLine = hasNested || depth > 0;
+                                // This is the absolute last post in the tree if: no nested replies AND isLast
+                                const isAbsolutelyLast = !hasNested && isLast;
+
+                                return (
+                                    <div key={reply.id}>
                                         <PostItem
                                             post={reply}
-                                            showThreadLine={true}
+                                            showThreadLine={shouldShowLine}
+                                            isFirstInThread={depth === 0 && hasNested}
+                                            isLastInThread={!hasNested}
+                                            isThread={shouldShowLine && !isAbsolutelyLast}
+                                            showThreadFooter={false}
+                                            currentUserId={currentUser?.id}
+                                            currentUserRole={currentUser?.role}
+                                            onPostDeleted={handlePostDeleted}
+                                            hasActiveThread={hasNested}
+                                        />
+                                        {/* Render nested replies recursively */}
+                                        {hasNested && (
+                                            <div>
+                                                {nestedReplies.map((nestedReply: any, idx: number) =>
+                                                    renderReplyWithNested(
+                                                        nestedReply,
+                                                        depth + 1,
+                                                        false,
+                                                        isLast && idx === nestedReplies.length - 1 // Only last if parent is last AND this is the last child
+                                                    )
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            };
+
+                            return allReplies.map((reply, idx) => renderReplyWithNested(reply, 0, true, idx === allReplies.length - 1));
+                        } else {
+                            // 1st level only for ROOT posts
+                            return allReplies.map((reply: any) => {
+                                const nestedReplies = reply.comments || [];
+                                const hasActiveThread = nestedReplies.length > 0;
+
+                                return (
+                                    <div key={reply.id}>
+                                        <PostItem
+                                            post={reply}
+                                            showThreadLine={false}
                                             isFirstInThread={false}
-                                            isLastInThread={nestedReplies.length === 0}
+                                            isLastInThread={true}
                                             isThread={false}
                                             showThreadFooter={false}
                                             currentUserId={currentUser?.id}
                                             currentUserRole={currentUser?.role}
                                             onPostDeleted={handlePostDeleted}
+                                            hasActiveThread={hasActiveThread}
                                         />
                                     </div>
-                                    {/* Render nested replies recursively */}
-                                    {nestedReplies.length > 0 && (
-                                        <div>
-                                            {nestedReplies.map((nestedReply: any) =>
-                                                renderReplyWithNested(nestedReply, depth + 1)
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        };
-
-                        // Render all top-level replies with their nested threads
-                        return allReplies.map((reply) => renderReplyWithNested(reply, 0));
+                                );
+                            });
+                        }
                     })()}
                 </div>
             ) : (

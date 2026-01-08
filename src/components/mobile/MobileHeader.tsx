@@ -34,7 +34,10 @@ import {
   IconRosetteDiscountCheck,
   IconMailSpark,
   IconSitemap,
-  IconArrowLeftToArc
+  IconArrowLeftToArc,
+  IconUsersGroup,
+  IconTimelineEventText,
+  IconWorldCog
 } from "@tabler/icons-react";
 import VerificationBadge from "@/components/VerificationBadge";
 import AdminBadge from "@/components/AdminBadge";
@@ -48,6 +51,11 @@ export default function MobileHeader() {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    'user-management': false,
+    'content-moderation': false,
+    'system-technical': false
+  });
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -61,6 +69,13 @@ export default function MobileHeader() {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
   };
 
   useEffect(() => {
@@ -276,76 +291,140 @@ export default function MobileHeader() {
                       <span>Dashboard</span>
                     </Link>
                   </li>
-                  <li>
-                    <Link
-                      href="/admincp/announcements"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/announcements") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
+
+                  {/* User Management Group */}
+                  <li className="space-y-1">
+                    <button
+                      onClick={() => toggleGroup('user-management')}
+                      className="flex items-center w-full p-3 text-sm sm:text-base font-bold text-[var(--app-body-text)] hover:bg-[#151515] rounded-lg transition-colors"
                     >
-                      <IconSpeakerphone className="h-5 w-5 mr-3" />
-                      <span>Duyurular</span>
-                    </Link>
+                      <IconUsersGroup className="h-5 w-5 mr-3" />
+                      <span>Kullanıcı Yönetimi</span>
+                    </button>
+                    {expandedGroups['user-management'] && (
+                      <div className="ml-8 space-y-1">
+                        <Link
+                          href="/admincp/users"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/users") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Kullanıcı Listesi
+                        </Link>
+                        <Link
+                          href="/admincp/approveuser"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/approveuser") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Üye Onay Havuzu
+                        </Link>
+                        <Link
+                          href="/admincp/badges"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/badges") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Rozet Talepleri
+                        </Link>
+                        <Link
+                          href="/admincp/bans"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/bans") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Cezalı Hesaplar
+                        </Link>
+                      </div>
+                    )}
                   </li>
-                  <li>
-                    <Link
-                      href="/admincp/users"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/users") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
+
+                  {/* Content Moderation Group */}
+                  <li className="space-y-1 mt-2">
+                    <button
+                      onClick={() => toggleGroup('content-moderation')}
+                      className="flex items-center w-full p-3 text-sm sm:text-base font-bold text-[var(--app-body-text)] hover:bg-[#151515] rounded-lg transition-colors"
                     >
-                      <IconUserSearch className="h-5 w-5 mr-3" />
-                      <span>Kullanıcılar</span>
-                    </Link>
+                      <IconTimelineEventText className="h-5 w-5 mr-3" />
+                      <span>İçerik Yönetimi</span>
+                    </button>
+                    {expandedGroups['content-moderation'] && (
+                      <div className="ml-8 space-y-1">
+                        <Link
+                          href="/admincp/posts"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/posts") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Gönderi Yönetimi
+                        </Link>
+                        <Link
+                          href="/admincp/reports"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/reports") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Şikayetler
+                        </Link>
+                        <Link
+                          href="/admincp/sensitive-content"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/sensitive-content") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Hassas İçerik
+                        </Link>
+                      </div>
+                    )}
                   </li>
-                  <li>
-                    <Link
-                      href="/admincp/reports"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/reports") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
+
+                  {/* System Management Group */}
+                  <li className="space-y-1 mt-2">
+                    <button
+                      onClick={() => toggleGroup('system-technical')}
+                      className="flex items-center w-full p-3 text-sm sm:text-base font-bold text-[var(--app-body-text)] hover:bg-[#151515] rounded-lg transition-colors"
                     >
-                      <IconMessageReport className="h-5 w-5 mr-3" />
-                      <span>Şikayetler</span>
-                    </Link>
+                      <IconWorldCog className="h-5 w-5 mr-3" />
+                      <span>Sistem Yönetimi</span>
+                    </button>
+                    {expandedGroups['system-technical'] && (
+                      <div className="ml-8 space-y-1">
+                        <Link
+                          href="/admincp/status"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/status") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Sunucu Durumu
+                        </Link>
+                        <Link
+                          href="/admincp/announcements"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/announcements") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Duyuru Yönetimi
+                        </Link>
+                        <Link
+                          href="/admincp/pages"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/pages") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Sayfa Yönetimi
+                        </Link>
+                        <Link
+                          href="/admincp/ghostmessage"
+                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/ghostmessage") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                          Ghost Mesaj
+                        </Link>
+                      </div>
+                    )}
                   </li>
-                  <li>
-                    <Link
-                      href="/admincp/approveuser"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/approveuser") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <IconUserCheck className="h-5 w-5 mr-3" />
-                      <span>Üyeleri Onayla</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/admincp/badges"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/badges") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <IconRosetteDiscountCheck className="h-5 w-5 mr-3" />
-                      <span>Rozet Talepleri</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/admincp/ghostmessage"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/ghostmessage") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <IconMailSpark className="h-5 w-5 mr-3" />
-                      <span>Ghost Mesaj</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/admincp/pages"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname.includes("/pages") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <IconSitemap className="h-5 w-5 mr-3" />
-                      <span>Sayfalar</span>
-                    </Link>
-                  </li>
+
                   <li>
                     <Link
                       href="/admincp/settings"

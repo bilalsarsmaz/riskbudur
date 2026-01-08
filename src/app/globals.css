@@ -26,6 +26,8 @@
   /* Card States (Hover & Active) */
   --app-card-hover: #0D0D0D;
   --app-card-active: #16181c;
+  /* Global Font Size */
+  --app-body-text-size: 14px;
   --font-montserrat: "Montserrat", sans-serif;
 }
 
@@ -63,6 +65,7 @@ body {
   background-color: var(--app-body-bg) !important;
   color: var(--app-body-text) !important;
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--app-body-text-size);
 }
 
 /* Global border color */
@@ -77,6 +80,33 @@ body {
 
 .font-montserrat {
   font-family: var(--font-montserrat);
+}
+
+/* Global Text Size Override - Force all text to use CSS variable */
+.text-sm,
+.text-base,
+.text-lg,
+.text-xl,
+.text-2xl,
+.text-\[15px\],
+.text-\[14px\],
+.text-\[13px\] {
+  font-size: var(--app-body-text-size) !important;
+}
+
+/* Responsive text sizes also use the same variable */
+@media (min-width: 640px) {
+
+  .sm\:text-sm,
+  .sm\:text-base,
+  .sm\:text-lg,
+  .sm\:text-xl,
+  .sm\:text-2xl,
+  .sm\:text-\[15px\],
+  .sm\:text-\[14px\],
+  .sm\:text-\[13px\] {
+    font-size: var(--app-body-text-size) !important;
+  }
 }
 
 /* Utility helpers */
