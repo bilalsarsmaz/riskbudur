@@ -29,7 +29,7 @@ interface Actor {
     profileImage: string | null;
     verificationTier: 'NONE' | 'GREEN' | 'GOLD' | 'GRAY';
     hasBlueTick: boolean;
-    role?: 'USER' | 'MODERATOR' | 'LEAD' | 'ADMIN' | 'ROOTADMIN';
+    role?: 'USER' | 'MODERATOR' | 'ADMIN' | 'ROOTADMIN';
 }
 
 interface Notification {

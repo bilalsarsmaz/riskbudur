@@ -14,6 +14,8 @@ import {
     IconUser
 } from "@tabler/icons-react";
 import { formatCustomDate } from "@/utils/date";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
+import { fetchApi } from "@/lib/api";
 
 interface Report {
     id: string;
@@ -46,7 +48,19 @@ export default function AdminReportsPage() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchReports();
+        const checkAuth = async () => {
+            try {
+                const me = await fetchApi("/users/me");
+                if (me) {
+                    if (!hasPermission(me.role as Role, Permission.MANAGE_REPORTS)) {
+                        router.push("/admincp");
+                        return;
+                    }
+                }
+            } catch (e) { }
+            fetchReports();
+        };
+        checkAuth();
     }, []);
 
     const fetchReports = async () => {

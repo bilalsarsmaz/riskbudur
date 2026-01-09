@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const decoded = await verifyToken(token);
-        const validRoles = ['ADMIN', 'ROOTADMIN', 'LEAD', 'MODERATOR'];
+        const validRoles = ['ADMIN', 'ROOTADMIN', 'MODERATOR'];
         if (!decoded || !decoded.role || !validRoles.includes(decoded.role as string)) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }

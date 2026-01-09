@@ -114,7 +114,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     <div className="space-y-4">
       {/* Trending Hashtags */}
       {!hideHashtags && (
-        <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-surface)' }}>
+        <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
           <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Gündem</h2>
           {loading ? (
             <div className="flex justify-center py-4">
@@ -126,7 +126,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                 <Link
                   key={hashtag.id}
                   href={`/hashtag/${hashtag.name}`}
-                  className="flex flex-col items-start py-1 rounded-lg"
+                  className="flex flex-col items-start py-2 px-2 -mx-2 rounded-lg hover:bg-white/5 transition-colors"
                 >
                   <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
                   <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} gönderi</span>
@@ -149,7 +149,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
 
       {/* Dikizleyenler (Profile Page Only) OR Popular Posts (Other Pages) */}
       {isProfilePage ? (
-        <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-surface)' }}>
+        <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
           <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Dikizleyenler</h2>
           {visitorsLoading ? (
             <div className="flex justify-center py-8">
@@ -162,11 +162,11 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                   {visitors.map((visitor, idx) => (
                     <Link href={`/${visitor.nickname}`} key={idx} className="block aspect-square group relative">
                       {visitor.profileImage ? (
-                        <div className="w-full h-full rounded-lg overflow-hidden hover:border-[var(--app-global-link-color)] transition-colors">
+                        <div className="w-full h-full app-box-style overflow-hidden hover:border-[var(--app-global-link-color)] transition-colors">
                           <img src={visitor.profileImage} alt={visitor.nickname} className="w-full h-full object-cover" />
                         </div>
                       ) : (
-                        <div className="w-full h-full rounded-lg bg-gray-800 flex items-center justify-center hover:border-[var(--app-global-link-color)] transition-colors">
+                        <div className="w-full h-full app-box-style bg-gray-800 flex items-center justify-center hover:border-[var(--app-global-link-color)] transition-colors">
                           <span className="text-sm font-bold text-gray-400">{visitor.nickname[0].toUpperCase()}</span>
                         </div>
                       )}
@@ -183,14 +183,14 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
           )}
         </div>
       ) : showPopularPosts ? (
-        <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-surface)' }}>
+        <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
           <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Popüler Postlar</h2>
           <PopularPostsSlider />
         </div>
       ) : null}
 
       {/* Footer */}
-      <div className="border border-theme-border p-4 rounded-lg" style={{ backgroundColor: 'var(--app-footer-bg)' }}>
+      <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-footer-bg)' }}>
         <div className="text-xs space-y-2" style={{ color: 'var(--app-subtitle)' }}>
           <div className="flex flex-wrap gap-2">
             <Link href="/help/about" className="hover:underline">Hakkında</Link>

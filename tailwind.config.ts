@@ -18,6 +18,9 @@ const config: Config = {
                 'theme-surface': 'var(--app-surface)',
                 'black': '#040404', // Override black to match app background
             },
+            fontFamily: {
+                sans: ['var(--font-open-sans)', 'sans-serif'],
+            },
         },
     },
     plugins: [

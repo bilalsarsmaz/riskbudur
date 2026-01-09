@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import AdmStandardPageLayout from "@/components/AdmStandardPageLayout";
 import AdminSidebar from "@/components/AdminSidebar";
 import GlobalHeader from "@/components/GlobalHeader";
 import { fetchApi, postApi, deleteApi } from "@/lib/api";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 import { IconShieldLock, IconPlus, IconTrash, IconAlertTriangle, IconInfoCircle } from "@tabler/icons-react";
 
 interface SensitiveWord {
@@ -15,6 +17,7 @@ interface SensitiveWord {
 }
 
 export default function SensitiveContentPage() {
+    const router = useRouter();
     const [words, setWords] = useState<SensitiveWord[]>([]);
     const [loading, setLoading] = useState(true);
     const [input, setInput] = useState("");
@@ -22,7 +25,19 @@ export default function SensitiveContentPage() {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        loadData();
+        const checkAuth = async () => {
+            try {
+                const me = await fetchApi("/users/me");
+                if (me) {
+                    if (!hasPermission(me.role as Role, Permission.MANAGE_SENSITIVE_CONTENT)) {
+                        router.push("/admincp");
+                        return;
+                    }
+                }
+            } catch (e) { }
+            loadData();
+        };
+        checkAuth();
     }, []);
 
     const loadData = async () => {

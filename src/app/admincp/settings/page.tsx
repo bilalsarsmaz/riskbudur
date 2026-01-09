@@ -1,16 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import AdmSecondaryLayout from "@/components/AdmSecondaryLayout";
 import GlobalHeader from "@/components/GlobalHeader";
 import { IconDeviceDesktopAnalytics } from "@tabler/icons-react";
+import { fetchApi } from "@/lib/api";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 export default function SettingsPage() {
+    const router = useRouter();
     const [settings, setSettings] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchSettings();
+        const checkAuth = async () => {
+            try {
+                const me = await fetchApi("/users/me");
+                if (me) {
+                    if (!hasPermission(me.role as Role, Permission.MANAGE_SETTINGS)) {
+                        router.push("/admincp");
+                        return;
+                    }
+                }
+            } catch (e) { }
+            fetchSettings();
+        };
+        checkAuth();
     }, []);
 
     const fetchSettings = async () => {

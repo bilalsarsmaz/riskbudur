@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
   subsets: ["latin"],
 });
 
@@ -47,7 +47,7 @@ export default async function RootLayout({
         if (!isAdmin) {
           return (
             <html lang="tr">
-              <body className={`${inter.variable} font-sans antialiased`}>
+              <body className={`${openSans.variable} font-sans antialiased`}>
                 <MaintenancePage />
               </body>
             </html>
@@ -61,7 +61,7 @@ export default async function RootLayout({
 
   return (
     <html lang="tr">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${openSans.variable} font-sans antialiased`}>
         <ApprovalGuard>
           <BanChecker />
           {children}

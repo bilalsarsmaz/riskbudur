@@ -240,7 +240,7 @@ export async function PATCH(
     // Or just let anyone with access edit email? 
     // Let's assume MANAGE_USER_FULLNAME is enough for basic details, but let's stick to base access.
     // Actually, Admin/Lead usually can. Moderators? Matrix says "Edit Fullname" only.
-    // Matrix didn't specify Email. I will restrict Email to LEAD+ (same as Username)
+    // Matrix didn't specify Email. I will restrict Email to ADMIN+ (same as Username)
     if (email !== undefined) {
       if (!hasPermission(actorRole, Permission.MANAGE_USER_USERNAME)) { // Reusing username perm for email for now
         return NextResponse.json({ error: "Erişim reddedildi: Email düzenleme yetkiniz yok." }, { status: 403 });
@@ -271,7 +271,7 @@ export async function PATCH(
     }
 
     if (verificationTier !== undefined) {
-      // Permission specific? Not explicit in matrix, but let's assume ADMIN+ or LEAD+? 
+      // Permission specific? Not explicit in matrix, but let's assume ADMIN+? 
       // Matrix says "Grant Badges" -> Admin+.
       if (!hasPermission(actorRole, Permission.GRANT_BADGES)) {
         return NextResponse.json({ error: "Erişim reddedildi: Rozet verme yetkiniz yok." }, { status: 403 });

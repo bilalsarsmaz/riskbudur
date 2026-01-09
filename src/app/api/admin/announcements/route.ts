@@ -39,8 +39,9 @@ export async function POST(request: Request) {
             return authResult.error;
         }
 
-        // Kısıtlama: Sadece LEAD, ADMIN ve ROOTADMIN erişebilir
-        if (authResult.user?.role === 'MODERATOR') {
+        // Kısıtlama: Sadece ADMIN ve ROOTADMIN erişebilir
+        const role = authResult.user?.role;
+        if (role !== 'ADMIN' && role !== 'ROOTADMIN') {
             return NextResponse.json({ error: "Erişim reddedildi: Duyuru oluşturma yetkiniz yok." }, { status: 403 });
         }
         const userId = authResult.user!.id;

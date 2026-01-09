@@ -6,6 +6,7 @@ import { IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
 import AdmSecondaryLayout from "@/components/AdmSecondaryLayout";
 import GlobalHeader from "@/components/GlobalHeader";
 import { fetchApi, deleteApi } from "@/lib/api";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 export default function AdminPagesPage() {
     const router = useRouter();
@@ -27,7 +28,19 @@ export default function AdminPagesPage() {
     };
 
     useEffect(() => {
-        loadPages();
+        const checkAuth = async () => {
+            try {
+                const me = await fetchApi("/users/me");
+                if (me) {
+                    if (!hasPermission(me.role as Role, Permission.MANAGE_PAGES)) {
+                        router.push("/admincp");
+                        return;
+                    }
+                }
+            } catch (e) { }
+            loadPages();
+        };
+        checkAuth();
     }, []);
 
     const handleEdit = (slug: string) => {

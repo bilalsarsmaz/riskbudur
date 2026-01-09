@@ -580,7 +580,7 @@ export default function ComposeBox({
 
           {/* Link Preview */}
           {linkPreviewLoading && (
-            <div className="mt-2 p-3 border border-theme-border rounded-lg">
+            <div className="mt-2 p-3 app-box-style">
               <div className="flex items-center text-gray-400 text-sm">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#1DCD9F] mr-2"></div>
                 Link önizlemesi yükleniyor...

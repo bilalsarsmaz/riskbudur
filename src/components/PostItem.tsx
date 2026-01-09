@@ -1208,7 +1208,7 @@ export default function PostItem({
               )}
 
               {!post.isCensored && (post.mediaUrl || post.imageUrl) && (
-                <div className="post-media mb-3 rounded-lg overflow-hidden flex justify-center cursor-pointer" style={{ border: "0.4px solid #2a2a2a" }} onClick={(e) => {
+                <div className="post-media mb-3 app-box-style flex justify-center cursor-pointer" onClick={(e) => {
                   e.stopPropagation();
                   setImageModalUrl(post.imageUrl || post.mediaUrl || null);
                 }}>
@@ -1238,7 +1238,7 @@ export default function PostItem({
                 <div className="mb-3">
                   {isYoutube && videoId ? (
                     youtubeEmbedOpen ? (
-                      <div className="relative w-full rounded-xl overflow-hidden border border-theme-border" style={{ paddingBottom: '56.25%' }}>
+                      <div className="relative w-full app-box-style" style={{ paddingBottom: '56.25%' }}>
                         <iframe
                           className="absolute top-0 left-0 w-full h-full"
                           src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
@@ -1250,7 +1250,7 @@ export default function PostItem({
                       </div>
                     ) : (
                       <div
-                        className="flex rounded-xl overflow-hidden border border-theme-border cursor-pointer hover:bg-[#111] transition-colors"
+                        className="flex app-box-style cursor-pointer hover:bg-[#111] transition-colors"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -1283,7 +1283,7 @@ export default function PostItem({
                       href={post.linkPreview.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex rounded-xl overflow-hidden border border-theme-border hover:bg-[#111] transition-colors"
+                      className="flex app-box-style hover:bg-[#111] transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {thumbnail && (
@@ -1312,7 +1312,7 @@ export default function PostItem({
             {!post.isCensored && post.quotedPost && (() => {
               const quotedPostIsAnonymous = post.quotedPost.isAnonymous || false;
               return (
-                <div className="post-quote mb-3 rounded-xl overflow-hidden border border-theme-border">
+                <div className="post-quote mb-3 app-box-style">
                   <div className="post-quote-header flex items-center p-3 pb-2">
                     {quotedPostIsAnonymous ? (
                       <div className="w-5 h-5 rounded-full mr-2 flex items-center justify-center">

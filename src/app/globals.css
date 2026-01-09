@@ -28,7 +28,14 @@
   --app-card-active: #16181c;
   /* Global Font Size */
   --app-body-text-size: 14px;
+  --app-border-radius: 16px;
   --font-montserrat: "Montserrat", sans-serif;
+}
+
+.app-box-style {
+  border: 1px solid var(--app-border) !important;
+  border-radius: var(--app-border-radius) !important;
+  overflow: hidden;
 }
 
 [data-theme='light'] {
@@ -58,13 +65,13 @@
 @theme inline {
   --color-background: var(--app-body-bg);
   --color-foreground: var(--app-body-text);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-open-sans);
 }
 
 body {
   background-color: var(--app-body-bg) !important;
   color: var(--app-body-text) !important;
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-open-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: var(--app-body-text-size);
 }
 

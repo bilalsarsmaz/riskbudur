@@ -54,7 +54,18 @@ export default function AdminUsers() {
     const fetchMe = async () => {
       try {
         const me = await fetchApi("/users/me");
-        if (me) setCurrentUserRole(me.role as Role);
+        if (me) {
+          setCurrentUserRole(me.role as Role);
+          // Strict check logic
+          if (!hasPermission(me.role as Role, Permission.MANAGE_USERS) && !hasPermission(me.role as Role, Permission.BAN_USERS)) {
+            // Allow if they have MANAGE_USERS OR BAN_USERS (since Mod has BAN_USERS and I added MANAGE_USERS too)
+            // Simple check for MANAGE_USERS is enough as I added it to Mod.
+            if (!hasPermission(me.role as Role, Permission.MANAGE_USERS)) {
+              router.push("/admincp");
+              return;
+            }
+          }
+        }
         setIsAuthenticated(true);
         fetchUsers();
       } catch (e) {
@@ -203,7 +214,7 @@ export default function AdminUsers() {
 
     // tab filter
     if (activeTab === 'VERIFIED') return user.hasBlueTick || user.verificationTier !== 'NONE';
-    if (activeTab === 'MODERATION') return user.role === 'ADMIN' || user.role === 'MODERATOR' || user.role === 'LEAD' || user.role === 'ROOTADMIN';
+    if (activeTab === 'MODERATION') return user.role === 'ADMIN' || user.role === 'MODERATOR' || user.role === 'ROOTADMIN';
 
     return true;
   });
@@ -514,7 +525,6 @@ function EditUserModal({ user, onSave, onCancel, loading, currentUserRole }: { u
             >
               <option value="USER">Kullanıcı (Üye)</option>
               <option value="MODERATOR">Moderatör</option>
-              <option value="LEAD">Lider (Lead)</option>
               <option value="ADMIN">Yönetici (Admin)</option>
               {currentUserRole === 'ROOTADMIN' && <option value="ROOTADMIN">Root Admin</option>}
             </select>

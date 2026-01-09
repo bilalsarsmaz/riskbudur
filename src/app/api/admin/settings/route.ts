@@ -17,7 +17,7 @@ export async function PUT(req: Request) {
                 select: { role: true }
             });
 
-            const allowedRoles = ['ADMIN', 'ROOTADMIN', 'LEAD'];
+            const allowedRoles = ['ADMIN', 'ROOTADMIN'];
             if (!adminUser || !adminUser.role || !allowedRoles.includes(adminUser.role)) {
                 return NextResponse.json({ error: "Forbidden" }, { status: 403 });
             }

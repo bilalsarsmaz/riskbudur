@@ -25,7 +25,7 @@ export async function DELETE(
             select: { role: true }
         });
 
-        if (!user || (user.role !== 'ADMIN' && user.role !== 'ROOTADMIN' && user.role !== 'MODERATOR' && user.role !== 'LEAD')) {
+        if (!user || (user.role !== 'ADMIN' && user.role !== 'ROOTADMIN' && user.role !== 'MODERATOR')) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

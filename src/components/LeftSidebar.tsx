@@ -143,7 +143,7 @@ export default function LeftSidebar() {
     .filter(item => {
       if (item.id === 'compose') return false;
       if (item.isAdmin) {
-        return ['MODERATOR', 'LEAD', 'ADMIN', 'ROOTADMIN'].includes(userInfo?.role);
+        return ['MODERATOR', 'ADMIN', 'ROOTADMIN'].includes(userInfo?.role);
       }
       return true;
     })

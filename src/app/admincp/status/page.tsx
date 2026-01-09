@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import AdmSecondaryLayout from "@/components/AdmSecondaryLayout";
 import GlobalHeader from "@/components/GlobalHeader";
 import {
@@ -17,6 +18,7 @@ import {
     IconX
 } from "@tabler/icons-react";
 import { fetchApi, postApi } from "@/lib/api";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 interface SystemStatus {
     status: string;
@@ -42,6 +44,7 @@ interface SystemStatus {
 }
 
 export default function AdminStatusPage() {
+    const router = useRouter();
     const [data, setData] = useState<SystemStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -61,7 +64,20 @@ export default function AdminStatusPage() {
     };
 
     useEffect(() => {
-        loadStatus();
+        const checkAuth = async () => {
+            try {
+                const me = await fetchApi("/users/me");
+                if (me) {
+                    if (!hasPermission(me.role as Role, Permission.VIEW_SYSTEM_STATUS)) {
+                        router.push("/admincp");
+                        return;
+                    }
+                }
+            } catch (e) { }
+            loadStatus();
+        };
+        checkAuth();
+
         const interval = setInterval(() => {
             fetchApi("/admin/status").then(setData).catch(console.error);
         }, 10000); // Poll every 10s

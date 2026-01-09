@@ -95,7 +95,7 @@ export default function MobileBottomNav() {
     .filter(item => {
       if (!item.showInMobile) return false;
       if (item.isAdmin) {
-        return ['MODERATOR', 'LEAD', 'ADMIN', 'ROOTADMIN'].includes(userInfo?.role);
+        return ['MODERATOR', 'ADMIN', 'ROOTADMIN'].includes(userInfo?.role);
       }
       return true;
     })

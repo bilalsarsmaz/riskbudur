@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IconTrash, IconEdit, IconCheck, IconX, IconPlus, IconAlertCircle } from "@tabler/icons-react";
 import { fetchApi, postApi, putApi, deleteApi } from "@/lib/api";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 import AdmStandardPageLayout from "@/components/AdmStandardPageLayout";
 import AdminSidebar from "@/components/AdminSidebar";
 import GlobalHeader from "@/components/GlobalHeader";
@@ -37,7 +38,12 @@ export default function AnnouncementsPage() {
         const fetchUserData = async () => {
             try {
                 const data = await fetchApi("/users/me");
-                if (data) setUserInfo(data);
+                if (data) {
+                    setUserInfo(data);
+                    if (!hasPermission(data.role as Role, Permission.MANAGE_ANNOUNCEMENTS)) {
+                        router.push("/admincp");
+                    }
+                }
             } catch (err) {
                 console.error("Kullanıcı bilgileri alınamadı:", err);
             }

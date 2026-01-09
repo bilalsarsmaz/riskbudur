@@ -51,6 +51,7 @@ model User {
   conversations ConversationParticipant[]
   sentMessages  Message[]
   pollVotes     PollVote[]
+  adminChatMessages AdminChatMessage[]
 }
 
 model Conversation {
@@ -253,7 +254,6 @@ enum VerificationTier {
 enum Role {
   USER
   MODERATOR
-  LEAD
   ADMIN
   ROOTADMIN
 }
@@ -340,4 +340,12 @@ model SystemSetting {
   value       String
   description String?
   updatedAt   DateTime @updatedAt
+}
+
+model AdminChatMessage {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }

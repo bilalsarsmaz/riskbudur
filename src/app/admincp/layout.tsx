@@ -25,7 +25,7 @@ export default function AdminLayout({
 
                 // Profil ve rol kontrolü
                 const user = await fetchApi("/users/me");
-                const authorizedRoles = ['ADMIN', 'MODERATOR', 'LEAD', 'ROOTADMIN'];
+                const authorizedRoles = ['ADMIN', 'MODERATOR', 'ROOTADMIN'];
 
                 if (user && user.role && authorizedRoles.includes(user.role)) {
                     setIsAuthorized(true);

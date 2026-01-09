@@ -9,6 +9,7 @@ import {
     IconSpeakerphone,
     IconUserSearch,
     IconMessage2Search,
+    IconTerminal2,
     IconMessageReport,
     IconRosetteDiscountCheck,
     IconSitemap,
@@ -105,8 +106,15 @@ export default function AdminSidebar() {
             visible: true
         },
         {
+            id: "chat",
+            label: "Chat",
+            icon: IconMessage2Search, // Using existing icon or a better one if available? IconMessage is good.
+            href: "/admincp/chat",
+            visible: true // Visible to all admins who can see the dashboard
+        },
+        {
             id: "user-management",
-            label: "Kullanıcı Yönetimi",
+            label: "Kullanıcılar",
             icon: IconUsersGroup,
             visible: true,
             children: [
@@ -139,7 +147,7 @@ export default function AdminSidebar() {
         },
         {
             id: "content-moderation",
-            label: "İçerik Yönetimi",
+            label: "İçerik",
             icon: IconTimelineEventText,
             visible: true,
             children: [
@@ -159,14 +167,14 @@ export default function AdminSidebar() {
                     id: "sensitive",
                     label: "Hassas İçerik",
                     href: "/admincp/sensitive-content",
-                    visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
+                    visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_SENSITIVE_CONTENT)
                 },
 
             ]
         },
         {
             id: "system-technical",
-            label: "Sistem Yönetimi",
+            label: "Sistem",
             icon: IconWorldCog,
             visible: true,
             children: [
@@ -174,7 +182,7 @@ export default function AdminSidebar() {
                     id: "status",
                     label: "Sunucu Durumu",
                     href: "/admincp/status",
-                    visible: true
+                    visible: hasPermission(userInfo?.role as Role, Permission.VIEW_SYSTEM_STATUS)
                 },
                 {
                     id: "announcements",
@@ -201,7 +209,7 @@ export default function AdminSidebar() {
             label: "Ayarlar",
             icon: IconSettings,
             href: "/admincp/settings",
-            visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
+            visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_SETTINGS)
         },
         {
             id: "back-to-platform",

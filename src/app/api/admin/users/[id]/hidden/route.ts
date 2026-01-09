@@ -31,7 +31,7 @@ export async function GET(
                 select: { role: true }
             });
 
-            const allowedRoles = ['ADMIN', 'MODERATOR', 'LEAD', 'ROOTADMIN'];
+            const allowedRoles = ['ADMIN', 'MODERATOR', 'ROOTADMIN'];
             if (!adminUser || !adminUser.role || !allowedRoles.includes(adminUser.role)) {
                 return NextResponse.json({ error: "Forbidden" }, { status: 403 });
             }
