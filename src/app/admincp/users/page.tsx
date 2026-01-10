@@ -510,21 +510,23 @@ function EditUserModal({ user, onSave, onCancel, loading, currentUserRole }: { u
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              Rol
-            </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 bg-[#000000] border border-theme-border rounded-lg text-white focus:outline-none focus:border-[#1DCD9F]"
-            >
-              <option value="USER">Kullanıcı (Üye)</option>
-              <option value="MODERATOR">Moderatör</option>
-              <option value="ADMIN">Yönetici (Admin)</option>
-              {currentUserRole === 'ROOTADMIN' && <option value="ROOTADMIN">Root Admin</option>}
-            </select>
-          </div>
+          {hasPermission(currentUserRole, Permission.GRANT_ROLES) && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Rol
+              </label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-3 py-2 bg-[#000000] border border-theme-border rounded-lg text-white focus:outline-none focus:border-[#1DCD9F]"
+              >
+                <option value="USER">Kullanıcı (Üye)</option>
+                <option value="MODERATOR">Moderatör</option>
+                <option value="ADMIN">Yönetici (Admin)</option>
+                {currentUserRole === 'ROOTADMIN' && <option value="ROOTADMIN">Root Admin</option>}
+              </select>
+            </div>
+          )}
 
           <div className="border-t border-theme-border pt-4 mt-4">
             <label className="block text-sm font-medium text-gray-400 mb-3">

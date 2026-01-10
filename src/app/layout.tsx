@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
+import { Open_Sans, Montserrat } from "next/font/google";
 import "./globals.css";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
+  subsets: ["latin"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
 });
 
@@ -48,7 +53,7 @@ export default async function RootLayout({
         if (!isAdmin) {
           return (
             <html lang="tr">
-              <body className={`${openSans.variable} font-sans antialiased`}>
+              <body className={`${openSans.variable} ${montserrat.variable} font-sans antialiased`}>
                 <MaintenancePage />
               </body>
             </html>
@@ -62,7 +67,7 @@ export default async function RootLayout({
 
   return (
     <html lang="tr">
-      <body className={`${openSans.variable} font-sans antialiased`}>
+      <body className={`${openSans.variable} ${montserrat.variable} font-sans antialiased`}>
         <ApprovalGuard>
           <ThemeInitializer />
           <BanChecker />
