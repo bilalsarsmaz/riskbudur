@@ -41,6 +41,7 @@ export enum Permission {
 
     // Special
     GHOST_MESSAGE = 'GHOST_MESSAGE', // RootAdmin only
+    USE_FORMATTING = 'USE_FORMATTING', // *bold* and _italic_
 }
 
 export type Role = 'USER' | 'MODERATOR' | 'ADMIN' | 'ROOTADMIN';
@@ -83,7 +84,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
         Permission.VIEW_MODERATORS,
         Permission.MANAGE_SENSITIVE_CONTENT,
         Permission.MANAGE_WIDGETS,
-        Permission.VIEW_SYSTEM_STATUS
+        Permission.VIEW_SYSTEM_STATUS,
+        Permission.USE_FORMATTING
     ],
     'ADMIN': [
         // Limited System Access
@@ -150,7 +152,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
         Permission.BAN_USER,       // "Hesap banlama/açma -> Mod: √"
         Permission.BAN_USERS,      // View
 
-        Permission.MANAGE_USER_USERNAME // "Username düzenleme -> Mod: √"
+        Permission.MANAGE_USER_USERNAME, // "Username düzenleme -> Mod: √"
+        Permission.USE_FORMATTING
 
         // "Kullanıcıyı silme -> Mod: X"
         // "Rozet verme -> Mod: X"

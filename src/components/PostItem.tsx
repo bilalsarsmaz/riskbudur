@@ -406,180 +406,12 @@ export default function PostItem({
     return num.toString();
   };
 
-  // Post içeriğini parse edip hashtag ve linkleri tıklanabilir hale getir
-  const parseContent = (content: string) => {
-    if (!content) return null;
-    const postLinkRegex = /(?:https?:\/\/)?(?:www\.)?riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/gi;
-
-    // Önce içeriğin sadece post linki(leri) ve boşluklardan oluşup oluşmadığını kontrol et
-    const tempContent = content.trim();
-    const postLinks: string[] = [];
-    let match: RegExpExecArray | null;
-    while ((match = postLinkRegex.exec(content)) !== null) {
-      postLinks.push(match[0]);
-    }
-
-    if (postLinks.length > 0) {
-      let contentWithoutLinks = content;
-      postLinks.forEach(link => {
-        contentWithoutLinks = contentWithoutLinks.replace(link, '');
-      });
-      if (!contentWithoutLinks.trim()) {
-        return null;
-      }
-    }
-
-    const parts: (string | React.ReactElement)[] = [];
-    let lastIndex = 0;
-    const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
-    const mentionRegex = /@[\w_]+/g;
-    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;
-    const matches: Array<{ type: 'hashtag' | 'mention' | 'link' | 'postlink'; start: number; end: number; text: string }> = [];
-
-    // Linkleri bul (Önce linkleri bul ki hashtag'ler linkin içindeki anchor'ları bozmasın)
-    while ((match = linkRegex.exec(content)) !== null) {
-      const m = match!;
-      const isPostLink = /riskbudur\.net\/(?:[^\/]+\/)?status\/\d+/i.test(m[0]);
-
-      // Çakışma kontrolü (eğer başka bir eşleşme varsa - şu an ilk olduğu için gerek yok ama genel yapı bozulmasın diye bırakıyorum)
-      const isOverlapping = matches.some(existing =>
-        (existing.start <= m.index && m.index < existing.end) ||
-        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
-        (m.index <= existing.start && existing.end <= m.index + m[0].length)
-      );
-
-      if (!isPostLink && !isOverlapping) {
-        matches.push({ type: 'link', start: m.index, end: m.index + m[0].length, text: m[0] });
-      }
-    }
-
-    // Hashtag'leri bul
-    while ((match = hashtagRegex.exec(content)) !== null) {
-      const m = match!;
-      const isOverlapping = matches.some(existing =>
-        (existing.start <= m.index && m.index < existing.end) ||
-        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
-        (m.index <= existing.start && existing.end <= m.index + m[0].length)
-      );
-
-      if (!isOverlapping) {
-        matches.push({ type: 'hashtag', start: m.index, end: m.index + m[0].length, text: m[0] });
-      }
-    }
-
-    // Mention'ları bul
-    while ((match = mentionRegex.exec(content)) !== null) {
-      const m = match!;
-      // Mention bir email adresi parcası mı kontrol et
-      const isEmail = m.index > 0 && content[m.index - 1] !== ' ' && content[m.index - 1] !== '\n';
-
-      const isOverlapping = matches.some(existing =>
-        (existing.start <= m.index && m.index < existing.end) ||
-        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
-        (m.index <= existing.start && existing.end <= m.index + m[0].length)
-      );
-
-      if (!isEmail && !isOverlapping) {
-        matches.push({ type: 'mention', start: m.index, end: m.index + m[0].length, text: m[0] });
-      }
-    }
-
-    // Post linklerini bul
-    while ((match = postLinkRegex.exec(content)) !== null) {
-      const m = match!;
-      const isOverlapping = matches.some(existing =>
-        (existing.start <= m.index && m.index < existing.end) ||
-        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
-        (m.index <= existing.start && existing.end <= m.index + m[0].length)
-      );
-      if (!isOverlapping) {
-        matches.push({ type: 'postlink', start: m.index, end: m.index + m[0].length, text: m[0] });
-      }
-    }
-
-    matches.sort((a, b) => a.start - b.start);
-
-    matches.forEach((match, index) => {
-      if (match.start > lastIndex) {
-        parts.push(content.substring(lastIndex, match.start));
-      }
-
-      if (match.type === 'hashtag') {
-        const hashtag = match.text.slice(1);
-        parts.push(
-          <Link
-            key={`hashtag-${index}`}
-            href={`/hashtag/${encodeURIComponent(hashtag.toLowerCase())}`}
-            className="text-[var(--app-global-link-color)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {match.text}
-          </Link>
-        );
-        lastIndex = match.end;
-      } else if (match.type === 'mention') {
-        const username = match.text.slice(1);
-        const isValidMention = post.mentionedUsers ? post.mentionedUsers.includes(username) : true;
-
-        if (isValidMention) {
-          parts.push(
-            <Link
-              key={`mention-${index}`}
-              href={`/${username}`}
-              className="text-[var(--app-global-link-color)]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {match.text}
-            </Link>
-          );
-        } else {
-          parts.push(
-            <span
-              key={`mention-${index}`}
-              className="text-[var(--app-body-text)]"
-            >
-              {match.text}
-            </span>
-          );
-        }
-        lastIndex = match.end;
-      } else if (match.type === 'link') {
-        let url = match.text;
-        if (url.startsWith('www.')) {
-          url = 'https://' + url;
-        } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          url = 'https://' + url;
-        }
-        parts.push(
-          <a
-            key={`link-${index}`}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--app-global-link-color)] hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {match.text}
-          </a>
-        );
-        lastIndex = match.end;
-      } else if (match.type === 'postlink') {
-        lastIndex = match.end;
-      }
-    });
-
-    if (lastIndex < content.length) {
-      const remaining = content.substring(lastIndex);
-      if (remaining) {
-        parts.push(remaining);
-      }
-    }
-
-    return parts.length > 0 ? parts : content;
-  };
-
   // HERO LAYOUT RENDER
   if (isHero) {
+    const formattedContent = parseContent(post.content, post.mentionedUsers, {
+      enableFormatting: hasPermission(post.author.role as Role, Permission.USE_FORMATTING)
+    });
+
     return (
       <>
         {/* Hero Post Container */}
@@ -773,7 +605,7 @@ export default function PostItem({
                   </>
                 )
               ) : (
-                parseContent(post.content)
+                formattedContent
               )}
             </div>
 
@@ -872,7 +704,9 @@ export default function PostItem({
                     router.push(`/${post.quotedPost?.author.nickname}/status/${post.quotedPost?.id}`);
                   }}>
                     <div className="post-quote-text text-[15px] line-clamp-3 cursor-pointer" style={{ color: "var(--app-body-text)" }}>
-                      {parseContent(post.quotedPost.content)}
+                      {parseContent(post.quotedPost.content, undefined, {
+                        enableFormatting: hasPermission(post.quotedPost.author.role as Role, Permission.USE_FORMATTING)
+                      })}
                     </div>
                   </div>
                   {(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) && (
@@ -1195,7 +1029,9 @@ export default function PostItem({
                     </>
                   )
                 ) : (
-                  parseContent(post.content)
+                  parseContent(post.content, post.mentionedUsers, {
+                    enableFormatting: hasPermission(post.author.role as Role, Permission.USE_FORMATTING)
+                  })
                 )}
               </div>
 
@@ -1385,7 +1221,9 @@ export default function PostItem({
                   >
                     {post.quotedPost.content && (
                       <div className="post-quote-text text-[15px] px-3 pb-2">
-                        {parseContent(post.quotedPost.content)}
+                        {parseContent(post.quotedPost.content, undefined, {
+                          enableFormatting: hasPermission(post.quotedPost.author.role as Role, Permission.USE_FORMATTING)
+                        })}
                       </div>
                     )}
                   </div>

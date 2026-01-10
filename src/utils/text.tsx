@@ -12,7 +12,8 @@ export const parseContent = (
     content: string,
     mentionedUsers?: string[],
     options: {
-        disablePostLinks?: boolean; // If true, won't strip post links (PostItem uses this to hide self-links? logic was a bit mixed)
+        disablePostLinks?: boolean;
+        enableFormatting?: boolean; // Enable *bold* and _italic_
     } = {}
 ) => {
     if (!content) return null;
@@ -38,7 +39,7 @@ export const parseContent = (
     const mentionRegex = /@[\w_]+/g;
     const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;
 
-    const matches: Array<{ type: 'hashtag' | 'mention' | 'link' | 'postlink'; start: number; end: number; text: string }> = [];
+    const matches: Array<{ type: 'hashtag' | 'mention' | 'link' | 'postlink' | 'bold' | 'italic'; start: number; end: number; text: string }> = [];
 
     // 1. Links
     let match;
@@ -120,6 +121,39 @@ export const parseContent = (
         }
     }
 
+    // 5. Formatting (Bold & Italic)
+    if (options.enableFormatting) {
+        // Bold (*text*)
+        const boldRegex = /\*([^*]+)\*/g;
+        let bMatch;
+        while ((bMatch = boldRegex.exec(content)) !== null) {
+            const m = bMatch;
+            const isOverlapping = matches.some(existing =>
+                (existing.start <= m.index && m.index < existing.end) ||
+                (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+                (m.index <= existing.start && existing.end <= m.index + m[0].length)
+            );
+            if (!isOverlapping) {
+                matches.push({ type: 'bold', start: m.index, end: m.index + m[0].length, text: m[0] });
+            }
+        }
+
+        // Italic (_text_)
+        const italicRegex = /_([^_]+)_/g;
+        let iMatch;
+        while ((iMatch = italicRegex.exec(content)) !== null) {
+            const m = iMatch;
+            const isOverlapping = matches.some(existing =>
+                (existing.start <= m.index && m.index < existing.end) ||
+                (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end) ||
+                (m.index <= existing.start && existing.end <= m.index + m[0].length)
+            );
+            if (!isOverlapping) {
+                matches.push({ type: 'italic', start: m.index, end: m.index + m[0].length, text: m[0] });
+            }
+        }
+    }
+
     matches.sort((a, b) => a.start - b.start);
 
     matches.forEach((match, index) => {
@@ -189,37 +223,24 @@ export const parseContent = (
             );
             lastIndex = match.end;
         } else if (match.type === 'postlink') {
-            // PostItem logic: it consumes the text but might NOT render it if it's considered "consumed" by the card?
-            // Actually PostItem says: "matches.push({ type: 'postlink' ... })" and then in the loop:
-            // "else if (match.type === 'postlink') { lastIndex = match.end; }"
-            // This effectively REMOVES the link from the text flow (state: lastIndex is advanced, but nothing pushed to parts).
-
-            // For notifications, we probably WANT to see the link if it's there?
-            // Or if the design is consistent, we hide it.
-            // Let's assume consistent behavior (hide it) for now, as usually cards are preferred. 
-            // But wait, LIKE notifications don't show the card usually?
-
-            // PostItem logic specifically hides it.
-            // I'll add an option to NOT hiding it if we want.
-
             if (options.disablePostLinks) {
-                // If disabled (meaning we want to show it as a normal link?), we should have caught it in 'link' type?
-                // But valid 'postlink' is excluded from 'link'.
-
-                // If we want to SHOW it, we should render it as a link.
                 parts.push(
                     <Link
                         key={`postlink-${index}`}
-                        href={match.text} // Should parse ID ideally but raw link is fine
+                        href={match.text}
                         className="text-[var(--app-global-link-color)] hover:underline"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {match.text}
                     </Link>
                 );
-            } else {
-                // Hide it (default PostItem behavior)
             }
+            lastIndex = match.end;
+        } else if (match.type === 'bold') {
+            parts.push(<strong key={`bold-${index}`}>{match.text.slice(1, -1)}</strong>);
+            lastIndex = match.end;
+        } else if (match.type === 'italic') {
+            parts.push(<em key={`italic-${index}`}>{match.text.slice(1, -1)}</em>);
             lastIndex = match.end;
         }
     });
