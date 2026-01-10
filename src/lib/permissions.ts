@@ -130,7 +130,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
         Permission.DELETE_USER_POST,
         Permission.EDIT_USER_POST,
         Permission.BAN_USER,
-        Permission.VIEW_MODERATORS
+        Permission.VIEW_MODERATORS,
+        Permission.USE_FORMATTING
 
         // "Platform sayfalarını oluşturma -> Admin: X" -> No MANAGE_PAGES
         // "Widget açma/kapama -> Admin: X" -> No MANAGE_WIDGETS
