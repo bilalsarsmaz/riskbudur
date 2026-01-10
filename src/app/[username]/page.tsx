@@ -39,6 +39,8 @@ interface Profile {
   fullName: string;
   bio: string;
   website: string;
+  location?: string;
+  birthday?: string;
   joinDate: string;
   following: number;
   followers: number;
@@ -77,10 +79,13 @@ export default function UserProfilePage() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isHoveringFollow, setIsHoveringFollow] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   // const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
 
@@ -413,6 +418,19 @@ export default function UserProfilePage() {
     fetchUserReplies();
   }, [username]);
 
+  // Click outside listener for Dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Record profile visit using API and fetch visitors for mobile view
   useEffect(() => {
     if (currentUser && currentUser.nickname !== username) {
@@ -608,22 +626,69 @@ export default function UserProfilePage() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Admin Edit Button for other users - MOVED TO FAR LEFT */}
+              {!isOwnProfile && currentUser && hasPermission(currentUser.role as Role, Permission.MANAGE_USER_FULLNAME) && (
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors"
+                  title="Kullanıcıyı Düzenle (Admin)"
+                >
+                  <IconUserCog className="w-5 h-5" style={{ color: 'var(--app-icon)' }} />
+                </button>
+              )}
+
+              {/* Three Dots Dropdown Menu */}
               {!isOwnProfile && (
-                <>
+                <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => router.push(`/messages?user=${profile!.username}`)}
-                    className="w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors"
                   >
-                    <IconMail className="w-5 h-5" />
+                    <IconDots className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "var(--app-body-text)" }} />
                   </button>
-                  <button
-                    onClick={handleBlock}
-                    className={`w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors ${(profile as any).isBlocking ? "text-red-500 border-red-500 bg-red-500/10" : ""}`}
-                    title={(profile as any).isBlocking ? "Engeli Kaldır" : "Engelle"}
-                  >
-                    <IconUserCancel className="w-5 h-5" />
-                  </button>
-                </>
+
+                  {isDropdownOpen && (
+                    <div
+                      className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-50 border border-theme-border"
+                      style={{ backgroundColor: "var(--app-body-bg)" }}
+                    >
+                      <button
+                        onClick={() => {
+                          router.push(`/messages?user=${profile!.username}`);
+                          setIsDropdownOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                        style={{ color: "var(--app-body-text)" }}
+                      >
+                        <IconMail className="w-4 h-4" />
+                        Mesaj Gönder
+                      </button>
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/${profile!.username}`;
+                          navigator.clipboard.writeText(url);
+                          alert("Profil bağlantısı kopyalandı!");
+                          setIsDropdownOpen(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-white/10 transition-colors flex items-center gap-2"
+                        style={{ color: "var(--app-body-text)" }}
+                      >
+                        <IconLink className="w-4 h-4" />
+                        Bağlantıyı Kopyala
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleBlock();
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`block w-full text-left px-4 py-2 text-sm hover:bg-white/10 transition-colors flex items-center gap-2 ${(profile as any).isBlocking ? "text-red-500" : "text-red-500"}`}
+                      >
+                        <IconUserCancel className="w-4 h-4" />
+                        {(profile as any).isBlocking ? "Engeli Kaldır" : "Engelle"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
               <button
                 onClick={() => isOwnProfile ? setIsEditModalOpen(true) : handleFollow()}
@@ -648,17 +713,6 @@ export default function UserProfilePage() {
                     : "Kovala"
                 }
               </button>
-
-              {/* Admin Edit Button for other users */}
-              {!isOwnProfile && currentUser && hasPermission(currentUser.role as Role, Permission.MANAGE_USER_FULLNAME) && (
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="w-10 h-10 rounded-full border border-theme-border flex items-center justify-center hover:bg-white/10 transition-colors ml-2"
-                  title="Kullanıcıyı Düzenle (Admin)"
-                >
-                  <IconUserCog className="w-5 h-5" style={{ color: 'var(--app-body-text)' }} />
-                </button>
-              )}
             </div>
           </div>
 
@@ -706,6 +760,18 @@ export default function UserProfilePage() {
                   <LinkIcon className="w-4 h-4 mr-1" />
                   {profile!.website}
                 </a>
+              )}
+              {profile!.location && (
+                <div className="flex items-center" style={{ color: "var(--app-subtitle)" }}>
+                  <IconMapPin className="w-4 h-4 mr-1" />
+                  {profile!.location}
+                </div>
+              )}
+              {profile!.birthday && (
+                <div className="flex items-center" style={{ color: "var(--app-subtitle)" }}>
+                  <IconCalendar className="w-4 h-4 mr-1" />
+                  Doğum tarihi: {new Date(profile!.birthday).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
               )}
               <div className="flex items-center" style={{ color: "var(--app-subtitle)" }}>
                 <CalendarIcon className="w-4 h-4 mr-1" />
@@ -759,7 +825,7 @@ export default function UserProfilePage() {
 
 
         {/* Tabs - Only show if NOT blocked */}
-        {!((profile as any).isBlocked || (profile as any).isBlocking) && (profile!.postsCount > 0 || isOwnProfile) && (
+        {!(profile && ((profile as any).isBlocked || (profile as any).isBlocking)) && (profile?.postsCount || 0 > 0 || isOwnProfile) && (
           <div className="flex border-t border-theme-border mt-2">
             <button
               onClick={() => setActiveTab("posts")}

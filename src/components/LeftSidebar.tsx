@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import Cookies from 'js-cookie';
@@ -36,24 +36,6 @@ export default function LeftSidebar() {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-
-  // Load theme from localStorage on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  }, []);
-
-  // Toggle theme
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -164,6 +146,20 @@ export default function LeftSidebar() {
     router.push("/");
   };
 
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (!userInfo) {
     return null;
   }
@@ -236,50 +232,9 @@ export default function LeftSidebar() {
         </ul>
       </nav>
 
-      <div className="mt-auto relative w-full flex flex-col items-center xl:items-start xl:px-2">
-        {/* Theme Toggle (Moved to Footer) */}
-        <button
-          onClick={toggleTheme}
-          className="flex items-center justify-center xl:justify-start p-3 xl:p-2 rounded-full xl:rounded-lg transition-colors aspect-square xl:aspect-auto w-fit xl:w-auto mx-auto xl:mx-0 w-full group mb-1 xl:mb-0"
-        >
-          {/* Custom Toggle Switch */}
-          <div
-            className={`relative w-[48px] h-[26px] rounded-full transition-colors duration-300 xl:mr-3 flex-shrink-0 border ${theme === 'dark' ? 'bg-black border-gray-700' : 'bg-gray-200 border-gray-300'}`}
-          >
-            {/* Sun Icon (Left Background - Visible when Dark) */}
-            <div className={`absolute left-1.5 top-1 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
-              <IconSun className="w-4 h-4 text-gray-500" />
-            </div>
-
-            {/* Moon Icon (Right Background - Visible when Light) */}
-            <div className={`absolute right-1.5 top-1 transition-opacity duration-300 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
-              <IconMoon className="w-4 h-4 text-gray-400" />
-            </div>
-
-            {/* Sliding Circle */}
-            <div
-              className={`absolute top-[2px] w-[20px] h-[20px] rounded-full shadow-sm flex items-center justify-center transition-transform duration-300 bg-[#f97316] ${theme === 'dark' ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}
-            >
-              {theme === 'dark' ? (
-                <IconMoonFilled className="w-3 h-3 text-white" />
-              ) : (
-                <IconSunFilled className="w-3 h-3 text-white" />
-              )}
-            </div>
-          </div>
-
-          <span className="hidden xl:inline text-[13px]" style={{ color: 'var(--app-body-text)' }}>
-            Platform Temasını Değiştir
-          </span>
-        </button>
-
-        {/* HR Separator */}
-        <div className="w-full px-2 my-2 xl:my-2 hidden xl:block">
-          <div className="border-t border-theme-border"></div>
-        </div>
-
+      <div className="mt-auto w-full relative" ref={menuRef}>
         <div
-          className="flex items-center justify-center p-2 rounded-full xl:rounded-lg cursor-pointer aspect-square xl:aspect-auto w-fit xl:w-full"
+          className="flex items-center justify-center p-2 rounded-full xl:rounded-lg cursor-pointer aspect-square xl:aspect-auto w-fit xl:w-full hover:bg-white/10 transition-colors"
           onClick={handleUserMenuToggle}
         >
           {userInfo.profileImage ? (
@@ -318,10 +273,10 @@ export default function LeftSidebar() {
           <div className="absolute bottom-full left-0 mb-2 w-[250px] rounded-lg shadow-lg overflow-hidden z-20" style={{ backgroundColor: 'var(--app-body-bg)', border: '1px solid var(--app-border)' }}>
             <div className="p-2">
               <button
-                className="flex items-center w-full p-2 rounded-lg transition-colors"
+                className="flex items-center w-full p-2 rounded-lg transition-colors hover:bg-white/10"
                 style={{ color: 'var(--app-body-text)' }}
                 onClick={() => {
-                  router.push("/settings");
+                  router.push("/settings/display");
                   setShowUserMenu(false);
                 }}
               >
@@ -329,7 +284,7 @@ export default function LeftSidebar() {
                 Ayarlar
               </button>
               <button
-                className="flex items-center w-full p-2 rounded-lg transition-colors"
+                className="flex items-center w-full p-2 rounded-lg transition-colors hover:bg-white/10"
                 style={{ color: 'var(--app-body-text)' }}
                 onClick={handleLogout}
               >
@@ -340,6 +295,6 @@ export default function LeftSidebar() {
           </div>
         )}
       </div>
-    </div >
+    </div>
   );
 }

@@ -232,22 +232,22 @@ export default function AdminUsers() {
 
   // Right Sidebar Content
   const rightSidebarContent = (
-    <div className="rounded-2xl p-4 sticky top-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-      <h2 className="text-xl font-extrabold mb-4" style={{ color: 'var(--app-body-text)' }}>İstatistikler</h2>
+    <div className="rounded-2xl p-4 sticky top-4 bg-theme-surface">
+      <h2 className="text-xl font-extrabold mb-4 text-theme-text">İstatistikler</h2>
       <div className="space-y-4">
         <div>
-          <p className="text-[13px]" style={{ color: 'var(--app-subtitle)' }}>Toplam Kullanıcı</p>
-          <p className="text-2xl font-bold" style={{ color: 'var(--app-body-text)' }}>{users.length}</p>
+          <p className="text-[13px] text-theme-subtitle">Toplam Kullanıcı</p>
+          <p className="text-2xl font-bold text-theme-text">{users.length}</p>
         </div>
         <div>
-          <p className="text-[13px]" style={{ color: 'var(--app-subtitle)' }}>Banlı Kullanıcı</p>
+          <p className="text-[13px] text-theme-subtitle">Banlı Kullanıcı</p>
           <p className="text-2xl font-bold text-[#f4212e]">
             {users.filter(u => u.isBanned).length}
           </p>
         </div>
         <div>
-          <p className="text-[13px]" style={{ color: 'var(--app-subtitle)' }}>Onay Rozeti Olan</p>
-          <p className="text-2xl font-bold" style={{ color: 'var(--app-accent)' }}>
+          <p className="text-[13px] text-theme-subtitle">Onay Rozeti Olan</p>
+          <p className="text-2xl font-bold text-theme-accent">
             {users.filter(u => u.hasBlueTick).length}
           </p>
         </div>
@@ -262,14 +262,13 @@ export default function AdminUsers() {
       <div className="px-4 py-4 border-b border-theme-border">
         {/* Arama */}
         <div className="relative">
-          <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: 'var(--app-subtitle)' }} />
+          <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-theme-subtitle" />
           <input
             type="text"
             placeholder="Ara"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-theme-surface border-none rounded-full placeholder-theme-subtitle focus:outline-none focus:ring-1 focus:ring-theme-accent"
-            style={{ backgroundColor: 'var(--app-input-bg)', color: 'var(--app-body-text)', colorScheme: 'dark' }}
+            className="w-full pl-10 pr-4 py-2 bg-theme-surface border-none rounded-full placeholder-theme-subtitle focus:outline-none focus:ring-1 focus:ring-theme-accent text-theme-text"
           />
         </div>
       </div>
@@ -284,15 +283,12 @@ export default function AdminUsers() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex-1 py-4 text-center font-medium relative transition-colors hover:bg-white/5 ${activeTab === tab.id ? 'font-bold' : ''
+            className={`flex-1 py-4 text-center font-medium relative transition-colors hover:bg-white/5 ${activeTab === tab.id ? 'font-bold text-theme-accent' : 'text-theme-subtitle'
               }`}
-            style={{
-              color: activeTab === tab.id ? 'var(--app-accent)' : 'var(--app-subtitle)'
-            }}
           >
             {tab.label}
             {activeTab === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-[4px] rounded-t-full" style={{ backgroundColor: 'var(--app-accent)' }}></div>
+              <div className="absolute bottom-0 left-0 right-0 h-[4px] rounded-t-full bg-theme-accent"></div>
             )}
           </button>
         ))}
@@ -331,7 +327,7 @@ export default function AdminUsers() {
                           className="w-12 h-12 rounded-full object-cover border-[0.5px] border-theme-border hover:opacity-80 transition-opacity"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-[0.5px] border-theme-border hover:opacity-80 transition-opacity" style={{ backgroundColor: 'var(--app-surface)', color: 'var(--app-body-text)' }}>
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-[0.5px] border-theme-border hover:opacity-80 transition-opacity bg-theme-surface text-theme-text">
                           {user.nickname.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -344,7 +340,7 @@ export default function AdminUsers() {
                           router.push(`/${user.nickname}`);
                         }}
                       >
-                        <span className="font-bold text-[15px] group-hover/name:underline" style={{ color: 'var(--app-body-text)' }}>
+                        <span className="font-bold text-[15px] group-hover/name:underline text-theme-text">
                           {user.fullName || user.nickname}
                         </span>
                         {(user.verificationTier !== 'NONE' || user.hasBlueTick) && (
@@ -364,7 +360,7 @@ export default function AdminUsers() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[14px]" style={{ color: 'var(--app-subtitle)' }}>
+                      <div className="text-[14px] text-theme-subtitle">
                         @{user.nickname}
                       </div>
                     </div>

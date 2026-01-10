@@ -28,6 +28,8 @@ export async function GET(
         hasBlueTick: true,
         verificationTier: true,
         role: true,
+        birthday: true,
+        location: true,
         createdAt: true,
         isBanned: true,
         _count: {
@@ -274,7 +276,7 @@ export async function PUT(
       }
     }
 
-    const { nickname: rawNickname, fullName, bio, website, email, profileImage, coverImage, gender, birthday } = await req.json();
+    const { nickname: rawNickname, fullName, bio, website, location, email, profileImage, coverImage, gender, birthday } = await req.json();
     const nickname = rawNickname ? rawNickname.trim() : undefined;
 
     // Nickname validasyonu
@@ -316,6 +318,7 @@ export async function PUT(
         ...(fullName !== undefined && { fullName }),
         ...(bio !== undefined && { bio }),
         ...(website !== undefined && { website }),
+        ...(location !== undefined && { location }),
         ...(email && { email }),
         ...(gender !== undefined && { gender }),
         ...(birthday !== undefined && { birthday: birthday ? new Date(birthday) : null }),

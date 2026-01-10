@@ -59,8 +59,21 @@ export async function GET(req: Request) {
       );
     }
 
+    // --- LAZY MIGRATION FOR LEGACY USERS ---
+    // If setup is NOT complete, but nickname DOES NOT look like a temporary one (starts with "user_"),
+    // then assume it's a legacy user who already has a custom name. Mark them as complete.
+    let isSetupComplete = user.isSetupComplete;
+    if (!isSetupComplete && user.nickname && !user.nickname.startsWith("user_")) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isSetupComplete: true }
+      });
+      isSetupComplete = true; // Return true in this response
+    }
+
     return NextResponse.json({
       ...user,
+      isSetupComplete, // Use the updated value
       active: true // Kullanıcı aktif
     });
   } catch (error) {

@@ -16,6 +16,12 @@ const config: Config = {
                 'theme-accent': 'var(--app-accent)',
                 'theme-bg': 'var(--app-body-bg)',
                 'theme-surface': 'var(--app-surface)',
+                'theme-header': 'var(--app-header-bg)',
+                'theme-footer': 'var(--app-footer-bg)',
+                'theme-hover': 'var(--app-card-hover)',
+                'theme-active': 'var(--app-card-active)',
+                'theme-icon': 'var(--app-icon-nav)',
+                'theme-icon-active': 'var(--app-icon-verified)',
                 'black': '#040404', // Override black to match app background
             },
             fontFamily: {

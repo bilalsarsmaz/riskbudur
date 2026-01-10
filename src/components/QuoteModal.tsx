@@ -54,7 +54,7 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
           </div>
           <hr className="border-theme-border" />
 
-          <div className="p-4 pb-0">
+          <div className="p-4 pb-[11px]">
             {/* Quote Content */}
             <div className="post-quote mb-3 rounded-lg overflow-hidden" style={{ border: "0.4px solid #333" }}>
               <div className="p-3">

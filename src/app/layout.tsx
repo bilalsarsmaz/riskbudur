@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 import ApprovalGuard from "@/components/ApprovalGuard";
+import ThemeInitializer from "@/components/ThemeInitializer";
 import BanChecker from "@/components/BanChecker";
 import MaintenancePage from "@/components/MaintenancePage";
 import { getSystemSettings } from "@/lib/settings";
@@ -63,6 +64,7 @@ export default async function RootLayout({
     <html lang="tr">
       <body className={`${openSans.variable} font-sans antialiased`}>
         <ApprovalGuard>
+          <ThemeInitializer />
           <BanChecker />
           {children}
         </ApprovalGuard>

@@ -130,11 +130,11 @@ export default function AdminStatusPage() {
     };
 
     const StatusCard = ({ title, value, icon: Icon, subtext, color = "var(--app-global-link-color)" }: any) => (
-        <div className="p-4 rounded-2xl border border-theme-border flex items-start justify-between" style={{ backgroundColor: 'var(--app-surface)' }}>
+        <div className="p-4 rounded-2xl border border-theme-border flex items-start justify-between bg-theme-surface">
             <div>
-                <p className="text-sm font-medium mb-1" style={{ color: 'var(--app-subtitle)' }}>{title}</p>
-                <h3 className="text-2xl font-bold" style={{ color: 'var(--app-body-text)' }}>{value}</h3>
-                {subtext && <p className="text-xs mt-1" style={{ color: 'var(--app-subtitle)' }}>{subtext}</p>}
+                <p className="text-sm font-medium mb-1 text-theme-subtitle">{title}</p>
+                <h3 className="text-2xl font-bold text-theme-text">{value}</h3>
+                {subtext && <p className="text-xs mt-1 text-theme-subtitle">{subtext}</p>}
             </div>
             <div className="p-2 rounded-xl bg-opacity-10" style={{ backgroundColor: `${color}20` }}>
                 <Icon size={24} style={{ color: color }} />
@@ -162,9 +162,9 @@ export default function AdminStatusPage() {
                 <GlobalHeader title="Sunucu Durumu" subtitle="Sistem İzleme Paneli" />
                 <button
                     onClick={loadStatus}
-                    className="p-2 rounded-full hover:bg-[var(--app-border)] transition-colors"
+                    className="p-2 rounded-full hover:bg-theme-border transition-colors"
                 >
-                    <IconRefresh size={20} className={refreshing ? "animate-spin" : ""} style={{ color: 'var(--app-body-text)' }} />
+                    <IconRefresh size={20} className={`text-theme-text ${refreshing ? "animate-spin" : ""}`} />
                 </button>
             </div>
 
@@ -202,17 +202,17 @@ export default function AdminStatusPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* 2. Orta Kısım: Servis Sağlık Tablosu */}
-                    <div className="lg:col-span-2 rounded-2xl border border-theme-border overflow-hidden" style={{ backgroundColor: 'var(--app-surface)' }}>
+                    <div className="lg:col-span-2 rounded-2xl border border-theme-border overflow-hidden bg-theme-surface">
                         <div className="px-5 py-4 border-b border-theme-border">
-                            <h3 className="font-bold text-lg" style={{ color: 'var(--app-body-text)' }}>Servis Durumları</h3>
+                            <h3 className="font-bold text-lg text-theme-text">Servis Durumları</h3>
                         </div>
                         <div className="divide-y divide-theme-border">
                             <div className="px-5 py-4 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <IconDatabase size={20} className="text-blue-500" />
                                     <div>
-                                        <p className="font-medium" style={{ color: 'var(--app-body-text)' }}>PostgreSQL Veritabanı</p>
-                                        <p className="text-xs" style={{ color: 'var(--app-subtitle)' }}>Ana veri saklama alanı</p>
+                                        <p className="font-medium text-theme-text">PostgreSQL Veritabanı</p>
+                                        <p className="text-xs text-theme-subtitle">Ana veri saklama alanı</p>
                                     </div>
                                 </div>
                                 <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${data?.db.status === 'connected' ? 'bg-[#1DCD9F]/10 text-[#1DCD9F]' : 'bg-[#F4212E]/10 text-[#F4212E]'}`}>
@@ -225,8 +225,8 @@ export default function AdminStatusPage() {
                                 <div className="flex items-center gap-3">
                                     <IconServer size={20} className="text-purple-500" />
                                     <div>
-                                        <p className="font-medium" style={{ color: 'var(--app-body-text)' }}>API Gateway</p>
-                                        <p className="text-xs" style={{ color: 'var(--app-subtitle)' }}>/api/ endpoints</p>
+                                        <p className="font-medium text-theme-text">API Gateway</p>
+                                        <p className="text-xs text-theme-subtitle">/api/ endpoints</p>
                                     </div>
                                 </div>
                                 <div className="px-3 py-1 rounded-full bg-[#1DCD9F]/10 text-[#1DCD9F] text-xs font-bold flex items-center gap-1">
@@ -238,8 +238,8 @@ export default function AdminStatusPage() {
                                 <div className="flex items-center gap-3">
                                     <IconDeviceDesktopAnalytics size={20} className="text-orange-500" />
                                     <div>
-                                        <p className="font-medium" style={{ color: 'var(--app-body-text)' }}>Web Sunucusu</p>
-                                        <p className="text-xs" style={{ color: 'var(--app-subtitle)' }}>Next.js Rendering</p>
+                                        <p className="font-medium text-theme-text">Web Sunucusu</p>
+                                        <p className="text-xs text-theme-subtitle">Next.js Rendering</p>
                                     </div>
                                 </div>
                                 <div className="px-3 py-1 rounded-full bg-[#1DCD9F]/10 text-[#1DCD9F] text-xs font-bold flex items-center gap-1">
@@ -249,12 +249,12 @@ export default function AdminStatusPage() {
 
                             <div className="px-5 py-4 flex items-center justify-between bg-opacity-50 opacity-60">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-5 h-5 flex items-center justify-center font-bold text-[10px] rounded border border-[var(--app-subtitle)] text-[var(--app-subtitle)]">
+                                    <div className="w-5 h-5 flex items-center justify-center font-bold text-[10px] rounded border border-theme-subtitle text-theme-subtitle">
                                         PHP
                                     </div>
                                     <div>
-                                        <p className="font-medium" style={{ color: 'var(--app-body-text)' }}>PHP FastCGI Process</p>
-                                        <p className="text-xs" style={{ color: 'var(--app-subtitle)' }}>Backend Services</p>
+                                        <p className="font-medium text-theme-text">PHP FastCGI Process</p>
+                                        <p className="text-xs text-theme-subtitle">Backend Services</p>
                                     </div>
                                 </div>
                                 <div className="px-3 py-1 rounded-full bg-gray-500/10 text-gray-500 text-xs font-bold flex items-center gap-1">
@@ -267,33 +267,32 @@ export default function AdminStatusPage() {
                     {/* 3. Sağ Kısım: Yönetim & Bilgi */}
                     <div className="space-y-6">
                         {/* Sistem Bilgisi */}
-                        <div className="rounded-2xl border border-theme-border p-5" style={{ backgroundColor: 'var(--app-surface)' }}>
-                            <h3 className="font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Sistem Bilgileri</h3>
+                        <div className="rounded-2xl border border-theme-border p-5 bg-theme-surface">
+                            <h3 className="font-bold mb-4 text-theme-text">Sistem Bilgileri</h3>
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--app-subtitle)' }}>Platform</span>
-                                    <span className="font-mono" style={{ color: 'var(--app-body-text)' }}>{data?.system.platform}</span>
+                                    <span className="text-theme-subtitle">Platform</span>
+                                    <span className="font-mono text-theme-text">{data?.system.platform}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--app-subtitle)' }}>Node Sürümü</span>
-                                    <span className="font-mono" style={{ color: 'var(--app-body-text)' }}>{data?.system.nodeVersion}</span>
+                                    <span className="text-theme-subtitle">Node Sürümü</span>
+                                    <span className="font-mono text-theme-text">{data?.system.nodeVersion}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--app-subtitle)' }}>Memory (Heap)</span>
-                                    <span className="font-mono" style={{ color: 'var(--app-body-text)' }}>{data?.system.memory.heapUsed} MB</span>
+                                    <span className="text-theme-subtitle">Memory (Heap)</span>
+                                    <span className="font-mono text-theme-text">{data?.system.memory.heapUsed} MB</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Hızlı İşlemler */}
-                        <div className="rounded-2xl border border-theme-border p-5" style={{ backgroundColor: 'var(--app-surface)' }}>
-                            <h3 className="font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Hızlı İşlemler</h3>
+                        <div className="rounded-2xl border border-theme-border p-5 bg-theme-surface">
+                            <h3 className="font-bold mb-4 text-theme-text">Hızlı İşlemler</h3>
 
                             <button
                                 onClick={handleClearCache}
                                 disabled={refreshing}
-                                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-theme-border hover:bg-[var(--app-border)] transition-colors mb-3 font-medium text-sm"
-                                style={{ color: 'var(--app-body-text)' }}
+                                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-theme-border hover:bg-theme-border transition-colors mb-3 font-medium text-sm text-theme-text"
                             >
                                 <IconRefresh size={18} /> Önbelleği Temizle
                             </button>
@@ -306,7 +305,7 @@ export default function AdminStatusPage() {
                                 <IconAlertTriangle size={18} />
                                 {maintenanceLoading ? "İşleniyor..." : (isMaintenance ? "Bakım Modunu Kapat" : "Bakım Moduna Al")}
                             </button>
-                            <p className="text-xs mt-2 text-center opacity-70" style={{ color: 'var(--app-subtitle)' }}>
+                            <p className="text-xs mt-2 text-center opacity-70 text-theme-subtitle">
                                 {isMaintenance ? "Site şu an sadece yöneticilere açık." : "Site şu an herkese açık."}
                             </p>
                         </div>

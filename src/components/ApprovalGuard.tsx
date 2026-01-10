@@ -9,6 +9,7 @@ export default function ApprovalGuard({ children }: { children: React.ReactNode 
     const pathname = usePathname();
     const router = useRouter();
     const [isApproved, setIsApproved] = useState<boolean | null>(null);
+    const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(true);
 
     // Whitelisted paths that don't need approval check
@@ -37,6 +38,7 @@ export default function ApprovalGuard({ children }: { children: React.ReactNode 
                 const user = await fetchApi("/users/me");
                 if (user) {
                     setIsApproved(user.isApproved);
+                    setIsSetupComplete(user.isSetupComplete);
                 } else {
                     // Token invalid?
                     setIsApproved(false);
@@ -53,15 +55,38 @@ export default function ApprovalGuard({ children }: { children: React.ReactNode 
 
     // If loading or no token (public access), render children
     // Note: If no token, we rely on other guards for protected pages.
-    if (loading || isApproved === null || isApproved === true) {
+    if (loading) {
+        return <div className="min-h-screen bg-black" />; // Prevent flash
+    }
+
+    if (isApproved === null && !localStorage.getItem("token")) {
+        return <>{children}</>;
+    }
+
+    // 1. ENFORCE SETUP: If approved but setup not complete -> Force /setup
+    // But check if we are already on /setup to facilitate the process
+    if (isApproved && isSetupComplete === false) {
+        if (pathname !== setupPath) {
+            router.push(setupPath);
+            return <div className="min-h-screen bg-black flex items-center justify-center text-white">Kuruluma Yönlendiriliyor...</div>;
+        }
+        return <>{children}</>;
+    }
+
+    // 2. BLOCK SETUP: If setup is complete -> Block /setup
+    if (isSetupComplete === true && pathname === setupPath) {
+        router.push("/home");
+        return <div className="min-h-screen bg-black flex items-center justify-center text-white">Yönlendiriliyor...</div>;
+    }
+
+    // 3. APPROVAL CHECK
+    if (isApproved === true) {
         return <>{children}</>;
     }
 
     // If NOT approved
-    // Allow setup page
-    if (pathname === setupPath) {
-        return <>{children}</>;
-    }
+    // Allow setup page? No, they must be approved first.
+    // If they are not approved, they can't do setup.
 
     // Allow public paths if logic flows here (though specific checks might be needed)
     if (publicPaths.some(p => pathname === p || pathname?.startsWith("/api") || pathname?.startsWith("/help"))) {

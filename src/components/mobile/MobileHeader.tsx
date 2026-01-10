@@ -50,26 +50,11 @@ export default function MobileHeader() {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     'user-management': false,
     'content-moderation': false,
     'system-technical': false
   });
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-  };
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => ({
@@ -564,44 +549,6 @@ export default function MobileHeader() {
                       >
                         <IconLogout className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
                         <span>Çıkış</span>
-                      </button>
-                    </li>
-                  </ul>
-
-                  <hr className="border-theme-border my-4" />
-
-                  <ul className="space-y-1">
-                    <li>
-                      <button
-                        onClick={toggleTheme}
-                        className="w-full flex items-center p-3 rounded-lg text-left transition-colors"
-                      >
-                        {/* Custom Toggle Switch */}
-                        <div
-                          className={`relative w-[48px] h-[26px] rounded-full transition-colors duration-300 mr-3 flex-shrink-0 border ${theme === 'dark' ? 'bg-black border-gray-700' : 'bg-gray-200 border-gray-300'}`}
-                        >
-                          {/* Sun Icon (Left Background - Visible when Dark) */}
-                          <div className={`absolute left-1.5 top-1 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
-                            <IconSun className="w-4 h-4 text-gray-500" />
-                          </div>
-
-                          {/* Moon Icon (Right Background - Visible when Light) */}
-                          <div className={`absolute right-1.5 top-1 transition-opacity duration-300 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
-                            <IconMoon className="w-4 h-4 text-gray-400" />
-                          </div>
-
-                          {/* Sliding Circle */}
-                          <div
-                            className={`absolute top-[2px] w-[20px] h-[20px] rounded-full shadow-sm flex items-center justify-center transition-transform duration-300 bg-[#f97316] ${theme === 'dark' ? 'translate-x-[25px]' : 'translate-x-[3px]'}`}
-                          >
-                            {theme === 'dark' ? (
-                              <IconMoonFilled className="w-3 h-3 text-white" />
-                            ) : (
-                              <IconSunFilled className="w-3 h-3 text-white" />
-                            )}
-                          </div>
-                        </div>
-                        <span style={{ color: 'var(--app-body-text)' }} className="text-xs sm:text-sm">Platform Temasını Değiştir</span>
                       </button>
                     </li>
                   </ul>

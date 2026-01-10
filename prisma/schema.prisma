@@ -25,6 +25,7 @@ model User {
   updatedAt             DateTime?             @updatedAt
   isSetupComplete       Boolean               @default(false)
   birthday              DateTime?
+  location              String?
   gender                String?
   lastSeen              DateTime?             @default(now())
   // ipAddress removed
