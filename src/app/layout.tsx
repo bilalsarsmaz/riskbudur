@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   description: "underground sosyal medya",
 };
 
-import ApprovalGuard from "@/components/ApprovalGuard";
 import ThemeInitializer from "@/components/ThemeInitializer";
 import BanChecker from "@/components/BanChecker";
 import MaintenancePage from "@/components/MaintenancePage";
@@ -68,11 +67,9 @@ export default async function RootLayout({
   return (
     <html lang="tr">
       <body className={`${openSans.variable} ${montserrat.variable} font-sans antialiased`}>
-        <ApprovalGuard>
-          <ThemeInitializer />
-          <BanChecker />
-          {children}
-        </ApprovalGuard>
+        <ThemeInitializer />
+        <BanChecker />
+        {children}
       </body>
     </html>
   );
