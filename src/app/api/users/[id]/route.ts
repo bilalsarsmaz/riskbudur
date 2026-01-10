@@ -188,7 +188,14 @@ export async function GET(
       isBanned: user.isBanned,
       isBlocked,
       isBlocking,
-      visitors: visitors // Include visitors in response
+      isFollowing,
+      followsYou,
+      isBanned: user.isBanned,
+      isBlocked,
+      isBlocking,
+      visitors: visitors,
+      location: user.location,
+      birthday: user.birthday,
     });
   } catch (error) {
     console.error("Kullanıcı bilgisi getirme hatası:", error);
