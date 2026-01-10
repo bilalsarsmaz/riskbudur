@@ -221,7 +221,7 @@ export default function LeftSidebar() {
                       </div>
                     )}
                   </div>
-                  <span className={`hidden xl:inline text-[20px] ${isActive ? 'font-bold' : ''}`} style={{ color: 'var(--app-body-text)' }}>{item.label}</span>
+                  <span className={`hidden xl:inline app-body-text-title ${isActive ? 'font-bold' : ''}`} style={{ color: 'var(--app-body-text)' }}>{item.label}</span>
 
                 </Link>
               </li>

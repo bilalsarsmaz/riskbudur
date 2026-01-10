@@ -151,6 +151,22 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
+                        {/* Setting Item: Modern Trending UI */}
+                        <div className="p-4 flex items-center justify-between border-b border-gray-800 last:border-0 hover:bg-[#151515] transition-colors">
+                            <div>
+                                <h3 className="font-bold text-white mb-1">Modern Gündem Kutuları</h3>
+                                <p className="text-sm text-gray-400">
+                                    WEB görünümündeki gündem bölümünde bulunan hashtag kutusunu aktif ederseniz, görünümü modern etiketler olarak gözükecektir.
+                                </p>
+                            </div>
+                            <div className="pl-4">
+                                <ToggleSwitch
+                                    checked={settings["modern_trending_ui"] === "true"}
+                                    onChange={() => toggleSetting("modern_trending_ui", settings["modern_trending_ui"] === "true")}
+                                />
+                            </div>
+                        </div>
+
                         {/* More settings can be added here */}
 
                     </div>

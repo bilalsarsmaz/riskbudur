@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconChevronRight, IconBoltFilled } from "@tabler/icons-react";
 import PopularPostsSlider from "./PopularPostsSlider";
 import { fetchApi } from "@/lib/api";
 
@@ -41,6 +41,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
   const [loading, setLoading] = useState(true);
   const [visitorsLoading, setVisitorsLoading] = useState(false);
   const [showPopularPosts, setShowPopularPosts] = useState(true);
+  const [isModernTrending, setIsModernTrending] = useState(false);
 
   useEffect(() => {
     if (isProfilePage) {
@@ -62,7 +63,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
 
     const fetchTrendingHashtags = async () => {
       try {
-        const data = await fetchApi("/hashtags/trending") as HashtagsResponse;
+        const data = await fetchApi("/hashtags/trending?limit=10") as HashtagsResponse;
 
         if (data.hashtags && data.hashtags.length > 0) {
           setTrendingHashtags(data.hashtags);
@@ -101,6 +102,9 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
           if (settings["enable_popular_posts"] === "false") {
             setShowPopularPosts(false);
           }
+          if (settings["modern_trending_ui"] === "true") {
+            setIsModernTrending(true);
+          }
         }
       } catch (error) {
         console.error("Error fetching settings:", error);
@@ -114,43 +118,86 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     <div className="space-y-4">
       {/* Trending Hashtags */}
       {!hideHashtags && (
-        <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Gündem</h2>
-          {loading ? (
-            <div className="flex justify-center py-4">
-              <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div>
+        <>
+          {isModernTrending ? (
+            <div className="mb-8">
+              <h2 className="app-body-text-title mb-4 flex items-center gap-2" style={{ color: 'var(--app-body-text)' }}>
+                <IconBoltFilled size={24} className="text-orange-500" />
+                Gündem
+              </h2>
+              {loading ? (
+                <div className="flex justify-center py-4">
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {trendingHashtags.map((hashtag) => (
+                      <Link
+                        key={hashtag.id}
+                        href={`/hashtag/${hashtag.name}`}
+                        className="px-2 py-1 rounded-full border text-[14px] font-bold transition-colors truncate max-w-full"
+                        style={{
+                          backgroundColor: 'transparent',
+                          borderColor: 'var(--app-border)',
+                          color: 'var(--app-body-text)',
+                        }}
+                      >
+                        {hashtag.name}
+                      </Link>
+                    ))}
+                  </div>
+
+                  <Link
+                    href="/i/explore"
+                    className="flex items-center gap-1 pt-2"
+                    style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
+                  >
+                    <span>Daha fazla göster</span>
+                    <IconChevronRight className="h-4 w-4" />
+                  </Link>
+                </>
+              )}
             </div>
           ) : (
-            <div className="space-y-1">
-              {trendingHashtags.map((hashtag) => (
-                <Link
-                  key={hashtag.id}
-                  href={`/hashtag/${hashtag.name}`}
-                  className="flex flex-col items-start py-2 px-2 -mx-2 rounded-2xl hover:bg-white/5 transition-colors"
-                >
-                  <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
-                  <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} gönderi</span>
-                </Link>
-              ))}
+            <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
+              <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>Gündem</h2>
+              {loading ? (
+                <div className="flex justify-center py-4">
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {trendingHashtags.slice(0, 5).map((hashtag) => (
+                    <Link
+                      key={hashtag.id}
+                      href={`/hashtag/${hashtag.name}`}
+                      className="flex flex-col items-start py-2 px-2 -mx-2 rounded-2xl hover:bg-white/5 transition-colors"
+                    >
+                      <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
+                      <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} gönderi</span>
+                    </Link>
+                  ))}
 
-              {/* Daha fazla göster */}
-              <Link
-                href="/i/explore"
-                className="flex items-center gap-1 pt-3"
-                style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
-              >
-                <span>Daha fazla göster</span>
-                <IconChevronRight className="h-4 w-4" />
-              </Link>
+                  <Link
+                    href="/i/explore"
+                    className="flex items-center gap-1 pt-3"
+                    style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
+                  >
+                    <span>Daha fazla göster</span>
+                    <IconChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
 
       {/* Dikizleyenler (Profile Page Only) OR Popular Posts (Other Pages) */}
       {isProfilePage ? (
         <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Dikizleyenler</h2>
+          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>Dikizleyenler</h2>
           {visitorsLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#1DCD9F]"></div>
@@ -184,7 +231,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
         </div>
       ) : showPopularPosts ? (
         <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--app-body-text)' }}>Popüler Postlar</h2>
+          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>Popüler Postlar</h2>
           <PopularPostsSlider />
         </div>
       ) : null}

@@ -513,3 +513,9 @@ svg.app-adminbadge,
 .app-adminbadge {
   color: #1DCD9F !important;
 }
+
+.app-body-text-title {
+  font-size: 17px !important;
+  font-weight: 700;
+  /* Assuming titles should be bold as they were h2/menu items */
+}

@@ -42,6 +42,7 @@ export async function GET(req: Request) {
         role: true,
         isSetupComplete: true,
         isApproved: true,
+        location: true,
         _count: {
           select: {
             posts: true,
@@ -104,7 +105,7 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { nickname: rawNickname, fullName, bio, website, email, currentPassword, newPassword, profileImage, coverImage, gender, birthday } = await req.json();
+    const { nickname: rawNickname, fullName, bio, website, location, email, currentPassword, newPassword, profileImage, coverImage, gender, birthday } = await req.json();
     const nickname = rawNickname ? rawNickname.trim() : undefined;
 
     // Nickname validasyonu
@@ -163,6 +164,7 @@ export async function PUT(req: Request) {
         ...(fullName !== undefined && { fullName }),
         ...(bio !== undefined && { bio }),
         ...(website !== undefined && { website }),
+        ...(location !== undefined && { location }),
         ...(email && { email }),
         ...(gender !== undefined && { gender }),
         ...(birthday !== undefined && { birthday: birthday ? new Date(birthday) : null }),
@@ -176,6 +178,7 @@ export async function PUT(req: Request) {
         nickname: true,
         bio: true,
         website: true,
+        location: true,
         profileImage: true,
         coverImage: true,
         gender: true,

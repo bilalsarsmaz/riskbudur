@@ -23,7 +23,8 @@ import {
   IconRosetteDiscountCheckFilled,
   IconUserCancel,
   IconMail,
-  IconUserCog
+  IconUserCog,
+  IconConfetti
 } from "@tabler/icons-react";
 // import DirectMessageModal from "@/components/DirectMessageModal";
 import { fetchApi, postApi, deleteApi } from "@/lib/api";
@@ -124,22 +125,42 @@ export default function UserProfilePage() {
     let lastIndex = 0;
     const hashtagRegex = /#[\p{L}\p{N}_]+/gu;
     const mentionRegex = /@[\w_]+/g;
-    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2}(?:\/[^\s]*)?)/g;
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/g;
 
-    // Basit match yapısı
-    const matches: Array<{ type: 'hashtag' | 'mention' | 'link'; start: number; end: number; text: string }> = [];
+    const matches: Array<{ type: 'hashtag' | 'mention' | 'link' | 'email'; start: number; end: number; text: string }> = [];
 
     let match;
 
+    // Email'leri bul (En öncelikli)
+    while ((match = emailRegex.exec(bio)) !== null) {
+      matches.push({ type: 'email', start: match.index, end: match.index + match[0].length, text: match[0] });
+    }
+
     // Hashtag'leri bul
     while ((match = hashtagRegex.exec(bio)) !== null) {
-      matches.push({ type: 'hashtag', start: match.index, end: match.index + match[0].length, text: match[0] });
+      const m = match;
+      // Çakışma kontrolü
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end)
+      );
+      if (!isOverlapping) {
+        matches.push({ type: 'hashtag', start: match.index, end: match.index + match[0].length, text: match[0] });
+      }
     }
 
     // Mention'ları bul
     while ((match = mentionRegex.exec(bio)) !== null) {
-      const isEmail = match.index > 0 && bio[match.index - 1] !== ' ' && bio[match.index - 1] !== '\n';
-      if (!isEmail) {
+      // Email kontrolüne gerek yok çünkü yukarıdaki email regex'i bunu yakalayacak ve overlapping kontrolü engelleyecek
+      const m = match;
+      // Çakışma kontrolü
+      const isOverlapping = matches.some(existing =>
+        (existing.start <= m.index && m.index < existing.end) ||
+        (existing.start < m.index + m[0].length && m.index + m[0].length <= existing.end)
+      );
+
+      if (!isOverlapping) {
         matches.push({ type: 'mention', start: match.index, end: match.index + match[0].length, text: match[0] });
       }
     }
@@ -186,12 +207,25 @@ export default function UserProfilePage() {
           <Link
             key={`mention-${index}`}
             href={`/${username}`}
-            className="hover:opacity-80" // Underline removed as per user preference
+            className="hover:opacity-80"
             style={{ color: "var(--app-global-link-color)" }}
             onClick={(e) => e.stopPropagation()}
           >
             {match.text}
           </Link>
+        );
+        lastIndex = match.end;
+      } else if (match.type === 'email') {
+        parts.push(
+          <a
+            key={`email-${index}`}
+            href={`mailto:${match.text}`}
+            className="hover:underline"
+            style={{ color: "var(--app-global-link-color)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {match.text}
+          </a>
         );
         lastIndex = match.end;
       } else if (match.type === 'link') {
@@ -587,7 +621,7 @@ export default function UserProfilePage() {
               className="w-4 h-4 ml-0.5"
             />
           </div>
-          <span className="text-xs text-[#71767b]">{profile!.postsCount || 0} gönderi</span>
+          <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{profile!.postsCount || 0} gönderi</span>
         </div>
       </div>
 
@@ -718,7 +752,7 @@ export default function UserProfilePage() {
 
           <div className="mt-4">
             <div className="flex items-center mb-1">
-              <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h1>
+              <h1 className="app-body-text-title" style={{ color: 'var(--app-body-text)' }}>{profile!.fullName}</h1>
               <VerificationBadge
                 tier={profile!.verificationTier}
                 hasBlueTick={profile!.hasBlueTick}
@@ -731,7 +765,7 @@ export default function UserProfilePage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-gray-500">@{profile!.username}</p>
+              <p style={{ color: 'var(--app-subtitle)' }}>@{profile!.username}</p>
               {profile!.followsYou && (
                 <span
                   className="text-[11px] px-1.5 py-0.5 rounded font-medium border"
@@ -749,34 +783,35 @@ export default function UserProfilePage() {
             {profile!.bio && <p className="mt-2" style={{ color: 'var(--app-body-text)' }}>{parseBioWithMentions(profile!.bio)}</p>}
 
             <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 mt-2">
-              {profile!.website && (
-                <a
-                  href={profile!.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center"
-                  style={{ color: 'var(--app-global-link-color)' }}
-                >
-                  <LinkIcon className="w-4 h-4 mr-1" />
-                  {profile!.website}
-                </a>
-              )}
               {profile!.location && (
                 <div className="flex items-center" style={{ color: "var(--app-subtitle)" }}>
                   <IconMapPin className="w-4 h-4 mr-1" />
                   {profile!.location}
                 </div>
               )}
+              {profile!.website && (
+                <a
+                  href={profile!.website.startsWith('http') ? profile!.website : `https://${profile!.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center hover:underline"
+                >
+                  <LinkIcon className="w-4 h-4 mr-1" style={{ color: "var(--app-subtitle)" }} />
+                  <span style={{ color: 'var(--app-global-link-color)' }}>
+                    {profile!.website.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')}
+                  </span>
+                </a>
+              )}
               {profile!.birthday && (
                 <div className="flex items-center" style={{ color: "var(--app-subtitle)" }}>
-                  <IconCalendar className="w-4 h-4 mr-1" />
+                  <IconConfetti className="w-4 h-4 mr-1" />
                   Doğum tarihi: {new Date(profile!.birthday).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </div>
               )}
-              <div className="flex items-center" style={{ color: "var(--app-subtitle)" }}>
-                <CalendarIcon className="w-4 h-4 mr-1" />
-                Katılma tarihi: {profile!.joinDate}
-              </div>
+            </div>
+            <div className="flex items-center mt-2" style={{ color: "var(--app-subtitle)" }}>
+              <CalendarIcon className="w-4 h-4 mr-1" />
+              Katılma tarihi: {profile!.joinDate}
             </div>
 
             <div className="flex space-x-4 mt-2">
