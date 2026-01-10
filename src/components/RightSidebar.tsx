@@ -126,7 +126,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                 <Link
                   key={hashtag.id}
                   href={`/hashtag/${hashtag.name}`}
-                  className="flex flex-col items-start py-2 px-2 -mx-2 rounded-lg hover:bg-white/5 transition-colors"
+                  className="flex flex-col items-start py-2 px-2 -mx-2 rounded-2xl hover:bg-white/5 transition-colors"
                 >
                   <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
                   <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} gönderi</span>
