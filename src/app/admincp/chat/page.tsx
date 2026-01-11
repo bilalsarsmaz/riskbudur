@@ -157,7 +157,7 @@ export default function AdminChatPage() {
         <AdmStandardPageLayout sidebarContent={<AdminSidebar />} rightSidebarContent={rightSidebarContent}>
             <GlobalHeader title="Yönetim Sohbeti" subtitle="Oldskool IRC mevzuları" />
 
-            <div className="flex flex-col h-[calc(100vh-80px)] p-2">
+            <div className="flex flex-col h-[calc(100dvh-176px)] lg:h-[calc(100vh-80px)] p-2">
 
                 {/* Chat Window */}
                 <div className="flex-1 bg-black border border-theme-border rounded-t-lg p-4 overflow-y-auto font-mono text-sm custom-scrollbar">

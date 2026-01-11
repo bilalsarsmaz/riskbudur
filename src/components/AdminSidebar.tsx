@@ -34,6 +34,7 @@ import {
 import VerificationBadge from "@/components/VerificationBadge";
 import AdminBadge from "@/components/AdminBadge";
 import { hasPermission, Permission, Role } from "@/lib/permissions";
+import { useTranslation } from "@/components/TranslationProvider";
 
 interface MenuItem {
     id: string;
@@ -76,48 +77,50 @@ export default function AdminSidebar() {
         fetchUserData();
     }, []);
 
+    const { t } = useTranslation();
+
     const menuStructure: MenuItem[] = useMemo(() => [
         {
             id: "dashboard",
-            label: "Dashboard",
+            label: t("sidebar.dashboard"),
             icon: IconLayoutDashboard,
             href: "/admincp",
             visible: true
         },
         {
             id: "chat",
-            label: "Chat",
-            icon: IconMessage2Search, // Using existing icon or a better one if available? IconMessage is good.
+            label: t("sidebar.chat"),
+            icon: IconMessage2Search,
             href: "/admincp/chat",
-            visible: true // Visible to all admins who can see the dashboard
+            visible: true
         },
         {
             id: "user-management",
-            label: "Kullanıcılar",
+            label: t("sidebar.users"),
             icon: IconUsersGroup,
             visible: true,
             children: [
                 {
                     id: "users-list",
-                    label: "Kullanıcı Listesi",
+                    label: t("sidebar.users_list"),
                     href: "/admincp/users",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_USER_FULLNAME) || hasPermission(userInfo?.role as Role, Permission.BAN_USER)
                 },
                 {
                     id: "approve-users",
-                    label: "Üye Onay Havuzu",
+                    label: t("sidebar.approve_users"),
                     href: "/admincp/approveuser",
                     visible: hasPermission(userInfo?.role as Role, Permission.APPROVE_USER)
                 },
                 {
                     id: "badges",
-                    label: "Rozet Talepleri",
+                    label: t("sidebar.badges"),
                     href: "/admincp/badges",
                     visible: hasPermission(userInfo?.role as Role, Permission.GRANT_BADGES)
                 },
                 {
                     id: "bans",
-                    label: "Cezalı Hesaplar",
+                    label: t("sidebar.bans"),
                     href: "/admincp/bans",
                     visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER)
                 },
@@ -126,25 +129,25 @@ export default function AdminSidebar() {
         },
         {
             id: "content-moderation",
-            label: "İçerik",
+            label: t("sidebar.content"),
             icon: IconTimelineEventText,
             visible: true,
             children: [
                 {
                     id: "posts",
-                    label: "Gönderi Yönetimi",
+                    label: t("sidebar.posts"),
                     href: "/admincp/posts",
                     visible: hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
                 },
                 {
                     id: "reports",
-                    label: "Şikayetler",
+                    label: t("sidebar.reports"),
                     href: "/admincp/reports",
                     visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER) || hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
                 },
                 {
                     id: "sensitive",
-                    label: "Hassas İçerik",
+                    label: t("sidebar.sensitive"),
                     href: "/admincp/sensitive-content",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_SENSITIVE_CONTENT)
                 },
@@ -153,51 +156,57 @@ export default function AdminSidebar() {
         },
         {
             id: "system-technical",
-            label: "Sistem",
+            label: t("sidebar.system"),
             icon: IconWorldCog,
             visible: true,
             children: [
                 {
                     id: "status",
-                    label: "Sunucu Durumu",
+                    label: t("sidebar.status"),
                     href: "/admincp/status",
                     visible: hasPermission(userInfo?.role as Role, Permission.VIEW_SYSTEM_STATUS)
                 },
                 {
                     id: "announcements",
-                    label: "Duyuru Yönetimi",
+                    label: t("sidebar.announcements"),
                     href: "/admincp/announcements",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
                 },
                 {
                     id: "pages",
-                    label: "Sayfa Yönetimi",
+                    label: t("sidebar.pages"),
                     href: "/admincp/pages",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
                 },
                 {
                     id: "ghost-message",
-                    label: "Ghost Mesaj",
+                    label: t("sidebar.ghost_message"),
                     href: "/admincp/ghostmessage",
                     visible: hasPermission(userInfo?.role as Role, Permission.GHOST_MESSAGE)
+                },
+                {
+                    id: "languages",
+                    label: t("sidebar.languages"),
+                    href: "/admincp/language",
+                    visible: userInfo?.role === "ROOTADMIN"
                 }
             ]
         },
         {
             id: "settings",
-            label: "Ayarlar",
+            label: t("sidebar.settings"),
             icon: IconSettings,
             href: "/admincp/settings",
             visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_SETTINGS)
         },
         {
             id: "back-to-platform",
-            label: "Platforma Dön",
+            label: t("sidebar.back_platform"),
             icon: IconArrowLeftToArc,
             href: "/home",
             visible: true
         }
-    ], [userInfo]);
+    ], [userInfo, t]);
 
     // Auto-expand groups based on active path
     useEffect(() => {
@@ -369,12 +378,15 @@ export default function AdminSidebar() {
                             <IconSettings className="h-5 w-5 mr-2" />
                             Ayarlar
                         </button>
+
+
+
                         <button
                             className="flex items-center w-full p-2 rounded-lg text-theme-text"
                             onClick={handleLogout}
                         >
                             <IconLogout className="h-5 w-5 mr-2" />
-                            Çıkış Yap
+                            {t("sidebar.logout")}
                         </button>
                     </div>
                 </div>

@@ -42,6 +42,7 @@ import {
 import VerificationBadge from "@/components/VerificationBadge";
 import AdminBadge from "@/components/AdminBadge";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
+import { hasPermission, Permission, Role } from "@/lib/permissions";
 
 export default function MobileHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -258,7 +259,7 @@ export default function MobileHeader() {
 
       >
         <div className="flex flex-col h-full">
-          {pathname.startsWith('/admincp') && (userInfo.role === 'ADMIN' || userInfo.role === 'ROOTADMIN') ? (
+          {pathname.startsWith('/admincp') && (userInfo.role === 'ADMIN' || userInfo.role === 'ROOTADMIN' || userInfo.role === 'MODERATOR') ? (
             // =========================
             // ADMIN DRAWER CONTENT
             // =========================
@@ -288,38 +289,46 @@ export default function MobileHeader() {
                     </button>
                     {expandedGroups['user-management'] && (
                       <div className="ml-8 space-y-1">
-                        <Link
-                          href="/admincp/users"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/users") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Kullanıcı Listesi
-                        </Link>
-                        <Link
-                          href="/admincp/approveuser"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/approveuser") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Üye Onay Havuzu
-                        </Link>
-                        <Link
-                          href="/admincp/badges"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/badges") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Rozet Talepleri
-                        </Link>
-                        <Link
-                          href="/admincp/bans"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/bans") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Cezalı Hesaplar
-                        </Link>
+                        {(hasPermission(userInfo?.role as Role, Permission.MANAGE_USER_FULLNAME) || hasPermission(userInfo?.role as Role, Permission.BAN_USER)) && (
+                          <Link
+                            href="/admincp/users"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/users") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Kullanıcı Listesi
+                          </Link>
+                        )}
+                        {hasPermission(userInfo?.role as Role, Permission.APPROVE_USER) && (
+                          <Link
+                            href="/admincp/approveuser"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/approveuser") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Üye Onay Havuzu
+                          </Link>
+                        )}
+                        {hasPermission(userInfo?.role as Role, Permission.GRANT_BADGES) && (
+                          <Link
+                            href="/admincp/badges"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/badges") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Rozet Talepleri
+                          </Link>
+                        )}
+                        {hasPermission(userInfo?.role as Role, Permission.BAN_USER) && (
+                          <Link
+                            href="/admincp/bans"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/bans") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Cezalı Hesaplar
+                          </Link>
+                        )}
                       </div>
                     )}
                   </li>
@@ -335,30 +344,36 @@ export default function MobileHeader() {
                     </button>
                     {expandedGroups['content-moderation'] && (
                       <div className="ml-8 space-y-1">
-                        <Link
-                          href="/admincp/posts"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/posts") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Gönderi Yönetimi
-                        </Link>
-                        <Link
-                          href="/admincp/reports"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/reports") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Şikayetler
-                        </Link>
-                        <Link
-                          href="/admincp/sensitive-content"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/sensitive-content") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Hassas İçerik
-                        </Link>
+                        {hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST) && (
+                          <Link
+                            href="/admincp/posts"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/posts") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Gönderi Yönetimi
+                          </Link>
+                        )}
+                        {(hasPermission(userInfo?.role as Role, Permission.BAN_USER) || hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)) && (
+                          <Link
+                            href="/admincp/reports"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/reports") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Şikayetler
+                          </Link>
+                        )}
+                        {hasPermission(userInfo?.role as Role, Permission.MANAGE_SENSITIVE_CONTENT) && (
+                          <Link
+                            href="/admincp/sensitive-content"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/sensitive-content") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Hassas İçerik
+                          </Link>
+                        )}
                       </div>
                     )}
                   </li>
@@ -374,52 +389,62 @@ export default function MobileHeader() {
                     </button>
                     {expandedGroups['system-technical'] && (
                       <div className="ml-8 space-y-1">
-                        <Link
-                          href="/admincp/status"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/status") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Sunucu Durumu
-                        </Link>
-                        <Link
-                          href="/admincp/announcements"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/announcements") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Duyuru Yönetimi
-                        </Link>
-                        <Link
-                          href="/admincp/pages"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/pages") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Sayfa Yönetimi
-                        </Link>
-                        <Link
-                          href="/admincp/ghostmessage"
-                          className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/ghostmessage") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                          Ghost Mesaj
-                        </Link>
+                        {hasPermission(userInfo?.role as Role, Permission.VIEW_SYSTEM_STATUS) && (
+                          <Link
+                            href="/admincp/status"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/status") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Sunucu Durumu
+                          </Link>
+                        )}
+                        {hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS) && (
+                          <Link
+                            href="/admincp/announcements"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/announcements") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Duyuru Yönetimi
+                          </Link>
+                        )}
+                        {hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES) && (
+                          <Link
+                            href="/admincp/pages"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/pages") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Sayfa Yönetimi
+                          </Link>
+                        )}
+                        {hasPermission(userInfo?.role as Role, Permission.GHOST_MESSAGE) && (
+                          <Link
+                            href="/admincp/ghostmessage"
+                            className={`flex items-center p-2 rounded-lg text-xs sm:text-sm ${pathname.includes("/ghostmessage") ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)] opacity-70"}`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
+                            Ghost Mesaj
+                          </Link>
+                        )}
                       </div>
                     )}
                   </li>
 
-                  <li>
-                    <Link
-                      href="/admincp/settings"
-                      className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname === "/admincp/settings" ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <IconSettings className="h-5 w-5 mr-3" />
-                      <span>Ayarlar</span>
-                    </Link>
-                  </li>
+                  {hasPermission(userInfo?.role as Role, Permission.MANAGE_SETTINGS) && (
+                    <li>
+                      <Link
+                        href="/admincp/settings"
+                        className={`flex items-center p-3 rounded-lg text-sm sm:text-base ${pathname === "/admincp/settings" ? "text-[var(--app-global-link-color)] font-bold" : "hover:bg-[#151515] text-[var(--app-body-text)]"}`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <IconSettings className="h-5 w-5 mr-3" />
+                        <span>Ayarlar</span>
+                      </Link>
+                    </li>
+                  )}
                   <li className="pt-2 border-t border-theme-border mt-2">
                     <Link
                       href="/home"
@@ -494,7 +519,7 @@ export default function MobileHeader() {
                 {/* Menu Items */}
                 <nav>
                   <ul className="space-y-1">
-                    {(userInfo.role === 'ADMIN' || userInfo.role === 'ROOTADMIN') && (
+                    {(userInfo.role === 'ADMIN' || userInfo.role === 'ROOTADMIN' || userInfo.role === 'MODERATOR') && (
                       <li className="md:hidden">
                         <Link
                           href="/admincp"

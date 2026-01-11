@@ -350,3 +350,23 @@ model AdminChatMessage {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
+
+model Language {
+  code      String  @id // e.g., "tr", "en", "it", "fr"
+  name      String  // e.g., "Türkçe", "English"
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false)
+  
+  translations Translation[]
+}
+
+model Translation {
+  id           String   @id @default(cuid())
+  languageCode String
+  key          String   // e.g., "sidebar.badges"
+  value        String   // e.g., "Rozet Talepleri"
+  
+  language     Language @relation(fields: [languageCode], references: [code], onDelete: Cascade)
+  
+  @@unique([languageCode, key]) // A key must be unique per language
+}
