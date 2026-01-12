@@ -6,30 +6,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/lib/api";
 import {
     IconLayoutDashboard,
-    IconSpeakerphone,
-    IconUserSearch,
     IconMessage2Search,
-    IconTerminal2,
-    IconMessageReport,
-    IconRosetteDiscountCheck,
-    IconSitemap,
     IconSettings,
     IconLogout,
     IconDots,
     IconArrowLeftToArc,
-    IconUserCheck,
-    IconMailSpark,
-    IconSun,
-    IconMoon,
-    IconSunFilled,
-    IconMoonFilled,
     IconUsersGroup,
     IconTimelineEventText,
     IconWorldCog,
-    IconBan,
-    IconVocabulary,
-    IconEyeOff,
-    IconServer
 } from "@tabler/icons-react";
 import VerificationBadge from "@/components/VerificationBadge";
 import AdminBadge from "@/components/AdminBadge";
@@ -233,16 +217,17 @@ export default function AdminSidebar() {
     const activeMenuId = pathname === "/admincp" ? "dashboard" : pathname.split("/")[2] || "";
 
     return (
-        <div className="px-2 lg:px-4 pb-4 sticky top-0 flex flex-col h-screen overflow-y-auto w-[280px]">
-            <div className="flex-1">
-                <div className="mb-6 px-2">
+        <div className="flex flex-col h-full bg-black">
+            {/* Scrollable Navigation Area */}
+            <div className="flex-1 overflow-y-auto px-2 lg:px-4 pb-4 w-[280px]">
+                <div className="mb-6 px-2 sticky top-0 bg-black z-20 pt-4">
                     <Link href="/admincp" className="flex items-start justify-center xl:justify-start py-2 xl:pr-2 xl:pl-0">
                         <img src="/riskbudurlogo.png?v=2" alt="Logo" className="w-[40px] h-auto object-contain mr-[5px] xl:mr-[3px] xl:mt-[2px]" />
                         <div className="hidden xl:flex flex-col justify-center mt-[5px]">
-                            <h1 className="text-xl font-extrabold font-montserrat leading-none text-theme-text">
+                            <h1 className="text-xl font-extrabold font-montserrat leading-none app-text-primary">
                                 riskbudur
                             </h1>
-                            <p className="text-[9px] font-medium font-montserrat text-right text-theme-subtitle mt-0">
+                            <p className="text-[9px] font-medium font-montserrat text-right app-text-muted mt-0">
                                 underground sosyal medya
                             </p>
                         </div>
@@ -269,8 +254,8 @@ export default function AdminSidebar() {
                                     className={`flex items-center px-3 py-3 rounded-full transition-all w-fit xl:w-full mb-1 ${isActive ? "font-bold" : ""}`}
                                 >
                                     <div className="relative flex items-center w-full">
-                                        {Icon && <Icon className={`w-[26.25px] h-[26.25px] mr-4 text-theme-text`} stroke={isActive ? 2.5 : 2} />}
-                                        <span className={`hidden xl:block text-[20px] text-theme-text ${isActive ? "font-bold" : "font-normal"}`}>
+                                        {Icon && <Icon className={`w-[26.25px] h-[26.25px] mr-4 app-text-primary`} stroke={isActive ? 2.5 : 2} />}
+                                        <span className={`hidden xl:block text-[20px] app-text-primary ${isActive ? "font-bold" : "font-normal"}`}>
                                             {item.label}
                                         </span>
                                     </div>
@@ -292,8 +277,8 @@ export default function AdminSidebar() {
                                     className={`flex items-center justify-between w-full px-3 py-3 rounded-full transition-all ${isChildActive ? "font-bold" : ""}`}
                                 >
                                     <div className="flex items-center">
-                                        {Icon && <Icon className={`w-[26.25px] h-[26.25px] mr-4 text-theme-text`} stroke={isChildActive ? 2.5 : 2} />}
-                                        <span className={`hidden xl:block text-[20px] text-theme-text ${isChildActive ? "font-bold" : "font-normal"}`}>
+                                        {Icon && <Icon className={`w-[26.25px] h-[26.25px] mr-4 app-text-primary`} stroke={isChildActive ? 2.5 : 2} />}
+                                        <span className={`hidden xl:block text-[20px] app-text-primary ${isChildActive ? "font-bold" : "font-normal"}`}>
                                             {item.label}
                                         </span>
                                     </div>
@@ -308,9 +293,9 @@ export default function AdminSidebar() {
                                                 <Link
                                                     key={child.id}
                                                     href={child.href || "#"}
-                                                    className={`flex items-center px-3 py-2 rounded-full transition-all w-full text-[16px] text-theme-text ${isItemActive ? "font-bold opacity-100" : "font-normal opacity-70 hover:opacity-100"}`}
+                                                    className={`flex items-center px-3 py-2 rounded-full transition-all w-full text-[16px] app-text-primary ${isItemActive ? "font-bold opacity-100" : "font-normal opacity-70 hover:opacity-100"}`}
                                                 >
-                                                    <div className={`w-1.5 h-1.5 rounded-full mr-3 bg-theme-text ${isItemActive ? "opacity-100" : "opacity-50"}`}></div>
+                                                    <div className={`w-1.5 h-1.5 rounded-full mr-3 bg-[var(--app-body-text)] ${isItemActive ? "opacity-100" : "opacity-50"}`}></div>
                                                     {child.label}
                                                 </Link>
                                             );
@@ -324,73 +309,69 @@ export default function AdminSidebar() {
                 </nav>
             </div>
 
-            {/* HR Separator */}
-            <div className="w-full px-2 my-2 xl:my-2 hidden xl:block mt-auto">
-                <div className="border-t border-theme-border"></div>
-            </div>
+            {/* Static Bottom Area - No HR line as requested */}
+            <div className="flex-shrink-0 px-2 lg:px-4 pb-4 pt-2 relative w-[280px]">
+                <div
+                    className="flex items-center justify-center xl:justify-start p-2 rounded-lg cursor-pointer w-full hover:bg-[var(--app-card-hover)] transition-colors"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                >
+                    {userInfo?.profileImage ? (
+                        <img
+                            src={userInfo.profileImage}
+                            alt={userInfo.nickname}
+                            className="w-10 h-10 rounded-full object-cover xl:mr-3 border-[0.5px] app-border"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center xl:mr-3 border-[0.5px] app-border app-bg-surface app-text-primary">
+                            {userInfo?.nickname?.charAt(0).toUpperCase() || 'A'}
+                        </div>
+                    )}
+                    <div className="hidden xl:flex flex-1 flex-col">
+                        <div className="flex items-center text-[15px] font-bold app-text-primary">
+                            {userInfo?.fullName || userInfo?.nickname || 'Admin'}
+                            <VerificationBadge
+                                tier={userInfo?.verificationTier}
+                                hasBlueTick={userInfo?.hasBlueTick}
+                                username={userInfo?.nickname}
+                                className="w-5 h-5 ml-1"
+                            />
+                            <AdminBadge
+                                role={userInfo?.role}
+                                className="w-5 h-5 ml-1"
+                            />
+                        </div>
+                        <div className="text-[13px] app-text-muted">
+                            @{userInfo?.nickname || 'admin'}
+                        </div>
+                    </div>
+                    <IconDots className="hidden xl:block w-5 h-5 app-text-muted" />
+                </div>
 
-            <div
-                className="flex items-center justify-center xl:justify-start p-2 rounded-lg cursor-pointer w-full"
-                onClick={() => setShowUserMenu(!showUserMenu)}
-            >
-                {userInfo?.profileImage ? (
-                    <img
-                        src={userInfo.profileImage}
-                        alt={userInfo.nickname}
-                        className="w-10 h-10 rounded-full object-cover xl:mr-3 border-[0.5px] border-theme-border"
-                    />
-                ) : (
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center xl:mr-3 border-[0.5px] border-theme-border bg-theme-surface text-theme-text">
-                        {userInfo?.nickname?.charAt(0).toUpperCase() || 'A'}
+                {showUserMenu && (
+                    <div className="absolute bottom-full left-4 mb-2 w-[calc(100%-32px)] xl:w-full min-w-[200px] rounded-lg shadow-lg overflow-hidden z-50 bg-black app-border border p-2">
+                        <div>
+                            <button
+                                className="flex items-center w-full p-2 rounded-lg app-text-primary hover:bg-[var(--app-card-hover)] transition-colors"
+                                onClick={() => {
+                                    router.push("/admincp/settings");
+                                    setShowUserMenu(false);
+                                }}
+                            >
+                                <IconSettings className="h-5 w-5 mr-2" />
+                                Ayarlar
+                            </button>
+
+                            <button
+                                className="flex items-center w-full p-2 rounded-lg app-text-primary hover:bg-[var(--app-card-hover)] transition-colors"
+                                onClick={handleLogout}
+                            >
+                                <IconLogout className="h-5 w-5 mr-2" />
+                                {t("sidebar.logout")}
+                            </button>
+                        </div>
                     </div>
                 )}
-                <div className="hidden xl:flex flex-1 flex-col">
-                    <div className="flex items-center text-[15px] font-bold text-theme-text">
-                        {userInfo?.fullName || userInfo?.nickname || 'Admin'}
-                        <VerificationBadge
-                            tier={userInfo?.verificationTier}
-                            hasBlueTick={userInfo?.hasBlueTick}
-                            username={userInfo?.nickname}
-                            className="w-5 h-5 ml-1"
-                        />
-                        <AdminBadge
-                            role={userInfo?.role}
-                            className="w-5 h-5 ml-1"
-                        />
-                    </div>
-                    <div className="text-[13px] text-theme-subtitle">
-                        @{userInfo?.nickname || 'admin'}
-                    </div>
-                </div>
-                <IconDots className="hidden xl:block w-5 h-5 text-theme-subtitle" />
             </div>
-
-            {showUserMenu && (
-                <div className="absolute bottom-full left-0 mb-2 w-full xl:w-auto min-w-[200px] rounded-lg shadow-lg overflow-hidden z-10 bg-theme-bg border border-theme-border">
-                    <div className="p-2">
-                        <button
-                            className="flex items-center w-full p-2 rounded-lg text-theme-text"
-                            onClick={() => {
-                                router.push("/admincp/settings");
-                                setShowUserMenu(false);
-                            }}
-                        >
-                            <IconSettings className="h-5 w-5 mr-2" />
-                            Ayarlar
-                        </button>
-
-
-
-                        <button
-                            className="flex items-center w-full p-2 rounded-lg text-theme-text"
-                            onClick={handleLogout}
-                        >
-                            <IconLogout className="h-5 w-5 mr-2" />
-                            {t("sidebar.logout")}
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

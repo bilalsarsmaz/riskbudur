@@ -28,7 +28,7 @@ export default function AdmSecondaryLayout({
                 <div className="flex w-full max-w-[1310px]">
                     {/* Left Sidebar */}
                     {showLeftSidebar && (
-                        <header className="left-nav flex-shrink-0 w-[88px] xl:w-[275px] h-screen sticky top-0 overflow-y-auto z-10 hidden lg:block">
+                        <header className="left-nav flex-shrink-0 w-[88px] xl:w-[275px] h-screen sticky top-0 z-10 hidden lg:block">
                             <div className="h-full w-full">
                                 {sidebarContent ? sidebarContent : <AdminSidebar />}
                             </div>
