@@ -1321,7 +1321,10 @@ export default function PostItem({
                     }}>
                       {isVideoUrl(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) ? (
                         <div className="w-full" onClick={(e) => e.stopPropagation()}>
-                          <VideoPlayer src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl || ""} />
+                          <VideoPlayer
+                            src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl || ""}
+                            className="!border-0 !rounded-none !bg-transparent"
+                          />
                         </div>
                       ) : (
                         <img
