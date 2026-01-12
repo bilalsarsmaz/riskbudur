@@ -211,7 +211,7 @@ export default function VideoPlayer({
                     ref={videoRef}
                     src={src}
                     poster={poster}
-                    className="w-full h-auto max-h-[600px] object-contain bg-black"
+                    className="w-full h-auto max-h-[440px] object-contain bg-black"
                     controls={!isMobile && isPlaying}
                     playsInline
                     onClick={handlePlayClick}

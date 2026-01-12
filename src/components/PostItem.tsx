@@ -1134,7 +1134,7 @@ export default function PostItem({
                       src={post.imageUrl || post.mediaUrl}
                       alt="Post görseli"
                       className="w-full h-auto"
-                      style={{ maxWidth: "518px", maxHeight: "518px", objectFit: "contain" }}
+                      style={{ maxWidth: "440px", maxHeight: "440px", objectFit: "contain" }}
                     />
                   )}
                 </div>
