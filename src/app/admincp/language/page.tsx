@@ -116,14 +116,14 @@ export default function LanguageManagementPage() {
                             <IconLanguage className="text-[#1DCD9F]" size={24} />
                         </div>
                         <div>
-                            <h3 className="text-theme-item-active-text font-bold text-[15px]">Admin Paneli Dili</h3>
+                            <h3 className="text-theme-text font-bold text-[15px]">Admin Paneli Dili</h3>
                             <p className="text-theme-subtitle text-xs">Yönetim panelini hangi dilde kullanmak istiyorsunuz?</p>
                         </div>
                     </div>
 
                     <div className="flex gap-2 items-center bg-theme-item-bg p-1.5 rounded-lg border border-theme-border w-full md:w-auto">
                         <select
-                            className="bg-transparent text-theme-item-active-text text-sm outline-none px-2 py-1 cursor-pointer flex-1 md:flex-none min-w-[120px]"
+                            className="bg-transparent text-theme-text text-sm outline-none px-2 py-1 cursor-pointer flex-1 md:flex-none min-w-[120px]"
                             value={selectedLang}
                             onChange={e => setSelectedLang(e.target.value)}
                         >
@@ -156,8 +156,8 @@ export default function LanguageManagementPage() {
                             <div key={lang.code} className={`bg-black border ${lang.isActive ? "border-theme-border" : "border-red-900/50"} rounded-xl p-4 flex flex-col justify-between hover:border-[#1DCD9F]/50 transition-colors group`}>
                                 <div>
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-xl font-bold text-theme-item-active-text flex items-center gap-2">
-                                            <span className="uppercase bg-theme-item-bg px-2 py-1 rounded text-sm text-[#1DCD9F] font-mono">{lang.code}</span>
+                                        <h3 className="text-xl font-bold text-theme-text flex items-center gap-2">
+                                            <span className="uppercase bg-theme-surface px-2 py-1 rounded text-sm text-[#1DCD9F] font-mono">{lang.code}</span>
                                             {lang.name}
                                         </h3>
                                         {lang.isDefault && (
@@ -205,13 +205,13 @@ export default function LanguageManagementPage() {
                         ) : (
                             <form onSubmit={handleAddLanguage} className="bg-black border border-[#1DCD9F] rounded-xl p-4 flex flex-col justify-between">
                                 <div className="space-y-3">
-                                    <h3 className="text-lg font-bold text-theme-item-active-text mb-2">Yeni Dil</h3>
+                                    <h3 className="text-lg font-bold text-theme-text mb-2">Yeni Dil</h3>
                                     <input
                                         type="text"
                                         placeholder="Kod (örn: de)"
                                         value={newLangCode}
                                         onChange={e => setNewLangCode(e.target.value)}
-                                        className="w-full bg-theme-item-bg border border-theme-border rounded px-3 py-2 text-theme-item-active-text text-sm outline-none focus:border-[#1DCD9F]"
+                                        className="w-full bg-theme-surface border border-theme-border rounded px-3 py-2 text-theme-text text-sm outline-none focus:border-[#1DCD9F]"
                                         maxLength={5}
                                         autoFocus
                                     />
@@ -220,7 +220,7 @@ export default function LanguageManagementPage() {
                                         placeholder="İsim (örn: Deutsch)"
                                         value={newLangName}
                                         onChange={e => setNewLangName(e.target.value)}
-                                        className="w-full bg-theme-item-bg border border-theme-border rounded px-3 py-2 text-theme-item-active-text text-sm outline-none focus:border-[#1DCD9F]"
+                                        className="w-full bg-theme-surface border border-theme-border rounded px-3 py-2 text-theme-text text-sm outline-none focus:border-[#1DCD9F]"
                                     />
                                 </div>
                                 <div className="flex gap-2 mt-4">

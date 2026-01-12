@@ -37,7 +37,7 @@ export default function AdmSecondaryLayout({
 
                     {/* Wide Content Area (Middle + Right merged) */}
                     <section
-                        className={`flex-1 w-full flex flex-col items-stretch lg:border-x border-theme-border pt-14 lg:pt-0 pb-16 lg:pb-0 relative ${className}`}
+                        className={`flex-1 w-full flex flex-col items-stretch lg:border-x app-border pt-14 lg:pt-0 pb-16 lg:pb-0 relative ${className}`}
                         style={{ maxWidth }}
                     >
                         {children}

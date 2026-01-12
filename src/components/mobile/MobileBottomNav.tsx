@@ -124,7 +124,7 @@ export default function MobileBottomNav() {
 
   return (
     <>
-      <nav className="mobile-nav lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-theme-bg/80 backdrop-blur-md border-t border-theme-border z-50">
+      <nav className="mobile-nav lg:hidden fixed bottom-0 left-0 right-0 h-16 app-bg-header/80 backdrop-blur-md border-t app-border z-50">
         <div className="flex items-center justify-around h-full">
           {navItems.map((item) => {
             const active = isActive(item.href);
