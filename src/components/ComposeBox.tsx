@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useId } from "react";
 import { EnrichedPost } from "@/types/post";
 import { postApi } from "@/lib/api";
-import { IconPhoto, IconGif, IconMoodSmile, IconX, IconPlayerPlay, IconChartBar, IconPlus, IconMinus, IconGhost, IconGhostFilled } from "@tabler/icons-react";
+import { IconPhoto, IconVideo, IconGif, IconMoodSmile, IconX, IconPlayerPlay, IconChartBar, IconPlus, IconMinus, IconGhost, IconGhostFilled } from "@tabler/icons-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import GifPicker, { TenorImage, Theme } from 'gif-picker-react';
 import ErrorBoundary from './ErrorBoundary';
@@ -38,6 +38,7 @@ export default function ComposeBox({
   const router = useRouter();
   const uniqueId = useId();
   const photoUploadId = `photo-upload-${uniqueId}`;
+  const videoUploadId = `video-upload-${uniqueId}`;
   const anonymousId = `anonymous-${uniqueId}`;
 
   const [content, setContent] = useState("");
@@ -45,6 +46,7 @@ export default function ComposeBox({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPreviewVideo, setIsPreviewVideo] = useState(false);
   const [linkPreview, setLinkPreview] = useState<{
     url: string;
     title: string;
@@ -251,6 +253,9 @@ export default function ComposeBox({
         postData.linkPreview = linkPreview;
       }
 
+      // If video, we might want to flag it? For now, the backend will treat it as mediaUrl.
+      // Ideally backend detects mime type from base64 header.
+
       if (isPollOpen) {
         const validOptions = pollOptions.filter(opt => opt.trim() !== "");
         if (validOptions.length < 2) {
@@ -291,6 +296,7 @@ export default function ComposeBox({
       // Success
       setContent("");
       setPreviewUrl(null);
+      setIsPreviewVideo(false);
       setLinkPreview(null);
       setIsTextareaActive(false);
       setIsPollOpen(false);
@@ -309,19 +315,26 @@ export default function ComposeBox({
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 50 * 1024 * 1024) { // 50MB Limit
+        setError("Dosya boyutu çok büyük (Max 50MB)");
+        return;
+      }
+
       const fileReader = new FileReader();
       fileReader.onload = () => {
         setPreviewUrl(fileReader.result as string);
+        setIsPreviewVideo(file.type.startsWith('video/'));
       };
       fileReader.readAsDataURL(file);
     }
   };
 
-  const removeImage = () => {
+  const removeMedia = () => {
     setPreviewUrl(null);
+    setIsPreviewVideo(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -563,15 +576,23 @@ export default function ComposeBox({
 
           {previewUrl && (
             <div className="mt-2 relative">
-              <img
-                src={previewUrl}
-                alt="Seçilen görsel"
-                className="max-h-40 rounded-lg"
-              />
+              {isPreviewVideo ? (
+                <video
+                  src={previewUrl}
+                  className="max-h-60 rounded-lg w-full bg-black"
+                  controls
+                />
+              ) : (
+                <img
+                  src={previewUrl}
+                  alt="Seçilen görsel"
+                  className="max-h-60 rounded-lg"
+                />
+              )}
               <button
                 type="button"
-                className="absolute top-1 right-1 bg-gray-800 bg-opacity-50 text-white rounded-full p-1"
-                onClick={removeImage}
+                className="absolute top-1 right-1 bg-gray-800 bg-opacity-50 text-white rounded-full p-1 z-10"
+                onClick={removeMedia}
               >
                 ✕
               </button>
@@ -770,9 +791,23 @@ export default function ComposeBox({
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handleImageChange}
+                onChange={handleMediaChange}
                 disabled={isLoading}
                 aria-label="Fotoğraf ekle"
+              />
+            </label>
+
+            <label htmlFor={videoUploadId} className={`cursor-pointer hover:opacity-80`} style={{ color: 'var(--app-global-link-color)' }}>
+              <IconVideo className="h-4 w-4 md:h-5 md:w-5" />
+              <span className="sr-only">Video ekle</span>
+              <input
+                id={videoUploadId}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={handleMediaChange}
+                disabled={isLoading}
+                aria-label="Video ekle"
               />
             </label>
 

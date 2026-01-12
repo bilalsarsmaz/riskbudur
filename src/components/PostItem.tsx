@@ -16,6 +16,7 @@ import { formatCustomDate } from "@/utils/date";
 import PollDisplay from "@/components/PollDisplay";
 import ReportModal from "@/components/ReportModal";
 import { parseContent } from "@/utils/text";
+import VideoPlayer from "@/components/VideoPlayer";
 
 import {
   IconHeart,
@@ -406,6 +407,12 @@ export default function PostItem({
     return num.toString();
   };
 
+  const isVideoUrl = (url?: string) => {
+    if (!url) return false;
+    // Check common video extensions or data URI mime type
+    return url.match(/\.(mp4|webm|ogg|mov)$/i) || url.startsWith('data:video/');
+  };
+
   // HERO LAYOUT RENDER
   if (isHero) {
     const formattedContent = parseContent(post.content, post.mentionedUsers, {
@@ -625,18 +632,48 @@ export default function PostItem({
 
             {(!post.isCensored || isAdminView) && (post.mediaUrl || post.imageUrl) && (
               <div
-                className="mt-3 rounded-2xl overflow-hidden border border-theme-border cursor-pointer"
+                className="mt-3 overflow-hidden cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  e.preventDefault();
-                  setImageModalUrl(post.imageUrl || post.mediaUrl || null);
+                  const mediaUrl = post.imageUrl || post.mediaUrl || "";
+                  if (!isVideoUrl(mediaUrl)) {
+                    e.preventDefault();
+                    setImageModalUrl(mediaUrl);
+                  }
                 }}
               >
-                <img
-                  src={post.imageUrl || post.mediaUrl}
-                  alt="Media"
-                  className="w-full h-auto max-h-[600px] object-contain bg-black"
-                />
+                {isVideoUrl(post.imageUrl || post.mediaUrl) ? (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <VideoPlayer
+                      src={post.imageUrl || post.mediaUrl || ""}
+                      post={post}
+                      isLiked={isLiked}
+                      likeCount={likeCount}
+                      commentCount={commentCount}
+                      quoteCount={quoteCount}
+                      isQuoted={quoted}
+                      isFollowing={isFollowing}
+                      onLike={handleLike}
+                      onComment={handleCommentClick}
+                      onQuote={handleQuoteClick}
+                      onShare={() => handleCopyLink({ stopPropagation: () => { } } as any)}
+                      onFollow={handleFollowToggle}
+                      isBookmarked={isBookmarked}
+                      onBookmark={handleBookmark}
+                      onDelete={handleDelete}
+                      onBlock={handleBlock}
+                      onReport={handleReport}
+                      currentUserId={currentUserId}
+                      currentUserRole={currentUserRole}
+                    />
+                  </div>
+                ) : (
+                  <img
+                    src={post.imageUrl || post.mediaUrl}
+                    alt="Media"
+                    className="w-full h-auto max-h-[600px] object-contain bg-black rounded-2xl border app-border"
+                  />
+                )}
               </div>
             )}
 
@@ -710,15 +747,30 @@ export default function PostItem({
                     </div>
                   </div>
                   {(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) && (
-                    <img
-                      src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
-                      alt="Quoted post media"
-                      className="w-full object-cover max-h-[300px] cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
-                      }}
-                    />
+                    <div className="mt-2">
+                      {isVideoUrl(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) ? (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <VideoPlayer
+                            src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl || ""}
+                            className="max-h-[300px]"
+                            post={post.quotedPost}
+                            likeCount={post.quotedPost._count?.likes || 0}
+                            commentCount={post.quotedPost._count?.comments || 0}
+                            quoteCount={post.quotedPost.quoteCount || 0}
+                          />
+                        </div>
+                      ) : (
+                        <img
+                          src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
+                          alt="Quoted post media"
+                          className="w-full object-cover max-h-[300px] cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
+                          }}
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               );
@@ -1044,16 +1096,47 @@ export default function PostItem({
               )}
 
               {!post.isCensored && (post.mediaUrl || post.imageUrl) && (
-                <div className="post-media mb-3 app-box-style flex justify-center cursor-pointer" onClick={(e) => {
+                <div className={`post-media mb-3 flex justify-center cursor-pointer ${isVideoUrl(post.mediaUrl || post.imageUrl) ? '' : 'app-box-style'}`} onClick={(e) => {
                   e.stopPropagation();
-                  setImageModalUrl(post.imageUrl || post.mediaUrl || null);
+                  const mediaUrl = post.imageUrl || post.mediaUrl || "";
+                  if (!isVideoUrl(mediaUrl)) {
+                    setImageModalUrl(mediaUrl);
+                  }
                 }}>
-                  <img
-                    src={post.imageUrl || post.mediaUrl}
-                    alt="Post görseli"
-                    className="w-full h-auto"
-                    style={{ maxWidth: "518px", maxHeight: "518px", objectFit: "contain" }}
-                  />
+                  {isVideoUrl(post.mediaUrl || post.imageUrl) ? (
+                    <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                      <VideoPlayer
+                        src={post.mediaUrl || post.imageUrl || ""}
+                        className="w-full"
+                        post={post}
+                        isLiked={isLiked}
+                        likeCount={likeCount}
+                        commentCount={commentCount}
+                        quoteCount={quoteCount}
+                        isQuoted={quoted}
+                        isFollowing={isFollowing}
+                        onLike={handleLike}
+                        onComment={handleCommentClick}
+                        onQuote={handleQuoteClick}
+                        onShare={() => handleCopyLink({ stopPropagation: () => { } } as any)}
+                        onFollow={handleFollowToggle}
+                        isBookmarked={isBookmarked}
+                        onBookmark={handleBookmark}
+                        onDelete={handleDelete}
+                        onBlock={handleBlock}
+                        onReport={handleReport}
+                        currentUserId={currentUserId}
+                        currentUserRole={currentUserRole}
+                      />
+                    </div>
+                  ) : (
+                    <img
+                      src={post.imageUrl || post.mediaUrl}
+                      alt="Post görseli"
+                      className="w-full h-auto"
+                      style={{ maxWidth: "518px", maxHeight: "518px", objectFit: "contain" }}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -1231,14 +1314,23 @@ export default function PostItem({
                   {(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) && (
                     <div className="w-full flex justify-center overflow-hidden cursor-pointer border-t border-theme-border" onClick={(e) => {
                       e.stopPropagation();
-                      setImageModalUrl(post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || null);
+                      const mediaUrl = post.quotedPost?.imageUrl || post.quotedPost?.mediaUrl || "";
+                      if (!isVideoUrl(mediaUrl)) {
+                        setImageModalUrl(mediaUrl);
+                      }
                     }}>
-                      <img
-                        src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
-                        alt="Alıntılanan post görseli"
-                        className="w-full h-auto object-cover"
-                        style={{ maxHeight: "350px", minHeight: "150px" }}
-                      />
+                      {isVideoUrl(post.quotedPost.imageUrl || post.quotedPost.mediaUrl) ? (
+                        <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                          <VideoPlayer src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl || ""} />
+                        </div>
+                      ) : (
+                        <img
+                          src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl}
+                          alt="Alıntılanan post görseli"
+                          className="w-full h-auto object-cover"
+                          style={{ maxHeight: "350px", minHeight: "150px" }}
+                        />
+                      )}
                     </div>
                   )}
 

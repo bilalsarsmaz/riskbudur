@@ -7,6 +7,7 @@ import { IconRosetteDiscountCheckFilled, IconX } from "@tabler/icons-react";
 import Link from "next/link";
 import ComposeBox from "./ComposeBox";
 import { formatCustomDate } from "@/utils/date";
+import VideoPlayer from "@/components/VideoPlayer";
 
 interface QuoteModalProps {
   post: EnrichedPost;
@@ -21,6 +22,11 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
   const likes = post._count?.likes || 0;
   const comments = post._count?.comments || 0;
   const isPopular = (likes > 30 || comments > 10);
+
+  const isVideoUrl = (url?: string) => {
+    if (!url) return false;
+    return url.match(/\.(mp4|webm|ogg|mov)$/i) || url.startsWith('data:video/');
+  };
 
   if (!isOpen) return null;
 
@@ -98,6 +104,25 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                     <div className="post-quote-text text-sm line-clamp-3" style={{ color: 'var(--app-body-text)' }}>
                       {post.content}
                     </div>
+                    {/* Media Preview for Desktop */}
+                    {(post.imageUrl || post.mediaUrl) && (
+                      <div className="mt-2 rounded-md overflow-hidden">
+                        {isVideoUrl(post.imageUrl || post.mediaUrl) ? (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <VideoPlayer
+                              src={post.imageUrl || post.mediaUrl || ""}
+                              className="max-h-[200px]"
+                            />
+                          </div>
+                        ) : (
+                          <img
+                            src={post.imageUrl || post.mediaUrl}
+                            className="w-full max-h-40 object-cover"
+                            alt="Media"
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -164,7 +189,18 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                     {post.content}
                   </div>
                   {(post.imageUrl || post.mediaUrl) && (
-                    <img src={post.imageUrl || post.mediaUrl} className="mt-2 rounded-md w-full max-h-40 object-cover" alt="Media" />
+                    <div className="mt-2 rounded-md overflow-hidden">
+                      {isVideoUrl(post.imageUrl || post.mediaUrl) ? (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <VideoPlayer
+                            src={post.imageUrl || post.mediaUrl || ""}
+                            className="max-h-[200px]"
+                          />
+                        </div>
+                      ) : (
+                        <img src={post.imageUrl || post.mediaUrl} className="w-full max-h-40 object-cover" alt="Media" />
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
