@@ -116,25 +116,25 @@ export default function LanguageManagementPage() {
                             <IconLanguage className="text-[#1DCD9F]" size={24} />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-[15px]">Admin Paneli Dili</h3>
+                            <h3 className="text-theme-item-active-text font-bold text-[15px]">Admin Paneli Dili</h3>
                             <p className="text-theme-subtitle text-xs">Yönetim panelini hangi dilde kullanmak istiyorsunuz?</p>
                         </div>
                     </div>
 
-                    <div className="flex gap-2 items-center bg-[#111] p-1.5 rounded-lg border border-theme-border w-full md:w-auto">
+                    <div className="flex gap-2 items-center bg-theme-item-bg p-1.5 rounded-lg border border-theme-border w-full md:w-auto">
                         <select
-                            className="bg-transparent text-white text-sm outline-none px-2 py-1 cursor-pointer flex-1 md:flex-none min-w-[120px]"
+                            className="bg-transparent text-theme-item-active-text text-sm outline-none px-2 py-1 cursor-pointer flex-1 md:flex-none min-w-[120px]"
                             value={selectedLang}
                             onChange={e => setSelectedLang(e.target.value)}
                         >
                             {languages.filter(l => l.isActive).map(l => (
-                                <option key={l.code} value={l.code} className="bg-black text-white">{l.name}</option>
+                                <option key={l.code} value={l.code} className="bg-theme-bg text-theme-text">{l.name}</option>
                             ))}
                             {/* Fallback if list empty or loading */}
                             {languages.length === 0 && (
                                 <>
-                                    <option value="tr" className="bg-black text-white">Türkçe</option>
-                                    <option value="en" className="bg-black text-white">English</option>
+                                    <option value="tr" className="bg-theme-bg text-theme-text">Türkçe</option>
+                                    <option value="en" className="bg-theme-bg text-theme-text">English</option>
                                 </>
                             )}
                         </select>
@@ -156,8 +156,8 @@ export default function LanguageManagementPage() {
                             <div key={lang.code} className={`bg-black border ${lang.isActive ? "border-theme-border" : "border-red-900/50"} rounded-xl p-4 flex flex-col justify-between hover:border-[#1DCD9F]/50 transition-colors group`}>
                                 <div>
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                            <span className="uppercase bg-[#181818] px-2 py-1 rounded text-sm text-[#1DCD9F] font-mono">{lang.code}</span>
+                                        <h3 className="text-xl font-bold text-theme-item-active-text flex items-center gap-2">
+                                            <span className="uppercase bg-theme-item-bg px-2 py-1 rounded text-sm text-[#1DCD9F] font-mono">{lang.code}</span>
                                             {lang.name}
                                         </h3>
                                         {lang.isDefault && (
@@ -205,13 +205,13 @@ export default function LanguageManagementPage() {
                         ) : (
                             <form onSubmit={handleAddLanguage} className="bg-black border border-[#1DCD9F] rounded-xl p-4 flex flex-col justify-between">
                                 <div className="space-y-3">
-                                    <h3 className="text-lg font-bold text-white mb-2">Yeni Dil</h3>
+                                    <h3 className="text-lg font-bold text-theme-item-active-text mb-2">Yeni Dil</h3>
                                     <input
                                         type="text"
                                         placeholder="Kod (örn: de)"
                                         value={newLangCode}
                                         onChange={e => setNewLangCode(e.target.value)}
-                                        className="w-full bg-[#181818] border border-theme-border rounded px-3 py-2 text-white text-sm outline-none focus:border-[#1DCD9F]"
+                                        className="w-full bg-theme-item-bg border border-theme-border rounded px-3 py-2 text-theme-item-active-text text-sm outline-none focus:border-[#1DCD9F]"
                                         maxLength={5}
                                         autoFocus
                                     />
@@ -220,7 +220,7 @@ export default function LanguageManagementPage() {
                                         placeholder="İsim (örn: Deutsch)"
                                         value={newLangName}
                                         onChange={e => setNewLangName(e.target.value)}
-                                        className="w-full bg-[#181818] border border-theme-border rounded px-3 py-2 text-white text-sm outline-none focus:border-[#1DCD9F]"
+                                        className="w-full bg-theme-item-bg border border-theme-border rounded px-3 py-2 text-theme-item-active-text text-sm outline-none focus:border-[#1DCD9F]"
                                     />
                                 </div>
                                 <div className="flex gap-2 mt-4">
@@ -228,6 +228,33 @@ export default function LanguageManagementPage() {
                                     <button type="submit" className="flex-1 bg-[#1DCD9F] text-black py-2 rounded text-xs font-bold hover:bg-[#1abe92]">Kaydet</button>
                                 </div>
                             </form>
+                        )}
+
+                        {/* Seed System Button (Only if empty) */}
+                        {languages.length === 0 && !isAdding && (
+                            <button
+                                onClick={async () => {
+                                    if (!confirm("Sistem varsayılan dilleri ve çevirileri yükleyecek. Onaylıyor musunuz?")) return;
+                                    setLoading(true);
+                                    try {
+                                        await fetchApi("/admin/seed-languages");
+                                        await loadLanguages();
+                                        alert("Kurulum tamamlandı! Sayfa yenileniyor...");
+                                        window.location.reload();
+                                    } catch (e) {
+                                        alert("Kurulum hatası");
+                                        setLoading(false);
+                                    }
+                                }}
+                                className="bg-[#181818] border border-dashed border-theme-border rounded-xl p-4 flex flex-col items-center justify-center min-h-[160px] hover:bg-[#222] hover:border-blue-500 transition-all group"
+                            >
+                                <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <IconLoader className="text-blue-500" size={24} />
+                                </div>
+                                <span className="text-theme-subtitle font-medium text-center">
+                                    Varsayılanları Yükle<br />(İlk Kurulum)
+                                </span>
+                            </button>
                         )}
                     </div>
                 )}

@@ -128,7 +128,7 @@ export default function EditTranslationPage() {
                             placeholder="Anahtar veya çeviri ara..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full bg-black border border-theme-border rounded-xl py-3 pl-10 pr-4 text-white outline-none focus:border-[#1DCD9F] transition-colors"
+                            className="w-full bg-theme-item-bg border border-theme-border rounded-xl py-3 pl-10 pr-4 text-theme-item-active-text outline-none focus:border-[#1DCD9F] transition-colors"
                             autoFocus
                         />
                     </div>
@@ -166,7 +166,7 @@ export default function EditTranslationPage() {
                                     <textarea
                                         value={t.value}
                                         onChange={e => handleChange(t.key, e.target.value)}
-                                        className="w-full bg-[#181818] border border-theme-border rounded-lg px-3 py-2 text-white outline-none focus:border-[#1DCD9F] focus:bg-black transition-all resize-none overflow-hidden h-auto min-h-[42px]"
+                                        className="w-full bg-theme-item-bg border border-theme-border rounded-lg px-3 py-2 text-theme-item-active-text outline-none focus:border-[#1DCD9F] focus:bg-black transition-all resize-none overflow-hidden h-auto min-h-[42px]"
                                         rows={1}
                                         style={{ height: 'auto' }}
                                         onInput={(e) => {
