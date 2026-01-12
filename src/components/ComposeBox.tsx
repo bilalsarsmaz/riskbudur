@@ -220,30 +220,6 @@ export default function ComposeBox({
     setLinkPreview(null);
   };
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = await res.json();
-      return data.url;
-    } catch (e) {
-      console.error("Upload error", e);
-      return null;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -268,21 +244,7 @@ export default function ComposeBox({
         isAnonymous
       };
 
-      // Handle File Upload
-      if (fileInputRef.current?.files?.[0]) {
-        const file = fileInputRef.current.files[0];
-        const uploadedUrl = await uploadFile(file);
-
-        if (!uploadedUrl) {
-          setError("Dosya yüklenemedi");
-          setIsLoading(false);
-          return;
-        }
-
-        postData.imageUrl = uploadedUrl;
-        postData.mediaUrl = uploadedUrl;
-      } else if (previewUrl && previewUrl.startsWith('http')) {
-        // GIF Picker case (Tenor URLs)
+      if (previewUrl) {
         postData.imageUrl = previewUrl;
         postData.mediaUrl = previewUrl;
       }
@@ -342,10 +304,6 @@ export default function ComposeBox({
       setPollDays(0);
       setPollHours(0);
       setPollMinutes(5);
-
-      // Clear file input
-      if (fileInputRef.current) fileInputRef.current.value = "";
-
       if (onPostCreated) {
         onPostCreated(data);
       }
@@ -365,12 +323,12 @@ export default function ComposeBox({
         return;
       }
 
-      // Create object URL for preview (much faster than Base64)
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
-      setIsPreviewVideo(file.type.startsWith('video/'));
-
-      // Cleanup previous object URLs to avoid memory leaks could be added here if component unmounts widely
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        setPreviewUrl(fileReader.result as string);
+        setIsPreviewVideo(file.type.startsWith('video/'));
+      };
+      fileReader.readAsDataURL(file);
     }
   };
 
