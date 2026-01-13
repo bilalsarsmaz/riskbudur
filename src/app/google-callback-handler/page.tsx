@@ -34,12 +34,46 @@ function GoogleCallbackContent() {
             // 2. Set Cookie (Duplicate safeguard, usually server sets HttpOnly, but client script might need it readable)
             Cookies.set('token', token, { expires: 365 });
 
-            // 3. Redirect
-            if (isSetupComplete) {
-                router.push("/home");
-            } else {
-                router.push("/setup");
-            }
+            // 3. Fetch user data to check approval status
+            const checkUserStatus = async () => {
+                try {
+                    const response = await fetch("/api/users/me", {
+                        headers: {
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const user = await response.json();
+
+                        // Redirect based on setup completion and approval status
+                        if (!isSetupComplete) {
+                            router.push("/setup");
+                        } else if (!user.isApproved) {
+                            router.push("/pending-approval");
+                        } else {
+                            router.push("/home");
+                        }
+                    } else {
+                        // If user fetch fails, fallback to old logic
+                        if (isSetupComplete) {
+                            router.push("/home");
+                        } else {
+                            router.push("/setup");
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking user status:", error);
+                    // Fallback to old logic
+                    if (isSetupComplete) {
+                        router.push("/home");
+                    } else {
+                        router.push("/setup");
+                    }
+                }
+            };
+
+            checkUserStatus();
         } else {
             router.push("/login?error=no_token");
         }

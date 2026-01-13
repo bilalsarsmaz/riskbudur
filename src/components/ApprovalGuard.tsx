@@ -13,6 +13,7 @@ export default function ApprovalGuard() {
         const publicPaths = [
             "/login",
             "/register",
+            "/google-callback-handler", // Gmail OAuth callback handler
             // "/pending-approval", // Burası artık kontrol edilmeli ki onaylanınca çıksınlar
             "/setup",
             "/forgot-password",
