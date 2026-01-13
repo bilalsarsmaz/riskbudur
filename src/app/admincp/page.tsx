@@ -11,7 +11,8 @@ import {
   IconFlag,
   IconChartBar,
   IconUserCheck,
-  IconRosetteDiscountCheck
+  IconRosetteDiscountCheck,
+  IconBan
 } from "@tabler/icons-react";
 
 import { fetchApi } from "@/lib/api";
@@ -25,7 +26,8 @@ export default function AdminDashboard() {
     totalReports: 0,
     activeUsers: 0,
     pendingUsers: 0,
-    pendingBadges: 0
+    pendingBadges: 0,
+    bannedUsers: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -56,12 +58,12 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { label: "Toplam Kullanıcı", value: stats.totalUsers, icon: IconUsers, color: "text-blue-500", bg: "bg-blue-500/5", border: "border-blue-500/20" },
-    { label: "Toplam Gönderi", value: stats.totalPosts, icon: IconFileText, color: "text-green-500", bg: "bg-green-500/5", border: "border-green-500/20" },
-    { label: "Şikayetler", value: stats.totalReports, icon: IconFlag, color: "text-red-500", bg: "bg-red-500/5", border: "border-red-500/20" },
-    { label: "Aktif Kullanıcılar", value: stats.activeUsers, icon: IconChartBar, color: "text-yellow-500", bg: "bg-yellow-500/5", border: "border-yellow-500/20" },
-    { label: "Onay Bekleyen Kullanıcılar", value: stats.pendingUsers, icon: IconUserCheck, color: "text-purple-500", bg: "bg-purple-500/5", border: "border-purple-500/20" },
-    { label: "Rozet Başvuruları", value: stats.pendingBadges || 0, icon: IconRosetteDiscountCheck, color: "text-orange-500", bg: "bg-orange-500/5", border: "border-orange-500/20" }
+    { label: "Toplam Kullanıcı", value: stats.totalUsers, icon: IconUsers, color: "text-blue-500", bg: "bg-blue-500/5", border: "border-blue-500/20", href: "/admincp/users" },
+    { label: "Toplam Gönderi", value: stats.totalPosts, icon: IconFileText, color: "text-green-500", bg: "bg-green-500/5", border: "border-green-500/20", href: "/admincp/posts" },
+    { label: "Şikayetler", value: stats.totalReports, icon: IconFlag, color: "text-red-500", bg: "bg-red-500/5", border: "border-red-500/20", href: "/admincp/reports" },
+    { label: "Onay Bekleyenler", value: stats.pendingUsers, icon: IconUserCheck, color: "text-purple-500", bg: "bg-purple-500/5", border: "border-purple-500/20", href: "/admincp/approveuser" },
+    { label: "Rozet Başvuruları", value: stats.pendingBadges || 0, icon: IconRosetteDiscountCheck, color: "text-orange-500", bg: "bg-orange-500/5", border: "border-orange-500/20", href: "/admincp/badges" },
+    { label: "Yasaklanmış Üyeler", value: stats.bannedUsers || 0, icon: IconBan, color: "text-red-600", bg: "bg-red-600/5", border: "border-red-600/20", href: "/admincp/bans" }
   ];
 
   return (
@@ -79,6 +81,7 @@ export default function AdminDashboard() {
               return (
                 <div
                   key={index}
+                  onClick={() => router.push(stat.href)}
                   className={`border rounded-2xl p-6 transition-all hover:bg-white/5 cursor-pointer ${stat.border} ${stat.bg}`}
                 >
                   <div className="flex items-start justify-between">

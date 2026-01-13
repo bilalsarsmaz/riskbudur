@@ -28,10 +28,12 @@ import {
 import VerificationBadge from "./VerificationBadge";
 import AdminBadge from "./AdminBadge";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
+import { useTranslation } from "@/components/TranslationProvider";
 
 export default function LeftSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -198,6 +200,9 @@ export default function LeftSidebar() {
             const isActive = activeMenuId === item.id;
             const Icon = (isActive && item.hasFilled) ? item.iconFilled : item.icon;
 
+            // Dynamic translation
+            const label = t(`sidebar.${item.id}`, item.label);
+
             return (
               <li key={item.id} className="w-full">
                 <Link
@@ -221,7 +226,7 @@ export default function LeftSidebar() {
                       </div>
                     )}
                   </div>
-                  <span className={`hidden xl:inline app-body-text-title ${isActive ? 'font-bold' : ''}`} style={{ color: 'var(--app-body-text)' }}>{item.label}</span>
+                  <span className={`hidden xl:inline app-body-text-title ${isActive ? 'font-bold' : ''}`} style={{ color: 'var(--app-body-text)' }}>{label}</span>
 
                 </Link>
               </li>
@@ -281,7 +286,7 @@ export default function LeftSidebar() {
                 }}
               >
                 <IconSettings className="h-5 w-5 mr-2" />
-                Ayarlar
+                {t('sidebar.settings', 'Ayarlar')}
               </button>
               <button
                 className="flex items-center w-full p-2 rounded-lg transition-colors hover:bg-white/10"
@@ -289,7 +294,7 @@ export default function LeftSidebar() {
                 onClick={handleLogout}
               >
                 <IconLogout className="h-5 w-5 mr-2" />
-                Çıkış Yap
+                {t('sidebar.logout', 'Çıkış Yap')}
               </button>
             </div>
           </div>

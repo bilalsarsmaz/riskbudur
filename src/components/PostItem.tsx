@@ -17,6 +17,7 @@ import PollDisplay from "@/components/PollDisplay";
 import ReportModal from "@/components/ReportModal";
 import { parseContent } from "@/utils/text";
 import VideoPlayer from "@/components/VideoPlayer";
+import { useTranslation } from "@/components/TranslationProvider";
 
 import {
   IconHeart,
@@ -81,6 +82,7 @@ export default function PostItem({
   const router = useRouter();
   const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
   const counts = post._count || defaultCounts;
+  const { t } = useTranslation();
 
   const [showCopiedToast, setShowCopiedToast] = useState(false);
   const [imageModalUrl, setImageModalUrl] = useState<string | null>(null);
@@ -143,6 +145,7 @@ export default function PostItem({
     // Only update local state if the prop value has actually changed from what it was previously.
     // This prevents stale props (e.g. from parent re-renders that don't know about local likes)
     // from overwriting our optimistic local state.
+
 
     if (post.isLiked !== prev.isLiked) {
       setIsLiked(post.isLiked || false);
@@ -324,7 +327,7 @@ export default function PostItem({
   };
 
   const handleBlock = async () => {
-    if (confirm(`@${post.author.nickname} adlı kullanıcıyı engellemek istediğinize emin misiniz?`)) {
+    if (confirm(t('post.confirm_block', `@{nickname} adlı kullanıcıyı engellemek istediğinize emin misiniz?`).replace('{nickname}', post.author.nickname))) {
       try {
         await postApi("/blocks", { userId: post.author.id });
         window.location.reload();
@@ -341,7 +344,7 @@ export default function PostItem({
 
   const handleDelete = async () => {
     console.log("Delete requested for post:", post.id);
-    if (confirm("Bu gönderiyi silmek istediğinize emin misiniz?")) {
+    if (confirm(t('post.confirm_delete', "Bu gönderiyi silmek istediğinize emin misiniz?"))) {
       try {
         console.log("Sending delete request...");
         await deleteApi(`/posts/${post.id}`);
@@ -525,7 +528,7 @@ export default function PostItem({
                         className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
                       >
                         <IconTrash className="w-5 h-5 mr-3" />
-                        Gönderiyi sil
+                        {t('post.delete', 'Gönderiyi sil')}
                       </button>
                     </>
                   ) : (
@@ -539,7 +542,7 @@ export default function PostItem({
                           className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors border-b border-theme-border"
                         >
                           <IconTrashX className="w-5 h-5 mr-3" />
-                          Gönderiyi sil
+                          {t('post.delete', 'Gönderiyi sil')}
                         </button>
                       )}
                       {!isAnonymous && (
@@ -552,12 +555,12 @@ export default function PostItem({
                             {isFollowing ? (
                               <>
                                 <IconUserMinus className="w-5 h-5 mr-3" />
-                                @{post.author.nickname} adlı kişiyi takipten çıkar
+                                {t('post.unfollow_user', '@{nickname} adlı kişiyi takipten çıkar').replace('{nickname}', post.author.nickname)}
                               </>
                             ) : (
                               <>
                                 <IconUserPlus className="w-5 h-5 mr-3" />
-                                @{post.author.nickname} adlı kişiyi takip et
+                                {t('post.follow_user', '@{nickname} adlı kişiyi takip et').replace('{nickname}', post.author.nickname)}
                               </>
                             )}
                           </button>
@@ -566,7 +569,7 @@ export default function PostItem({
                             className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
                           >
                             <IconBan className="w-5 h-5 mr-3" />
-                            @{post.author.nickname} adlı kişiyi engelle
+                            {t('post.block_user', '@{nickname} adlı kişiyi engelle').replace('{nickname}', post.author.nickname)}
                           </button>
                         </>
                       )}
@@ -575,7 +578,7 @@ export default function PostItem({
                         className="w-full text-left px-4 py-3 text-red-500 flex items-center transition-colors"
                       >
                         <IconFlag className="w-5 h-5 mr-3" />
-                        Gönderiyi bildir
+                        {t('post.report', 'Gönderiyi bildir')}
                       </button>
                     </>
                   )}
@@ -591,7 +594,7 @@ export default function PostItem({
                 isAdminView ? (
                   <div className="p-4 border border-red-500/40 bg-red-500/10 rounded-xl">
                     <div className="flex items-center mb-2">
-                      <span className="text-xs font-bold text-red-500 uppercase tracking-wider">⚠️ Admin Görünümü - Gizlenen İçerik</span>
+                      <span className="text-xs font-bold text-red-500 uppercase tracking-wider">{t('post.admin_censored_label', '⚠️ Admin Görünümü - Gizlenen İçerik')}</span>
                     </div>
                     <div className="text-base text-gray-200 font-mono whitespace-pre-wrap bg-black/30 p-2 rounded">
                       {post.content || <span className="italic text-gray-500">İçerik boş</span>}
@@ -602,11 +605,11 @@ export default function PostItem({
                     {/* @ts-ignore */}
                     {(post.author && (post.author as any).isBanned) ? (
                       <span className="text-sm block" style={{ color: "var(--app-subtitle)" }}>
-                        <span className="font-bold">Bu hesap sınır dışı edildi!</span> Kurallara uymadığı için RiskBudur Özel Tim'i tarafından yaka paça sınır dışı edildi.
+                        <span className="font-bold">{t('post.banned_title', 'Bu hesap sınır dışı edildi!')}</span> {t('post.banned_message', "Kurallara uymadığı için RiskBudur Özel Tim'i tarafından yaka paça sınır dışı edildi.")}
                       </span>
                     ) : (
                       <span className="text-sm block" style={{ color: "var(--app-subtitle)" }}>
-                        Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen <span className="font-bold" style={{ color: "var(--app-link)" }}>RiskBudur Kullanım Şartları</span> sayfasını ziyaret edin.
+                        {t('post.censored_message_1', 'Bu gönderi sistem tarafından otomatik olarak gizlenmiştir. Gönderinizin gizlenmesi ile ilgili detaylı bilgi için lütfen')} <span className="font-bold" style={{ color: "var(--app-link)" }}>{t('post.terms', 'RiskBudur Kullanım Şartları')}</span> {t('post.censored_message_2', 'sayfasını ziyaret edin.')}
                       </span>
                     )}
                   </>
@@ -1449,7 +1452,7 @@ export default function PostItem({
                       <IconLibraryPlusFilled className="interaction-icon w-5 h-5" />
                       {showCopiedToast && (
                         <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[#1DCD9F] text-black text-xs font-bold rounded shadow-lg whitespace-nowrap z-50 animate-fade-in-out">
-                          Kopyalandı!
+                          {t('post.copied', 'Kopyalandı!')}
                         </div>
                       )}
                     </button>
@@ -1470,7 +1473,7 @@ export default function PostItem({
               className="inline-flex items-center gap-2 hover:opacity-80"
               style={{ color: "var(--app-global-link-color)" }}
             >
-              <span className="text-xs">Tümünü gör</span>
+              <span className="text-xs">{t('post.show_all_thread', 'Tümünü gör')}</span>
               <IconTimelineEventText size={14} />
             </Link>
           </div>

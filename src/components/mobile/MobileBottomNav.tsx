@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api";
 import { menuItems as baseMenuItems } from "@/constants/menuItems";
 import MobileComposeModal from "@/components/MobileComposeModal";
+import { useTranslation } from "@/components/TranslationProvider";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -14,6 +15,7 @@ export default function MobileBottomNav() {
   const [isMobileComposeOpen, setIsMobileComposeOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const { t } = useTranslation();
 
   const fetchNotificationCount = async () => {
     try {
@@ -103,7 +105,8 @@ export default function MobileBottomNav() {
       href: typeof item.href === 'function' ? item.href(userInfo?.nickname) : item.href,
       icon: item.icon,
       iconActive: item.iconFilled,
-      label: item.label,
+      // Use sidebar.* keys for bottom nav labels as well
+      label: t(`sidebar.${item.id}`, item.label),
       id: item.id
     }));
 

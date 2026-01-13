@@ -5,6 +5,7 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { fetchApi } from "@/lib/api";
+import { useTranslation } from "@/components/TranslationProvider";
 import {
   IconHome,
   IconHomeFilled,
@@ -56,6 +57,7 @@ export default function MobileHeader() {
     'content-moderation': false,
     'system-technical': false
   });
+  const { t } = useTranslation();
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => ({
@@ -197,7 +199,7 @@ export default function MobileHeader() {
                 riskbudur
               </h1>
               <p className="text-[9px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
-                underground sosyal medya
+                {t('common.slogan', 'underground sosyal medya')}
               </p>
             </div>
           </div>
@@ -225,7 +227,7 @@ export default function MobileHeader() {
                 riskbudur
               </h1>
               <p className="text-[9px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
-                underground sosyal medya
+                {t('common.slogan', 'underground sosyal medya')}
               </p>
             </div>
           </div>
@@ -274,7 +276,7 @@ export default function MobileHeader() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <IconLayoutDashboard className="h-5 w-5 mr-3" />
-                      <span>Dashboard</span>
+                      <span>{t('sidebar.dashboard', 'Dashboard')}</span>
                     </Link>
                   </li>
 
@@ -285,7 +287,7 @@ export default function MobileHeader() {
                       className="flex items-center w-full p-3 text-sm sm:text-base font-bold text-[var(--app-body-text)] hover:bg-[#151515] rounded-lg transition-colors"
                     >
                       <IconUsersGroup className="h-5 w-5 mr-3" />
-                      <span>Kullanıcı Yönetimi</span>
+                      <span>{t('sidebar.users', 'Kullanıcı Yönetimi')}</span>
                     </button>
                     {expandedGroups['user-management'] && (
                       <div className="ml-8 space-y-1">
@@ -296,7 +298,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Kullanıcı Listesi
+                            {t('sidebar.users_list', 'Kullanıcı Listesi')}
                           </Link>
                         )}
                         {hasPermission(userInfo?.role as Role, Permission.APPROVE_USER) && (
@@ -306,7 +308,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Üye Onay Havuzu
+                            {t('sidebar.approve_users', 'Üye Onay Havuzu')}
                           </Link>
                         )}
                         {hasPermission(userInfo?.role as Role, Permission.GRANT_BADGES) && (
@@ -316,7 +318,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Rozet Talepleri
+                            {t('sidebar.badges', 'Rozet Talepleri')}
                           </Link>
                         )}
                         {hasPermission(userInfo?.role as Role, Permission.BAN_USER) && (
@@ -326,7 +328,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Cezalı Hesaplar
+                            {t('sidebar.bans', 'Cezalı Hesaplar')}
                           </Link>
                         )}
                       </div>
@@ -340,7 +342,7 @@ export default function MobileHeader() {
                       className="flex items-center w-full p-3 text-sm sm:text-base font-bold text-[var(--app-body-text)] hover:bg-[#151515] rounded-lg transition-colors"
                     >
                       <IconTimelineEventText className="h-5 w-5 mr-3" />
-                      <span>İçerik Yönetimi</span>
+                      <span>{t('sidebar.content', 'İçerik Yönetimi')}</span>
                     </button>
                     {expandedGroups['content-moderation'] && (
                       <div className="ml-8 space-y-1">
@@ -351,7 +353,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Gönderi Yönetimi
+                            {t('sidebar.posts', 'Gönderi Yönetimi')}
                           </Link>
                         )}
                         {(hasPermission(userInfo?.role as Role, Permission.BAN_USER) || hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)) && (
@@ -361,7 +363,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Şikayetler
+                            {t('sidebar.reports', 'Şikayetler')}
                           </Link>
                         )}
                         {hasPermission(userInfo?.role as Role, Permission.MANAGE_SENSITIVE_CONTENT) && (
@@ -371,7 +373,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Hassas İçerik
+                            {t('sidebar.sensitive', 'Hassas İçerik')}
                           </Link>
                         )}
                       </div>
@@ -385,7 +387,7 @@ export default function MobileHeader() {
                       className="flex items-center w-full p-3 text-sm sm:text-base font-bold text-[var(--app-body-text)] hover:bg-[#151515] rounded-lg transition-colors"
                     >
                       <IconWorldCog className="h-5 w-5 mr-3" />
-                      <span>Sistem Yönetimi</span>
+                      <span>{t('sidebar.system', 'Sistem Yönetimi')}</span>
                     </button>
                     {expandedGroups['system-technical'] && (
                       <div className="ml-8 space-y-1">
@@ -396,7 +398,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Sunucu Durumu
+                            {t('sidebar.status', 'Sunucu Durumu')}
                           </Link>
                         )}
                         {hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS) && (
@@ -406,7 +408,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Duyuru Yönetimi
+                            {t('sidebar.announcements', 'Duyuru Yönetimi')}
                           </Link>
                         )}
                         {hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES) && (
@@ -416,7 +418,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Sayfa Yönetimi
+                            {t('sidebar.pages', 'Sayfa Yönetimi')}
                           </Link>
                         )}
                         {hasPermission(userInfo?.role as Role, Permission.GHOST_MESSAGE) && (
@@ -426,7 +428,7 @@ export default function MobileHeader() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-current mr-3"></div>
-                            Ghost Mesaj
+                            {t('sidebar.ghost_message', 'Ghost Mesaj')}
                           </Link>
                         )}
                       </div>
@@ -441,7 +443,7 @@ export default function MobileHeader() {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <IconSettings className="h-5 w-5 mr-3" />
-                        <span>Ayarlar</span>
+                        <span>{t('sidebar.settings', 'Ayarlar')}</span>
                       </Link>
                     </li>
                   )}
@@ -452,7 +454,7 @@ export default function MobileHeader() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <IconArrowLeftToArc className="h-5 w-5 mr-3" />
-                      <span>Platforma Dön</span>
+                      <span>{t('sidebar.back_platform', 'Platforma Dön')}</span>
                     </Link>
                   </li>
                 </ul>
@@ -505,11 +507,11 @@ export default function MobileHeader() {
                 <div className="flex items-center gap-4 mb-4 px-2">
                   <div className="flex items-center gap-1">
                     <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.following || 0}</div>
-                    <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalanan</div>
+                    <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>{t('profile.following', 'Kovalanan')}</div>
                   </div>
                   <div className="flex items-center gap-1">
                     <div className="text-sm sm:text-base font-bold" style={{ color: 'var(--app-body-text)' }}>{userInfo.followers || 0}</div>
-                    <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>Kovalayan</div>
+                    <div className="text-[10px] sm:text-xs" style={{ color: 'var(--app-subtitle)' }}>{t('profile.followers', 'Kovalayan')}</div>
                   </div>
                 </div>
 
@@ -528,7 +530,7 @@ export default function MobileHeader() {
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <IconLayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                          <span>Dashboard</span>
+                          <span>{t('sidebar.dashboard', 'Dashboard')}</span>
                         </Link>
                       </li>
                     )}
@@ -540,7 +542,7 @@ export default function MobileHeader() {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <IconUser className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                        <span>Profilim</span>
+                        <span>{t('sidebar.profile', 'Profilim')}</span>
                       </Link>
                     </li>
                     <li>
@@ -551,7 +553,7 @@ export default function MobileHeader() {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <IconTargetArrow className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                        <span>Çivilenenler</span>
+                        <span>{t('sidebar.bookmarks', 'Çivilenenler')}</span>
                       </Link>
                     </li>
 
@@ -563,7 +565,7 @@ export default function MobileHeader() {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <IconSettings className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                        <span>Ayarlar</span>
+                        <span>{t('sidebar.settings', 'Ayarlar')}</span>
                       </Link>
                     </li>
                     <li>
@@ -573,7 +575,7 @@ export default function MobileHeader() {
                         style={{ color: 'var(--app-body-text)' }}
                       >
                         <IconLogout className="h-4 w-4 sm:h-5 sm:w-5 mr-3" />
-                        <span>Çıkış</span>
+                        <span>{t('sidebar.logout', 'Çıkış')}</span>
                       </button>
                     </li>
                   </ul>

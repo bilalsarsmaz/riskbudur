@@ -81,3 +81,39 @@ export async function POST(
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export async function DELETE(
+    request: Request,
+    props: { params: Promise<{ lang: string }> }
+) {
+    const params = await props.params;
+    try {
+        const token = request.headers.get("Authorization")?.split(" ")[1];
+        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const user = await verifyToken(token);
+        if (!user || (user.role !== "ADMIN" && user.role !== "ROOTADMIN")) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const key = searchParams.get("key");
+
+        if (!key) {
+            return NextResponse.json({ error: "Missing key" }, { status: 400 });
+        }
+
+        await prisma.translation.deleteMany({
+            where: {
+                languageCode: params.lang.toLowerCase(),
+                key: key
+            }
+        });
+
+        revalidateTag(TAGS.TRANSLATIONS);
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Translation delete error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

@@ -6,6 +6,7 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import { IconChevronRight, IconBoltFilled } from "@tabler/icons-react";
 import PopularPostsSlider from "./PopularPostsSlider";
 import { fetchApi } from "@/lib/api";
+import { useTranslation } from "@/components/TranslationProvider";
 
 interface Hashtag {
   id: number;
@@ -31,6 +32,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
+  const { t } = useTranslation();
   const profileUsername = params?.username as string | undefined;
   // If there is an 'id' param, we are likely on a post detail page, not the main profile page.
   // We only want to show visitors on the main profile page.
@@ -123,7 +125,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
             <div className="mb-8">
               <h2 className="app-body-text-title mb-4 flex items-center gap-2" style={{ color: 'var(--app-body-text)' }}>
                 <IconBoltFilled size={24} className="text-orange-500" />
-                Gündem
+                {t('trending.title', 'Gündem')}
               </h2>
               {loading ? (
                 <div className="flex justify-center py-4">
@@ -153,7 +155,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                     className="flex items-center gap-1 pt-2"
                     style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
                   >
-                    <span>Daha fazla göster</span>
+                    <span>{t('common.show_more', 'Daha fazla göster')}</span>
                     <IconChevronRight className="h-4 w-4" />
                   </Link>
                 </>
@@ -161,7 +163,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
             </div>
           ) : (
             <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-              <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>Gündem</h2>
+              <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('trending.title', 'Gündem')}</h2>
               {loading ? (
                 <div className="flex justify-center py-4">
                   <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div>
@@ -175,7 +177,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                       className="flex flex-col items-start py-2 px-2 -mx-2 rounded-2xl hover:bg-white/5 transition-colors"
                     >
                       <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
-                      <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} gönderi</span>
+                      <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} {t('trending.posts_suffix', 'gönderi')}</span>
                     </Link>
                   ))}
 
@@ -184,7 +186,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                     className="flex items-center gap-1 pt-3"
                     style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
                   >
-                    <span>Daha fazla göster</span>
+                    <span>{t('common.show_more', 'Daha fazla göster')}</span>
                     <IconChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -197,7 +199,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
       {/* Dikizleyenler (Profile Page Only) OR Popular Posts (Other Pages) */}
       {isProfilePage ? (
         <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>Dikizleyenler</h2>
+          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('who_visited.title', 'Dikizleyenler')}</h2>
           {visitorsLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#1DCD9F]"></div>
@@ -224,14 +226,14 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                   ))}
                 </div>
               ) : (
-                <div className="text-gray-500 text-sm py-4 text-center">Henüz kimse dikizlemedi...</div>
+                <div className="text-gray-500 text-sm py-4 text-center">{t('who_visited.empty', 'Henüz kimse dikizlemedi...')}</div>
               )}
             </>
           )}
         </div>
       ) : showPopularPosts ? (
         <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>Popüler Postlar</h2>
+          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('popular_posts.title', 'Popüler Postlar')}</h2>
           <PopularPostsSlider />
         </div>
       ) : null}
@@ -240,10 +242,10 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
       <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-footer-bg)' }}>
         <div className="text-xs space-y-2" style={{ color: 'var(--app-subtitle)' }}>
           <div className="flex flex-wrap gap-2">
-            <Link href="/help/about" className="hover:underline">Hakkında</Link>
-            <Link href="/help/terms" className="hover:underline">Kullanım Şartları</Link>
-            <Link href="/help/privacy" className="hover:underline">Gizlilik</Link>
-            <Link href="/help/contact" className="hover:underline">İletişim</Link>
+            <Link href="/help/about" className="hover:underline">{t('footer.about', 'Hakkında')}</Link>
+            <Link href="/help/terms" className="hover:underline">{t('footer.terms', 'Kullanım Şartları')}</Link>
+            <Link href="/help/privacy" className="hover:underline">{t('footer.privacy', 'Gizlilik')}</Link>
+            <Link href="/help/contact" className="hover:underline">{t('footer.contact', 'İletişim')}</Link>
           </div>
           <p>© 2026 RiskBudur</p>
         </div>

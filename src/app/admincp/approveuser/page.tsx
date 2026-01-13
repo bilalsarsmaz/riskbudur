@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import GlobalHeader from "@/components/GlobalHeader";
 import AdmStandardPageLayout from "@/components/AdmStandardPageLayout";
 import { fetchApi, postApi } from "@/lib/api";
-import { IconCheck, IconX, IconUser } from "@tabler/icons-react";
+import { IconCheck, IconX, IconUser, IconMail } from "@tabler/icons-react";
 import AdminSidebar from "@/components/AdminSidebar";
 
 interface PendingUser {
@@ -56,7 +56,7 @@ export default function ApproveUsersPage() {
         <AdmStandardPageLayout sidebarContent={<AdminSidebar />}>
             <GlobalHeader title="Üyeleri Onayla" subtitle="Kimler gelmiş kimler?" showBackButton={true} />
 
-            <div className="p-4">
+            <div>
                 {loading ? (
                     <div className="text-center py-10 opacity-50">Yükleniyor...</div>
                 ) : users.length === 0 ? (
@@ -64,45 +64,63 @@ export default function ApproveUsersPage() {
                         <p>Bekleyen onay isteği yok.</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div>
                         {users.map((user) => (
-                            <div key={user.id} className="bg-[#111] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-gray-900 overflow-hidden relative border border-gray-800">
+                            <div
+                                key={user.id}
+                                className="flex items-center justify-between group px-[11px] py-[8px] border-b border-theme-border transition-colors hover:bg-white/5"
+                            >
+                                <div className="flex items-center space-x-3">
+                                    <div className="flex-shrink-0">
                                         {user.profileImage ? (
-                                            <img src={user.profileImage} alt={user.nickname} className="w-full h-full object-cover" />
+                                            <img
+                                                src={user.profileImage}
+                                                alt={user.nickname}
+                                                className="w-12 h-12 rounded-full object-cover border-[0.5px] border-theme-border"
+                                            />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-600">
+                                            <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-[0.5px] border-theme-border bg-theme-surface text-theme-text">
                                                 <IconUser size={24} />
                                             </div>
                                         )}
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-white leading-none mb-1">
-                                            {user.fullName || user.nickname}
-                                        </h3>
-                                        <p className="text-sm text-gray-500">@{user.nickname}</p>
-                                        <p className="text-xs text-gray-600 mt-1">{user.email}</p>
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center space-x-1 group/name cursor-default">
+                                            <span className="font-bold text-[15px] text-theme-text">
+                                                {user.fullName || user.nickname}
+                                            </span>
+                                        </div>
+                                        <div className="text-[14px] text-theme-subtitle">
+                                            @{user.nickname}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleAction(user.id, 'REJECT')}
-                                        disabled={processing === user.id}
-                                        className="p-2 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                                        title="Reddet (Sil)"
-                                    >
-                                        <IconX size={20} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleAction(user.id, 'APPROVE')}
-                                        disabled={processing === user.id}
-                                        className="p-2 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors disabled:opacity-50"
-                                        title="Onayla"
-                                    >
-                                        <IconCheck size={20} />
-                                    </button>
+                                <div className="flex flex-col items-end space-y-1.5">
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handleAction(user.id, 'REJECT')}
+                                            disabled={processing === user.id}
+                                            className="p-2 rounded-full hover:bg-red-500/10 text-theme-subtitle hover:text-red-500 transition-colors"
+                                            title="Reddet (Sil)"
+                                        >
+                                            <IconX size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleAction(user.id, 'APPROVE')}
+                                            disabled={processing === user.id}
+                                            className="p-2 rounded-full hover:bg-green-500/10 text-theme-subtitle hover:text-green-500 transition-colors"
+                                            title="Onayla"
+                                        >
+                                            <IconCheck size={18} />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center space-x-3 text-xs text-theme-subtitle pr-2">
+                                        <div className="flex items-center space-x-1" title="Kayıtlı Email">
+                                            <IconMail size={14} />
+                                            <span className="truncate max-w-[200px]">{user.email}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}

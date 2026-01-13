@@ -69,6 +69,8 @@ export async function POST(req: Request) {
         hasBlueTick: user.hasBlueTick,
         fullName: user.fullName,
         profileImage: user.profileImage,
+        isApproved: user.isApproved,
+        isSetupComplete: user.isSetupComplete,
       },
     });
 

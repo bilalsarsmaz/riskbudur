@@ -6,7 +6,7 @@ import AdmSecondaryLayout from "@/components/AdmSecondaryLayout";
 import GlobalHeader from "@/components/GlobalHeader";
 import { fetchApi, postApi } from "@/lib/api";
 import { useParams, useRouter } from "next/navigation";
-import { IconDeviceFloppy, IconSearch, IconArrowLeft, IconLoader, IconCheck, IconEdit } from "@tabler/icons-react";
+import { IconDeviceFloppy, IconSearch, IconArrowLeft, IconLoader, IconCheck, IconEdit, IconChevronRight } from "@tabler/icons-react";
 
 interface Translation {
     key: string;
@@ -154,30 +154,56 @@ export default function EditTranslationPage() {
                 {loading ? (
                     <div className="flex justify-center p-10"><IconLoader className="animate-spin text-[#1DCD9F]" /></div>
                 ) : (
-                    <div className="space-y-2">
-                        {filteredTranslations.map((t) => {
-                            const isChanged = unsavedChanges.has(t.key);
-                            return (
-                                <div key={t.key} className={`bg-[#111] p-3 rounded-lg border ${isChanged ? "border-[#1DCD9F]/50 bg-[#1DCD9F]/5" : "border-theme-border"} hover:border-theme-subtitle transition-colors group`}>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <div className="text-xs font-mono text-theme-subtitle">{t.key}</div>
-                                        <IconEdit size={14} className="text-theme-subtitle opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="space-y-4">
+                        {Object.entries(
+                            filteredTranslations.reduce((acc, t) => {
+                                const group = t.key.includes('.') ? t.key.split('.')[0] : 'Diğer';
+                                if (!acc[group]) acc[group] = [];
+                                acc[group].push(t);
+                                return acc;
+                            }, {} as Record<string, Translation[]>)
+                        ).map(([group, items]) => (
+                            <div key={group} className="border border-theme-border rounded-xl overflow-hidden bg-[#111]">
+                                <details className="group" open>
+                                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors select-none font-bold text-lg text-theme-text capitalize">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[#1DCD9F]">#</span>
+                                            {group.replace(/_/g, ' ')}
+                                            <span className="text-xs font-normal text-theme-subtitle bg-white/10 px-2 py-0.5 rounded-full ml-2">
+                                                {items.length}
+                                            </span>
+                                        </div>
+                                        <IconChevronRight className="transform transition-transform group-open:rotate-90 text-theme-subtitle" />
+                                    </summary>
+                                    <div className="p-4 pt-0 space-y-2 border-t border-theme-border/50 bg-[#000]/20">
+                                        {items.map((t) => {
+                                            const isChanged = unsavedChanges.has(t.key);
+                                            return (
+                                                <div key={t.key} className={`bg-theme-surface p-3 rounded-lg border ${isChanged ? "border-[#1DCD9F]/50 bg-[#1DCD9F]/5" : "border-theme-border"} hover:border-theme-subtitle transition-colors group/item`}>
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <div className="text-xs font-mono text-theme-subtitle">{t.key}</div>
+                                                        <IconEdit size={14} className="text-theme-subtitle opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                                                    </div>
+                                                    <textarea
+                                                        value={t.value}
+                                                        onChange={e => handleChange(t.key, e.target.value)}
+                                                        className="w-full bg-[#111] border border-theme-border rounded-lg px-3 py-2 text-theme-text outline-none focus:border-[#1DCD9F] focus:bg-black transition-all resize-none overflow-hidden h-auto min-h-[42px]"
+                                                        rows={1}
+                                                        style={{ height: 'auto' }}
+                                                        onInput={(e) => {
+                                                            (e.target as HTMLTextAreaElement).style.height = "auto";
+                                                            (e.target as HTMLTextAreaElement).style.height = (e.target as HTMLTextAreaElement).scrollHeight + "px";
+                                                        }}
+                                                        placeholder="Çeviri giriniz..."
+                                                    />
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                    <textarea
-                                        value={t.value}
-                                        onChange={e => handleChange(t.key, e.target.value)}
-                                        className="w-full bg-theme-surface border border-theme-border rounded-lg px-3 py-2 text-theme-text outline-none focus:border-[#1DCD9F] focus:bg-theme-bg transition-all resize-none overflow-hidden h-auto min-h-[42px]"
-                                        rows={1}
-                                        style={{ height: 'auto' }}
-                                        onInput={(e) => {
-                                            (e.target as HTMLTextAreaElement).style.height = "auto";
-                                            (e.target as HTMLTextAreaElement).style.height = (e.target as HTMLTextAreaElement).scrollHeight + "px";
-                                        }}
-                                        placeholder="Çeviri giriniz..."
-                                    />
-                                </div>
-                            );
-                        })}
+                                </details>
+                            </div>
+                        ))}
+
                         {filteredTranslations.length === 0 && (
                             <div className="text-center text-theme-subtitle py-8">Sonuç bulunamadı.</div>
                         )}

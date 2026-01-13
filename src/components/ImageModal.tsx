@@ -30,9 +30,12 @@ export default function ImageModal({ imageUrl, onClose }: ImageModalProps) {
 
     return (
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-90 animate-fade-in"
+            className="fixed inset-0 z-[9999] flex items-center justify-center animate-fade-in"
             onClick={onClose}
         >
+            {/* Backdrop Layer - Standard Dark Blur */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-md transition-all" />
+
             {/* Close button */}
             <button
                 onClick={onClose}
@@ -44,7 +47,7 @@ export default function ImageModal({ imageUrl, onClose }: ImageModalProps) {
 
             {/* Image */}
             <div
-                className="relative max-w-[95vw] max-h-[80vh] flex items-center justify-center"
+                className="relative max-w-[95vw] max-h-[80vh] flex items-center justify-center z-10"
                 onClick={(e) => e.stopPropagation()}
             >
                 <img

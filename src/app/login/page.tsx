@@ -59,8 +59,16 @@ export default function LoginPage() {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      // Kullanıcıyı ana sayfaya yönlendir
-      router.push("/home");
+      console.log("Login User Data:", data.user);
+
+      // Kullanıcıyı yönlendir
+      if (data.user && !data.user.isApproved && data.user.isSetupComplete) {
+        console.log("Redirecting to PA -> Not Approved & Setup Complete");
+        router.push("/pending-approval");
+      } else {
+        console.log("Redirecting to Home -> Approved or Setup Incomplete");
+        router.push("/home");
+      }
     } catch (err) {
       console.error("Giriş hatası:", err);
       setError(err instanceof Error ? err.message : "Bir hata oluştu");
@@ -114,8 +122,16 @@ export default function LoginPage() {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      // Kullanıcıyı ana sayfaya yönlendir
-      router.push("/home");
+      console.log("Login User Data (Alt):", data.user);
+
+      // Kullanıcıyı yönlendir
+      if (data.user && !data.user.isApproved && data.user.isSetupComplete) {
+        console.log("Redirecting to PA (Alt) -> Not Approved & Setup Complete");
+        router.push("/pending-approval");
+      } else {
+        console.log("Redirecting to Home (Alt) -> Approved or Setup Incomplete");
+        router.push("/home");
+      }
     } catch (err) {
       console.error("Giriş hatası:", err);
       setError(err instanceof Error ? err.message : "Bir hata oluştu");

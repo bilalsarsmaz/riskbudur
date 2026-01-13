@@ -195,7 +195,11 @@ export default function SetupPage() {
 
             await putApi("/users/me/complete-setup", {});
 
-            router.push("/home");
+            if (!userInfo?.isApproved) {
+                router.push("/pending-approval");
+            } else {
+                router.push("/home");
+            }
         } catch (err) {
             alert("Bir hata oluştu. Lütfen tekrar dene.");
         } finally {
@@ -205,22 +209,22 @@ export default function SetupPage() {
 
     if (fetchError) {
         return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+            <div className="min-h-screen bg-[var(--app-body-bg)] text-[var(--app-body-text)] flex items-center justify-center p-4">
                 <div className="text-center max-w-md">
                     <h2 className="text-2xl font-bold mb-4 text-red-500">Kimlik Doğrulanamadı</h2>
-                    <p className="mb-6 text-gray-400">
+                    <p className="mb-6 text-[var(--app-subtitle)]">
                         Kayıt sonrası bilgileriniz alınırken bir sorun oluştu. Lütfen sayfayı yenilemeyi veya tekrar giriş yapmayı deneyin.
                     </p>
                     <div className="flex gap-4 justify-center">
                         <button
                             onClick={() => window.location.reload()}
-                            className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-gray-200"
+                            className="px-6 py-2 bg-[var(--app-body-text)] text-[var(--app-body-bg)] rounded-full font-bold hover:opacity-90"
                         >
                             Yenile
                         </button>
                         <button
                             onClick={() => router.push("/login")}
-                            className="px-6 py-2 border border-gray-700 rounded-full font-bold hover:bg-white/10"
+                            className="px-6 py-2 border border-[var(--app-border)] rounded-full font-bold hover:bg-[var(--app-body-text)]/10"
                         >
                             Giriş'e Dön
                         </button>
@@ -235,13 +239,13 @@ export default function SetupPage() {
             {/* CROP MODAL */}
             {isCropModalOpen && imageSrc && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-[#111] border border-gray-800 rounded-2xl w-full max-w-md overflow-hidden flex flex-col h-[500px]">
-                        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#111] z-10">
+                    <div className="bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl w-full max-w-md overflow-hidden flex flex-col h-[500px]">
+                        <div className="p-4 border-b border-[var(--app-border)] flex justify-between items-center bg-[var(--app-surface)] z-10">
                             <h3 className="font-bold">Fotoğrafı Düzenle</h3>
                             <button onClick={handleCancelCrop}><IconX size={20} /></button>
                         </div>
 
-                        <div className="relative flex-1 bg-black">
+                        <div className="relative flex-1 bg-[var(--app-body-bg)]">
                             <Cropper
                                 image={imageSrc}
                                 crop={crop}
@@ -251,15 +255,15 @@ export default function SetupPage() {
                                 onCropComplete={onCropComplete}
                                 onZoomChange={setZoom}
                                 style={{
-                                    containerStyle: { backgroundColor: 'black' },
-                                    cropAreaStyle: { border: '2px solid #DC5F00' }
+                                    containerStyle: { backgroundColor: 'var(--app-body-bg)' },
+                                    cropAreaStyle: { border: '2px solid var(--app-accent)' }
                                 }}
                             />
                         </div>
 
-                        <div className="p-4 bg-[#111] border-t border-gray-800 space-y-4 z-10">
+                        <div className="p-4 bg-[var(--app-surface)] border-t border-[var(--app-border)] space-y-4 z-10">
                             <div className="flex items-center gap-2">
-                                <IconZoomOut size={16} className="text-gray-400" />
+                                <IconZoomOut size={16} className="text-[var(--app-subtitle)]" />
                                 <input
                                     type="range"
                                     value={zoom}
@@ -268,12 +272,12 @@ export default function SetupPage() {
                                     step={0.1}
                                     aria-labelledby="Zoom"
                                     onChange={(e) => setZoom(Number(e.target.value))}
-                                    className="w-full accent-[#DC5F00] h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                    className="w-full accent-[var(--app-accent)] h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                                 />
-                                <IconZoomIn size={16} className="text-gray-400" />
+                                <IconZoomIn size={16} className="text-[var(--app-subtitle)]" />
                             </div>
 
-                            <button onClick={handleSaveCrop} className="w-full py-2 bg-[#DC5F00] text-white rounded-full font-bold">
+                            <button onClick={handleSaveCrop} className="w-full py-2 bg-[var(--app-accent)] text-white rounded-full font-bold">
                                 Uygula
                             </button>
                         </div>
@@ -285,14 +289,14 @@ export default function SetupPage() {
             {step === 1 && (
                 <div className="text-center animate-in fade-in slide-in-from-right-4 duration-300">
                     <h2 className="text-2xl font-bold mb-2">Profil Fotoğrafı Seç</h2>
-                    <p className="text-gray-400 mb-8">Seni tanımaları için güzel bir fotoğrafın olsun.</p>
+                    <p className="text-[var(--app-subtitle)] mb-8">Seni tanımaları için güzel bir fotoğrafın olsun.</p>
 
                     <div className="relative w-32 h-32 mx-auto mb-8 group cursor-pointer">
-                        <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden border-2 border-dashed ${finalProfileImage ? 'border-theme-accent' : 'border-gray-700'} hover:border-theme-accent transition-colors bg-[#000]`}>
+                        <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden border-2 border-dashed ${finalProfileImage ? 'border-[var(--app-accent)]' : 'border-[var(--app-border)]'} hover:border-[var(--app-accent)] transition-colors bg-[var(--app-body-bg)]`}>
                             {finalProfileImage ? (
                                 <img src={finalProfileImage} alt="Preview" className="w-full h-full object-cover" />
                             ) : (
-                                <IconUser size={48} className="text-gray-600" />
+                                <IconUser size={48} className="text-[var(--app-subtitle)]" />
                             )}
                         </div>
 
@@ -304,7 +308,7 @@ export default function SetupPage() {
 
                     <button
                         onClick={() => setStep(2)}
-                        className="w-full py-3 bg-[#DC5F00] text-white rounded-full font-bold hover:bg-[#b04c00] transition-colors"
+                        className="w-full py-3 bg-[var(--app-accent)] text-white rounded-full font-bold hover:opacity-90 transition-colors"
                     >
                         {finalProfileImage ? "Harika Görünüyor!" : "Şimdilik Geç"}
                     </button>
@@ -314,29 +318,29 @@ export default function SetupPage() {
             {step === 2 && (
                 <div className="text-center animate-in fade-in slide-in-from-right-4 duration-300">
                     <h2 className="text-2xl font-bold mb-2">Kimliğini Oluştur</h2>
-                    <p className="text-gray-400 mb-8">Sana nasıl hitap edelim?</p>
+                    <p className="text-[var(--app-subtitle)] mb-8">Sana nasıl hitap edelim?</p>
 
                     <div className="space-y-4 mb-8 text-left">
                         <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Kullanıcı Adı</label>
+                            <label className="block text-sm font-medium text-[var(--app-subtitle)] mb-1 ml-1">Kullanıcı Adı</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-3 text-gray-500">@</span>
+                                <span className="absolute left-4 top-3 text-[var(--app-subtitle)]">@</span>
                                 <input
                                     type="text"
                                     value={nickname}
                                     onChange={handleNicknameChange}
-                                    className="w-full bg-black border border-gray-700 rounded-xl py-3 pl-8 pr-4 text-white focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors"
+                                    className="w-full bg-[var(--app-body-bg)] border border-[var(--app-border)] rounded-xl py-3 pl-8 pr-4 text-[var(--app-body-text)] focus:border-[var(--app-accent)] focus:ring-1 focus:ring-[var(--app-accent)] transition-colors"
                                     placeholder="kullaniciadi"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Biyografi</label>
+                            <label className="block text-sm font-medium text-[var(--app-subtitle)] mb-1 ml-1">Biyografi</label>
                             <textarea
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
-                                className="w-full bg-black border border-gray-700 rounded-xl py-3 px-4 text-white focus:border-[#DC5F00] focus:ring-1 focus:ring-[#DC5F00] transition-colors resize-none h-24"
+                                className="w-full bg-[var(--app-body-bg)] border border-[var(--app-border)] rounded-xl py-3 px-4 text-[var(--app-body-text)] focus:border-[var(--app-accent)] focus:ring-1 focus:ring-[var(--app-accent)] transition-colors resize-none h-24"
                                 placeholder="Kendinden bahset..."
                             />
                         </div>
@@ -345,7 +349,7 @@ export default function SetupPage() {
                     <button
                         onClick={handleFinish}
                         disabled={loading || !nickname}
-                        className="w-full py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-colors disabled:opacity-50"
+                        className="w-full py-3 bg-[var(--app-body-text)] text-[var(--app-body-bg)] rounded-full font-bold hover:opacity-90 transition-colors disabled:opacity-50"
                     >
                         {loading ? "Tamamlanıyor..." : "Riskbudur'a Başla 🚀"}
                     </button>

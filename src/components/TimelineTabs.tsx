@@ -11,9 +11,12 @@ interface TimelineTabsProps {
   onTabChange: (tab: TimelineType) => void;
 }
 
+import { useTranslation } from "@/components/TranslationProvider";
+
 export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsProps) {
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,7 +54,7 @@ export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsPro
             : "text-theme-text font-medium"
             }`}
         >
-          Herkes
+          {t('feed.all', 'Herkes')}
           {activeTab === "all" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--app-global-link-color)] rounded-t-full"></div>
           )}
@@ -63,7 +66,7 @@ export default function TimelineTabs({ activeTab, onTabChange }: TimelineTabsPro
             : "text-theme-text font-medium"
             }`}
         >
-          Kovaladıklarım
+          {t('feed.following', 'Kovaladıklarım')}
           {activeTab === "following" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--app-global-link-color)] rounded-t-full"></div>
           )}

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
 
-        const [totalUsers, totalPosts, activeUsers, pendingVerificationRequests, pendingApprovals] = await Promise.all([
+        const [totalUsers, totalPosts, activeUsers, pendingVerificationRequests, pendingApprovals, bannedUsers] = await Promise.all([
             prisma.user.count(),
             prisma.post.count(),
             prisma.user.count({
@@ -35,6 +35,11 @@ export async function GET(req: NextRequest) {
                 where: {
                     isApproved: false
                 }
+            }),
+            prisma.user.count({
+                where: {
+                    isBanned: true
+                }
             })
         ]);
 
@@ -44,7 +49,8 @@ export async function GET(req: NextRequest) {
             totalReports: 0,
             activeUsers,
             pendingUsers: pendingApprovals,
-            pendingBadges: pendingVerificationRequests
+            pendingBadges: pendingVerificationRequests,
+            bannedUsers
         });
     } catch (error) {
         console.error("Error fetching admin stats:", error);

@@ -26,6 +26,7 @@ export const viewport: Viewport = {
 
 import ThemeInitializer from "@/components/ThemeInitializer";
 import BanChecker from "@/components/BanChecker";
+import ApprovalGuard from "@/components/ApprovalGuard";
 import MaintenancePage from "@/components/MaintenancePage";
 import { getSystemSettings } from "@/lib/settings";
 import { cookies, headers } from "next/headers";
@@ -87,6 +88,7 @@ export default async function RootLayout({
         <TranslationProvider initialLanguage={lang} initialTranslations={translations}>
           <ThemeInitializer />
           <BanChecker />
+          <ApprovalGuard />
           {children}
         </TranslationProvider>
       </body>

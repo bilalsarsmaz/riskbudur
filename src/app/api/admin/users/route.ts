@@ -17,6 +17,9 @@ export async function GET(req: Request) {
 
     // Tüm kullanıcıları getir
     const users = await prisma.user.findMany({
+      where: {
+        isApproved: true
+      },
       select: {
         id: true,
         nickname: true,
@@ -26,6 +29,7 @@ export async function GET(req: Request) {
         hasBlueTick: true,
         verificationTier: true,
         isBanned: true,
+        isApproved: true,
         createdAt: true,
         role: true
       },
@@ -43,6 +47,7 @@ export async function GET(req: Request) {
       hasBlueTick: user.hasBlueTick || false,
       verificationTier: user.verificationTier || 'NONE',
       isBanned: user.isBanned || false,
+      isApproved: user.isApproved || false,
       role: user.role || 'USER',
       createdAt: user.createdAt ? user.createdAt.toISOString() : new Date().toISOString()
     })));
