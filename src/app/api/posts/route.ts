@@ -82,7 +82,11 @@ export async function GET(req: NextRequest) {
       where: whereClause,
       skip,
       take,
-      orderBy: { createdAt: "desc" },
+      // Consistent ordering for stable pagination
+      orderBy: [
+        { createdAt: "desc" },
+        { id: "desc" }
+      ],
       include: {
         author: {
           select: {
@@ -94,6 +98,34 @@ export async function GET(req: NextRequest) {
             verificationTier: true,
             role: true,
             isBanned: true,
+          },
+        },
+        // Include quotes to eliminate N+1 query
+        quotes: {
+          include: {
+            quotedPost: {
+              select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                imageUrl: true,
+                mediaUrl: true,
+                linkPreview: true,
+                isAnonymous: true,
+                author: {
+                  select: {
+                    id: true,
+                    nickname: true,
+                    fullName: true,
+                    profileImage: true,
+                    hasBlueTick: true,
+                    verificationTier: true,
+                    role: true,
+                    isBanned: true,
+                  },
+                },
+              },
+            },
           },
         },
         _count: {
@@ -223,53 +255,31 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Her post icin alinti bilgisini cek
-    const formattedPosts = await Promise.all(posts.map(async (post) => {
-      // Bu post'un alinti yaptigi postu bul (Quote tablosundan)
-      const quote = await prisma.quote.findFirst({
-        where: {
-          authorId: post.authorId,
-          content: post.content,
-          createdAt: {
-            gte: new Date(post.createdAt.getTime() - 1000),
-            lte: new Date(post.createdAt.getTime() + 1000),
-          },
-        },
-        include: {
-          quotedPost: {
-            select: {
-              id: true,
-              content: true,
-              createdAt: true,
-              imageUrl: true,
-              mediaUrl: true,
-              linkPreview: true,
-              isAnonymous: true,
-              author: {
-                select: {
-                  id: true,
-                  nickname: true,
-                  fullName: true,
-                  profileImage: true,
-                  hasBlueTick: true,
-                  verificationTier: true,
-                  role: true,
-                  isBanned: true,
-                },
-              },
-            },
-          },
-        },
-      });
+    // ✅ BULK THREAD COUNT QUERY (Instead of N+1)
+    const postIds = posts.map(p => p.id);
+    const threadCounts = await prisma.post.groupBy({
+      by: ['threadRootId'],
+      where: {
+        threadRootId: { in: postIds },
+      },
+      _count: { id: true }
+    });
 
-      // Thread bilgisi: Ayni yazarin kendi postuna verdigi yanitlar
-      const threadRepliesCount = await prisma.post.count({
-        where: {
-          threadRootId: post.id,
-          // Herhangi bir yazarin yanitlari (thread olusturmak icin)
-        },
-      });
+    // Create a Map for O(1) lookup
+    const threadCountMap = new Map(
+      threadCounts.map(tc => [tc.threadRootId?.toString(), tc._count.id])
+    );
 
+    // ✅ Format posts using included data (No more N+1 queries!)
+    const formattedPosts = posts.map((post) => {
+      // Use included quotes data instead of separate query
+      const quote = post.quotes.find(q =>
+        q.authorId === post.authorId &&
+        Math.abs(q.createdAt.getTime() - post.createdAt.getTime()) < 2000
+      );
+
+      // Get thread count from Map
+      const threadRepliesCount = threadCountMap.get(post.id.toString()) || 0;
       const isThread = threadRepliesCount >= 4;
 
       // Filter content removed - using isCensored flag instead
@@ -287,6 +297,7 @@ export async function GET(req: NextRequest) {
         isQuoted: userId ? quotedPostIds.includes(post.id.toString()) : false,
         isBookmarked: userId ? bookmarkedPostIds.includes(post.id.toString()) : false,
         isCensored: (post as any).isCensored || false,
+        viewCount: post.viewCount || 0,
         _count: {
           likes: post._count.likes,
           comments: post._count.comments + post._count.replies, // Toplam yanit
@@ -310,7 +321,7 @@ export async function GET(req: NextRequest) {
         } : null,
       };
 
-      // Eger alinti varsa, alintilanan postu ekle
+      // Eger alinti varsa, alintilanan postu ekle (using included data)
       if (quote && quote.quotedPost) {
         return {
           ...basePost,
@@ -329,14 +340,13 @@ export async function GET(req: NextRequest) {
       }
 
       return basePost;
-    }));
+    });
 
     return NextResponse.json(formattedPosts, {
       status: 200,
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        // ✅ Smart caching: 30s cache, 60s stale-while-revalidate
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
       }
     });
   } catch (error) {

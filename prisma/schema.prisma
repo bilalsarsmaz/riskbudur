@@ -118,6 +118,7 @@ model Post {
   imageUrl      String?
   isAnonymous   Boolean        @default(false)
   isCensored    Boolean        @default(false)
+  viewCount     Int            @default(0)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   authorId      String
@@ -142,6 +143,8 @@ model Post {
   @@index([parentPostId])
   @@index([threadRootId])
   @@index([authorId, createdAt])
+  // Performance index for feed query (pagination with ordering)
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
 }
 
 model Like {
@@ -186,6 +189,9 @@ model Quote {
   quotedPostId BigInt
   author       User     @relation(fields: [authorId], references: [id])
   quotedPost   Post     @relation(fields: [quotedPostId], references: [id])
+
+  // Performance index for quote lookup (eliminating N+1 queries)
+  @@index([authorId, createdAt])
 }
 
 model Hashtag {

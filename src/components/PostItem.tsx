@@ -18,12 +18,13 @@ import ReportModal from "@/components/ReportModal";
 import { parseContent } from "@/utils/text";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useTranslation } from "@/components/TranslationProvider";
+import { useViewTracking } from "@/hooks/useViewTracking";
 
 import {
   IconHeart,
   IconDots,
   IconHeartFilled,
-  IconMessage2,
+  IconMessage,
   IconRepeat,
   IconRosetteDiscountCheckFilled,
   IconTargetArrow,
@@ -39,7 +40,8 @@ import {
   IconUserMinus,
   IconBan,
   IconFlag,
-  IconSquareChevronRightFilled
+  IconSquareChevronRightFilled,
+  IconEyeFilled,
 } from "@tabler/icons-react";
 
 interface PostItemProps {
@@ -83,6 +85,13 @@ export default function PostItem({
   const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
   const counts = post._count || defaultCounts;
   const { t } = useTranslation();
+
+  // View tracking with Intersection Observer
+  const { elementRef: viewTrackingRef } = useViewTracking(post.id, {
+    enabled: !isAdminView, // Don't track views in admin panel
+    threshold: 0.5, // 50% visibility required
+    delay: 1000 // 1 second delay
+  });
 
   const [showCopiedToast, setShowCopiedToast] = useState(false);
   const [imageModalUrl, setImageModalUrl] = useState<string | null>(null);
@@ -904,9 +913,9 @@ export default function PostItem({
                 className="post-action post-action-comment flex items-center mr-6"
                 style={{ color: isCommented ? "#1d9bf0" : undefined }}
               >
-                <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
+                <IconMessage className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
                 {commentCount > 0 && (
-                  <span className={`post-action-count font-extrabold ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
+                  <span className={`post-action-count font-semibold ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
                 )}
               </button>
 
@@ -922,7 +931,7 @@ export default function PostItem({
                   <IconHeart className="interaction-icon w-5 h-5 mr-1" />
                 )}
                 {likeCount > 0 && (
-                  <span className={`post-action-count font-extrabold ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
+                  <span className={`post-action-count font-semibold ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
                 )}
               </button>
 
@@ -933,11 +942,21 @@ export default function PostItem({
               >
                 <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
                 {quoteCount > 0 && (
-                  <span className={`post-action-count font-extrabold ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
+                  <span className={`post-action-count font-semibold ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
                 )}
               </button>
 
               <div className="ml-auto flex items-center gap-2">
+                {/* View Count */}
+                <div
+                  className="post-action flex items-center gap-1 cursor-default"
+                >
+                  <IconEyeFilled className="w-5 h-5 interaction-icon" />
+                  <span className="post-action-count font-semibold interaction-icon text-sm">
+                    {post.viewCount ? (post.viewCount > 1000 ? `${(post.viewCount / 1000).toFixed(1)}k` : post.viewCount) : 0}
+                  </span>
+                </div>
+
                 <button
                   onClick={handleBookmark}
                   className="post-action post-action-bookmark p-1 rounded-full transition-colors"
@@ -991,6 +1010,7 @@ export default function PostItem({
   return (
     <>
       <div
+        ref={viewTrackingRef}
         className={`post py-[11px] px-[13px] relative cursor-pointer transition-colors ${isThread ? "" : "border-b border-theme-border"} ${className}`}
         style={{ zIndex: (showShareMenu || headerMenuOpen) ? 9999 : 'auto' }}
         onClick={handlePostClick}
@@ -1402,9 +1422,9 @@ export default function PostItem({
                   className="post-action post-action-comment flex items-center mr-8"
                   style={{ color: isCommented ? "#1d9bf0" : undefined }}
                 >
-                  <IconMessage2 className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
+                  <IconMessage className={`w-5 h-5 mr-1 ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }} />
                   {commentCount > 0 && (
-                    <span className={`post-action-count font-extrabold ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
+                    <span className={`post-action-count font-semibold ${!isCommented ? 'interaction-icon' : ''}`} style={{ color: isCommented ? "#1d9bf0" : undefined }}>{isPopular ? formatNumber(commentCount) : commentCount}</span>
                   )}
                 </button>
 
@@ -1420,7 +1440,7 @@ export default function PostItem({
                     <IconHeart className="interaction-icon w-5 h-5 mr-1" />
                   )}
                   {likeCount > 0 && (
-                    <span className={`post-action-count font-extrabold ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
+                    <span className={`post-action-count font-semibold ${!isLiked ? 'interaction-icon' : ''}`} style={{ color: isLiked ? "#FF0066" : undefined }}>{isPopular ? formatNumber(likeCount) : likeCount}</span>
                   )}
                 </button>
 
@@ -1431,11 +1451,21 @@ export default function PostItem({
                 >
                   <IconRepeat className={`w-5 h-5 mr-1 ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }} />
                   {quoteCount > 0 && (
-                    <span className={`post-action-count font-extrabold ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
+                    <span className={`post-action-count font-semibold ${!quoted ? 'interaction-icon' : ''}`} style={{ color: quoted ? "#1DCD9F" : undefined }}>{quoteCount}</span>
                   )}
                 </button>
 
                 <div className="ml-auto flex items-center gap-2">
+                  {/* View Count */}
+                  <div
+                    className="post-action flex items-center gap-1 cursor-default"
+                  >
+                    <IconEyeFilled className="w-5 h-5 interaction-icon" />
+                    <span className="post-action-count font-semibold interaction-icon text-sm">
+                      {post.viewCount ? (post.viewCount > 1000 ? `${(post.viewCount / 1000).toFixed(1)}k` : post.viewCount) : 0}
+                    </span>
+                  </div>
+
                   <button
                     onClick={handleBookmark}
                     className="post-action post-action-bookmark p-1 rounded-full transition-colors"

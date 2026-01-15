@@ -27,6 +27,7 @@ export default function HomePage() {
   const [activeTimeline, setActiveTimeline] = useState<TimelineType>("all");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [newPostCount, setNewPostCount] = useState(0);
   const [isMobileComposeOpen, setIsMobileComposeOpen] = useState(false);
   const loadingRef = useRef(false);
@@ -55,6 +56,17 @@ export default function HomePage() {
     } catch (e) {
       console.error("Token parse hatası:", e);
     }
+
+    // Fetch current user data for avatar
+    const fetchUserData = async () => {
+      try {
+        const userData = await fetchApi("/users/me");
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    fetchUserData();
 
     // Fetch System Settings
     const fetchSettings = async () => {
@@ -254,6 +266,7 @@ export default function HomePage() {
           <ComposeBox
             onPostCreated={handlePostCreated}
             className="border-t-0"
+            currentUser={currentUser}
           />
         </div>
 

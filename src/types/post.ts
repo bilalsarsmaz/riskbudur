@@ -61,6 +61,7 @@ export interface EnrichedPost {
     isThread?: boolean;
     isPopular?: boolean;
     isCensored?: boolean;
+    viewCount?: number;
 
     // Rich content
     linkPreview?: LinkPreview;
