@@ -663,7 +663,6 @@ export default function PostItem({
                       likeCount={likeCount}
                       commentCount={commentCount}
                       quoteCount={quoteCount}
-                      isQuoted={quoted}
                       isFollowing={isFollowing}
                       onLike={handleLike}
                       onComment={handleCommentClick}
@@ -766,6 +765,7 @@ export default function PostItem({
                             src={post.quotedPost.imageUrl || post.quotedPost.mediaUrl || ""}
                             className="max-h-[300px]"
                             post={post.quotedPost}
+                            isQuoted={true}
                             likeCount={post.quotedPost._count?.likes || 0}
                             commentCount={post.quotedPost._count?.comments || 0}
                             quoteCount={post.quotedPost.quoteCount || 0}
@@ -1136,7 +1136,6 @@ export default function PostItem({
                         likeCount={likeCount}
                         commentCount={commentCount}
                         quoteCount={quoteCount}
-                        isQuoted={quoted}
                         isFollowing={isFollowing}
                         onLike={handleLike}
                         onComment={handleCommentClick}

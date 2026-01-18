@@ -101,33 +101,7 @@ export async function GET(req: NextRequest) {
           },
         },
         // Include quotes to eliminate N+1 query
-        quotes: {
-          include: {
-            quotedPost: {
-              select: {
-                id: true,
-                content: true,
-                createdAt: true,
-                imageUrl: true,
-                mediaUrl: true,
-                linkPreview: true,
-                isAnonymous: true,
-                author: {
-                  select: {
-                    id: true,
-                    nickname: true,
-                    fullName: true,
-                    profileImage: true,
-                    hasBlueTick: true,
-                    verificationTier: true,
-                    role: true,
-                    isBanned: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+        // quotes removed from include to avoid incorrect relation usage
         _count: {
           select: {
             likes: true,
@@ -270,13 +244,64 @@ export async function GET(req: NextRequest) {
       threadCounts.map(tc => [tc.threadRootId?.toString(), tc._count.id])
     );
 
-    // ✅ Format posts using included data (No more N+1 queries!)
-    const formattedPosts = posts.map((post) => {
-      // Use included quotes data instead of separate query
-      const quote = post.quotes.find(q =>
+    // ✅ BULK QUOTE FETCHING (Fix for logic error)
+    // The previous logic assumed Post.quotes contained the quote record for the post itself,
+    // but it actually contains quotes *of* that post.
+    // We need to find "is this post a quote?" by checking the Quote table.
+
+    // 1. Collect potential authors and time ranges
+    const postAuthors = posts.map(p => p.authorId);
+    // Find min and max dates to optimize query
+    const minDate = new Date(Math.min(...posts.map(p => p.createdAt.getTime())) - 2000);
+    const maxDate = new Date(Math.max(...posts.map(p => p.createdAt.getTime())) + 2000);
+
+    const relevantQuotes = await prisma.quote.findMany({
+      where: {
+        authorId: { in: postAuthors },
+        createdAt: {
+          gte: minDate,
+          lte: maxDate
+        }
+      },
+      include: {
+        quotedPost: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            imageUrl: true,
+            mediaUrl: true,
+            linkPreview: true,
+            isAnonymous: true,
+            author: {
+              select: {
+                id: true,
+                nickname: true,
+                fullName: true,
+                profileImage: true,
+                hasBlueTick: true,
+                verificationTier: true,
+                role: true,
+                isBanned: true,
+              },
+            },
+          },
+        }
+      }
+    });
+
+    // Create a lookup map/function
+    const findQuoteForPost = (post: any) => {
+      return relevantQuotes.find(q =>
         q.authorId === post.authorId &&
         Math.abs(q.createdAt.getTime() - post.createdAt.getTime()) < 2000
       );
+    };
+
+    // ✅ Format posts using included data (No more N+1 queries!)
+    const formattedPosts = posts.map((post) => {
+      // Find quote from bulk fetch
+      const quote = findQuoteForPost(post);
 
       // Get thread count from Map
       const threadRepliesCount = threadCountMap.get(post.id.toString()) || 0;

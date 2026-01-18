@@ -206,7 +206,7 @@ export default function VideoPlayer({
 
     return (
         <>
-            <div className={`relative rounded-2xl overflow-hidden border app-border bg-black ${className}`}>
+            <div className={`relative overflow-hidden ${isQuoted ? 'w-full border-0 rounded-none bg-black' : 'rounded-2xl border app-border bg-black w-full'} ${className}`}>
                 <video
                     ref={videoRef}
                     src={src}
