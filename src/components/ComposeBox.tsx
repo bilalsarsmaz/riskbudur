@@ -597,29 +597,50 @@ export default function ComposeBox({
                   style={{ color: "var(--app-body-text)" }}
                   className={`w-full bg-transparent text-lg resize-none outline-none overflow-hidden placeholder-[var(--app-subtitle)] ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
                   onPaste={(e) => {
-                    // ... logic for images ... 
                     if (e.clipboardData && e.clipboardData.items) {
                       const items = e.clipboardData.items;
                       for (let i = 0; i < items.length; i++) {
                         if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
-                          // ... existing image paste logic ...
                           const file = items[i].getAsFile();
                           if (file) {
                             e.preventDefault();
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              setPreviewUrl(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
+
+                            if (file.size > 50 * 1024 * 1024) {
+                              setError(t('user.compose.error_file_size', "Dosya boyutu çok büyük (Max 50MB)"));
+                              return;
+                            }
+
+                            setSelectedFile(file);
+                            const objectUrl = URL.createObjectURL(file);
+                            setPreviewUrl(objectUrl);
+                            setIsPreviewVideo(false);
                             return;
                           }
                         }
                       }
                     }
-                    // Handle text paste truncation? 
-                    // If standard onChange handles it, it will just block the paste if it exceeds. 
-                    // Better UX might be to truncate the pasted text to fit, but user asked "Do not let me type".
-                    // Blocking the paste entirely if it overflows is "not letting type/input".
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      const file = e.dataTransfer.files[0];
+                      if (file.type.startsWith('image/')) {
+                        if (file.size > 50 * 1024 * 1024) {
+                          setError(t('user.compose.error_file_size', "Dosya boyutu çok büyük (Max 50MB)"));
+                          return;
+                        }
+                        setSelectedFile(file);
+                        const objectUrl = URL.createObjectURL(file);
+                        setPreviewUrl(objectUrl);
+                        setIsPreviewVideo(false);
+                        setIsTextareaActive(true);
+                      }
+                    }
                   }}
                 />
                 {/* Character Counter Removed from here */}
