@@ -8,6 +8,7 @@ import Link from "next/link";
 import ComposeBox from "./ComposeBox";
 import { formatCustomDate } from "@/utils/date";
 import VideoPlayer from "@/components/VideoPlayer";
+import { useTranslation } from "@/components/TranslationProvider";
 
 interface QuoteModalProps {
   post: EnrichedPost;
@@ -17,6 +18,7 @@ interface QuoteModalProps {
 }
 
 export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: QuoteModalProps) {
+  const { t } = useTranslation();
   const isAnonymous = post.isAnonymous || false;
   const formattedDate = formatCustomDate(post.createdAt);
   const likes = post._count?.likes || 0;
@@ -135,8 +137,8 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                 onClose();
               }}
               onCancel={onClose}
-              placeholder="Bir şeyler ekle..."
-              submitButtonText="Alıntıla"
+              placeholder={t('user.modal.quote.add_thought', 'Bir şeyler ekle...')}
+              submitButtonText={t('user.modal.quote.button_quote', 'Alıntıla')}
             />
           </div>
         </div>
@@ -215,8 +217,8 @@ export default function QuoteModal({ post, isOpen, onClose, onQuoteAdded }: Quot
                 onQuoteAdded(newPost);
                 onClose();
               }}
-              placeholder="Bir şeyler ekle..."
-              submitButtonText="Alıntıla"
+              placeholder={t('user.modal.quote.add_thought', 'Bir şeyler ekle...')}
+              submitButtonText={t('user.modal.quote.button_quote', 'Alıntıla')}
               isMobileFullscreen={true}
               className="!bg-transparent !border-none !rounded-none !p-0"
             />

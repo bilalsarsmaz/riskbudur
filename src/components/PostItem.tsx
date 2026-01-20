@@ -84,7 +84,7 @@ export default function PostItem({
   const router = useRouter();
   const defaultCounts = { likes: 0, comments: 0, quotes: 0 };
   const counts = post._count || defaultCounts;
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   // View tracking with Intersection Observer
   const { elementRef: viewTrackingRef } = useViewTracking(post.id, {
@@ -1078,6 +1078,7 @@ export default function PostItem({
               onFollowToggle={handleFollowToggle}
               onDelete={handleDelete}
               onBlock={handleBlock}
+              language={language}
               onReport={handleReport}
               onMenuOpenChange={setHeaderMenuOpen}
             />

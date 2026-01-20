@@ -58,6 +58,7 @@ export default function MobileHeader() {
     'system-technical': false
   });
   const { t } = useTranslation();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups(prev => ({
@@ -67,6 +68,22 @@ export default function MobileHeader() {
   };
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          setLogoUrl(data.site_logo || "/riskbudurlogo.png?v=2");
+        } else {
+          setLogoUrl("/riskbudurlogo.png?v=2");
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+        setLogoUrl("/riskbudurlogo.png?v=2");
+      }
+    };
+    fetchSettings();
+
     const fetchUserData = async () => {
       try {
         const data = await fetchApi("/users/me");
@@ -193,12 +210,16 @@ export default function MobileHeader() {
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-theme-bg/80 backdrop-blur-md border-b border-theme-border z-50 flex items-center justify-between px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex items-start justify-center">
-            <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "30px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" style={{ width: "34px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
+            ) : (
+              <div style={{ width: "34px", height: "34px", marginRight: '5px' }}></div>
+            )}
             <div className="flex flex-col justify-center" style={{ marginTop: '2px' }}>
-              <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
-                riskbudur
+              <h1 className="text-2xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
+                {t('common.site_name', 'riskbudur')}
               </h1>
-              <p className="text-[9px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
+              <p className="text-[11px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
                 {t('common.slogan', 'underground sosyal medya')}
               </p>
             </div>
@@ -221,12 +242,16 @@ export default function MobileHeader() {
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-theme-bg/80 backdrop-blur-md border-b border-theme-border z-[9999] flex items-center justify-between px-4">
         <Link href="/home" className="flex items-center">
           <div className="flex items-start justify-center">
-            <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "30px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" style={{ width: "34px", height: "auto", objectFit: "contain", marginRight: '5px' }} />
+            ) : (
+              <div style={{ width: "34px", height: "34px", marginRight: '5px' }}></div>
+            )}
             <div className="flex flex-col justify-center" style={{ marginTop: '2px' }}>
-              <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
-                riskbudur
+              <h1 className="text-2xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
+                {t('common.site_name', 'riskbudur')}
               </h1>
-              <p className="text-[9px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
+              <p className="text-[11px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
                 {t('common.slogan', 'underground sosyal medya')}
               </p>
             </div>

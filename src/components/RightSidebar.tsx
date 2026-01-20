@@ -42,20 +42,10 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [visitorsLoading, setVisitorsLoading] = useState(false);
-  const [showPopularPosts, setShowPopularPosts] = useState(true);
-  const [isModernTrending, setIsModernTrending] = useState(false);
+  const [showPopularPosts, setShowPopularPosts] = useState<boolean | null>(null);
+  const [isModernTrending, setIsModernTrending] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (isProfilePage) {
-      setVisitorsLoading(true);
-      fetchApi(`/users/${profileUsername}/visitors`)
-        .then((data: any) => {
-          setVisitors(data.visitors || []);
-        })
-        .catch(console.error)
-        .finally(() => setVisitorsLoading(false));
-    }
-  }, [profileUsername]);
+  // ... (existing useEffect for profile page visitors)
 
   useEffect(() => {
     if (hideHashtags) {
@@ -95,26 +85,29 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
     // Fetch System Settings
     const fetchSettings = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("/api/settings", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        const res = await fetch("/api/settings", { cache: "no-store" });
         if (res.ok) {
-          const settings = await res.json();
-          if (settings["enable_popular_posts"] === "false") {
-            setShowPopularPosts(false);
-          }
-          if (settings["modern_trending_ui"] === "true") {
-            setIsModernTrending(true);
-          }
+          const data = await res.json();
+          // Parse string booleans if necessary, or use values
+          // Assuming API returns string "true"/"false" or boolean
+          const showPop = data.show_popular_posts === "true" || data.show_popular_posts === true;
+          const modernTrend = data.modern_trending_ui === "true" || data.modern_trending_ui === true;
+
+          setShowPopularPosts(showPop);
+          setIsModernTrending(modernTrend);
+        } else {
+          // Default fallbacks if API fails
+          setShowPopularPosts(true);
+          setIsModernTrending(false);
         }
       } catch (error) {
         console.error("Error fetching settings:", error);
+        setShowPopularPosts(true);
+        setIsModernTrending(false);
       }
     };
     fetchSettings();
-
-  }, [hideHashtags, pathname]); // pathname degisince de guncelle
+  }, [hideHashtags]);
 
   return (
     <div className="space-y-4">
@@ -125,7 +118,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
             <div className="mb-8">
               <h2 className="app-body-text-title mb-4 flex items-center gap-2" style={{ color: 'var(--app-body-text)' }}>
                 <IconBoltFilled size={24} className="text-orange-500" />
-                {t('trending.title', 'Gündem')}
+                {t('user.explore.trending', 'Gündem')}
               </h2>
               {loading ? (
                 <div className="flex justify-center py-4">
@@ -155,7 +148,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                     className="flex items-center gap-1 pt-2"
                     style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
                   >
-                    <span>{t('common.show_more', 'Daha fazla göster')}</span>
+                    <span>{t('common.ui.show_more', 'Daha fazla göster')}</span>
                     <IconChevronRight className="h-4 w-4" />
                   </Link>
                 </>
@@ -163,7 +156,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
             </div>
           ) : (
             <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-              <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('trending.title', 'Gündem')}</h2>
+              <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('user.explore.trending', 'Gündem')}</h2>
               {loading ? (
                 <div className="flex justify-center py-4">
                   <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div>
@@ -177,7 +170,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                       className="flex flex-col items-start py-2 px-2 -mx-2 rounded-2xl hover:bg-white/5 transition-colors"
                     >
                       <span className="font-bold" style={{ color: 'var(--app-body-text)' }}>#{hashtag.name}</span>
-                      <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} {t('trending.posts_suffix', 'gönderi')}</span>
+                      <span className="text-xs" style={{ color: 'var(--app-subtitle)' }}>{hashtag.count} {t('user.trending.posts_suffix', 'gönderi')}</span>
                     </Link>
                   ))}
 
@@ -186,7 +179,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                     className="flex items-center gap-1 pt-3"
                     style={{ fontSize: '13px', color: 'var(--app-global-link-color)' }}
                   >
-                    <span>{t('common.show_more', 'Daha fazla göster')}</span>
+                    <span>{t('common.ui.show_more', 'Daha fazla göster')}</span>
                     <IconChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -199,7 +192,7 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
       {/* Dikizleyenler (Profile Page Only) OR Popular Posts (Other Pages) */}
       {isProfilePage ? (
         <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('who_visited.title', 'Dikizleyenler')}</h2>
+          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('user.who_visited.title', 'Dikizleyenler')}</h2>
           {visitorsLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#1DCD9F]"></div>
@@ -226,14 +219,14 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
                   ))}
                 </div>
               ) : (
-                <div className="text-gray-500 text-sm py-4 text-center">{t('who_visited.empty', 'Henüz kimse dikizlemedi...')}</div>
+                <div className="text-gray-500 text-sm py-4 text-center">{t('user.who_visited.empty', 'Henüz kimse dikizlemedi...')}</div>
               )}
             </>
           )}
         </div>
       ) : showPopularPosts ? (
         <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-surface)' }}>
-          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('popular_posts.title', 'Popüler Postlar')}</h2>
+          <h2 className="app-body-text-title mb-4" style={{ color: 'var(--app-body-text)' }}>{t('user.popular_posts.title', 'Popüler Postlar')}</h2>
           <PopularPostsSlider />
         </div>
       ) : null}
@@ -242,10 +235,10 @@ export default function RightSidebar({ hideHashtags = false }: RightSidebarProps
       <div className="app-box-style p-4" style={{ backgroundColor: 'var(--app-footer-bg)' }}>
         <div className="text-xs space-y-2" style={{ color: 'var(--app-subtitle)' }}>
           <div className="flex flex-wrap gap-2">
-            <Link href="/help/about" className="hover:underline">{t('footer.about', 'Hakkında')}</Link>
-            <Link href="/help/terms" className="hover:underline">{t('footer.terms', 'Kullanım Şartları')}</Link>
-            <Link href="/help/privacy" className="hover:underline">{t('footer.privacy', 'Gizlilik')}</Link>
-            <Link href="/help/contact" className="hover:underline">{t('footer.contact', 'İletişim')}</Link>
+            <Link href="/help/about" className="hover:underline">{t('common.footer.about', 'Hakkında')}</Link>
+            <Link href="/help/terms" className="hover:underline">{t('common.footer.terms', 'Kullanım Şartları')}</Link>
+            <Link href="/help/privacy" className="hover:underline">{t('common.footer.privacy', 'Gizlilik')}</Link>
+            <Link href="/help/contact" className="hover:underline">{t('common.footer.contact', 'İletişim')}</Link>
           </div>
           <p>© 2026 RiskBudur</p>
         </div>

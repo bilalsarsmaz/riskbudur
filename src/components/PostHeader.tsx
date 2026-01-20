@@ -35,6 +35,7 @@ interface PostHeaderProps {
     onPin?: () => void;
     onMenuOpenChange?: (isOpen: boolean) => void;
     isGold?: boolean;
+    language: string;
 }
 
 export default function PostHeader({
@@ -50,7 +51,8 @@ export default function PostHeader({
     onViewStats,
     onPin,
     onMenuOpenChange,
-    isGold
+    isGold,
+    language
 }: PostHeaderProps) {
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -62,7 +64,7 @@ export default function PostHeader({
     const comments = post._count?.comments || 0;
     const isPopular = (likes > 30 || comments > 10);
 
-    const formattedDate = formatCustomDate(post.createdAt);
+    const formattedDate = formatCustomDate(post.createdAt, language);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

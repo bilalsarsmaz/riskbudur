@@ -175,7 +175,7 @@ export default function EditTranslationPage() {
                                         </div>
                                         <IconChevronRight className="transform transition-transform group-open:rotate-90 text-theme-subtitle" />
                                     </summary>
-                                    <div className="p-4 pt-0 space-y-2 border-t border-theme-border/50 bg-[#000]/20">
+                                    <div className="p-4 pt-0 space-y-3 border-t border-theme-border/50 bg-[#000]/20">
                                         {items.map((t) => {
                                             const isChanged = unsavedChanges.has(t.key);
                                             return (

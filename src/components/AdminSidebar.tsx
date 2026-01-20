@@ -61,50 +61,70 @@ export default function AdminSidebar() {
         fetchUserData();
     }, []);
 
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch("/api/settings", { cache: "no-store" });
+                if (res.ok) {
+                    const data = await res.json();
+                    setLogoUrl(data.site_logo || "/riskbudurlogo.png?v=2");
+                } else {
+                    setLogoUrl("/riskbudurlogo.png?v=2");
+                }
+            } catch (error) {
+                console.error("Error fetching settings:", error);
+                setLogoUrl("/riskbudurlogo.png?v=2");
+            }
+        };
+        fetchSettings();
+    }, []);
+
     const { t } = useTranslation();
 
     const menuStructure: MenuItem[] = useMemo(() => [
         {
             id: "dashboard",
-            label: t("sidebar.dashboard"),
+            label: t("admin.sidebar.dashboard"),
             icon: IconLayoutDashboard,
             href: "/admincp",
             visible: true
         },
         {
             id: "chat",
-            label: t("sidebar.chat"),
+            label: t("admin.sidebar.chat"),
             icon: IconMessage2Search,
             href: "/admincp/chat",
             visible: true
         },
         {
             id: "user-management",
-            label: t("sidebar.users"),
+            label: t("admin.sidebar.users"),
             icon: IconUsersGroup,
             visible: true,
             children: [
                 {
                     id: "users-list",
-                    label: t("sidebar.users_list"),
+                    label: t("admin.sidebar.users_list"),
                     href: "/admincp/users",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_USER_FULLNAME) || hasPermission(userInfo?.role as Role, Permission.BAN_USER)
                 },
                 {
                     id: "approve-users",
-                    label: t("sidebar.approve_users"),
+                    label: t("admin.sidebar.approve_users"),
                     href: "/admincp/approveuser",
                     visible: hasPermission(userInfo?.role as Role, Permission.APPROVE_USER)
                 },
                 {
                     id: "badges",
-                    label: t("sidebar.badges"),
+                    label: t("admin.sidebar.badges"),
                     href: "/admincp/badges",
                     visible: hasPermission(userInfo?.role as Role, Permission.GRANT_BADGES)
                 },
                 {
                     id: "bans",
-                    label: t("sidebar.bans"),
+                    label: t("admin.sidebar.bans"),
                     href: "/admincp/bans",
                     visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER)
                 },
@@ -113,25 +133,25 @@ export default function AdminSidebar() {
         },
         {
             id: "content-moderation",
-            label: t("sidebar.content"),
+            label: t("admin.sidebar.content"),
             icon: IconTimelineEventText,
             visible: true,
             children: [
                 {
                     id: "posts",
-                    label: t("sidebar.posts"),
+                    label: t("admin.sidebar.posts"),
                     href: "/admincp/posts",
                     visible: hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
                 },
                 {
                     id: "reports",
-                    label: t("sidebar.reports"),
+                    label: t("admin.sidebar.reports"),
                     href: "/admincp/reports",
                     visible: hasPermission(userInfo?.role as Role, Permission.BAN_USER) || hasPermission(userInfo?.role as Role, Permission.DELETE_USER_POST)
                 },
                 {
                     id: "sensitive",
-                    label: t("sidebar.sensitive"),
+                    label: t("admin.sidebar.sensitive"),
                     href: "/admincp/sensitive-content",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_SENSITIVE_CONTENT)
                 },
@@ -140,37 +160,37 @@ export default function AdminSidebar() {
         },
         {
             id: "system-technical",
-            label: t("sidebar.system"),
+            label: t("admin.sidebar.system"),
             icon: IconWorldCog,
             visible: true,
             children: [
                 {
                     id: "status",
-                    label: t("sidebar.status"),
+                    label: t("admin.sidebar.status"),
                     href: "/admincp/status",
                     visible: hasPermission(userInfo?.role as Role, Permission.VIEW_SYSTEM_STATUS)
                 },
                 {
                     id: "announcements",
-                    label: t("sidebar.announcements"),
+                    label: t("admin.sidebar.announcements"),
                     href: "/admincp/announcements",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_ANNOUNCEMENTS)
                 },
                 {
                     id: "pages",
-                    label: t("sidebar.pages"),
+                    label: t("admin.sidebar.pages"),
                     href: "/admincp/pages",
                     visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_PAGES)
                 },
                 {
                     id: "ghost-message",
-                    label: t("sidebar.ghost_message"),
+                    label: t("admin.sidebar.ghost_message"),
                     href: "/admincp/ghostmessage",
                     visible: hasPermission(userInfo?.role as Role, Permission.GHOST_MESSAGE)
                 },
                 {
                     id: "languages",
-                    label: t("sidebar.languages"),
+                    label: t("admin.sidebar.languages"),
                     href: "/admincp/language",
                     visible: userInfo?.role === "ROOTADMIN"
                 }
@@ -178,14 +198,14 @@ export default function AdminSidebar() {
         },
         {
             id: "settings",
-            label: t("sidebar.settings"),
+            label: t("admin.sidebar.settings"),
             icon: IconSettings,
             href: "/admincp/settings",
             visible: hasPermission(userInfo?.role as Role, Permission.MANAGE_SETTINGS)
         },
         {
             id: "back-to-platform",
-            label: t("sidebar.back_platform"),
+            label: t("admin.sidebar.back_platform"),
             icon: IconArrowLeftToArc,
             href: "/home",
             visible: true
@@ -222,13 +242,17 @@ export default function AdminSidebar() {
             <div className="flex-1 overflow-y-auto px-2 lg:px-4 pb-4 w-[280px]">
                 <div className="mb-6 px-2 sticky top-0 bg-black z-20 pt-4">
                     <Link href="/admincp" className="flex items-start justify-center xl:justify-start py-2 xl:pr-2 xl:pl-0">
-                        <img src="/riskbudurlogo.png?v=2" alt="Logo" className="w-[40px] h-auto object-contain mr-[5px] xl:mr-[3px] xl:mt-[2px]" />
+                        {logoUrl ? (
+                            <img src={logoUrl} alt="Logo" className="w-[36px] h-auto object-contain mr-[5px] xl:mr-[3px] xl:mt-[2px]" />
+                        ) : (
+                            <div className="w-[36px] h-[36px] mr-[5px] xl:mr-[3px] xl:mt-[2px]"></div>
+                        )}
                         <div className="hidden xl:flex flex-col justify-center mt-[5px]">
-                            <h1 className="text-xl font-extrabold font-montserrat leading-none app-text-primary">
-                                riskbudur
+                            <h1 className="text-2xl font-extrabold font-montserrat leading-none app-text-primary">
+                                {t('common.site_name', 'riskbudur')}
                             </h1>
-                            <p className="text-[9px] font-medium font-montserrat text-right app-text-muted mt-0">
-                                underground sosyal medya
+                            <p className="text-[11px] font-medium font-montserrat text-right app-text-muted mt-0">
+                                {t('common.slogan', 'underground sosyal medya')}
                             </p>
                         </div>
                     </Link>
@@ -251,11 +275,11 @@ export default function AdminSidebar() {
                                 <Link
                                     key={item.id}
                                     href={item.href || "#"}
-                                    className={`flex items-center px-3 py-3 rounded-full transition-all w-fit xl:w-full mb-1 ${isActive ? "font-bold" : ""}`}
+                                    className={`flex items-center justify-center xl:justify-start p-3 xl:p-2 rounded-full xl:rounded-lg transition-all w-fit xl:w-full mb-1 ${isActive ? "font-bold" : ""}`}
                                 >
-                                    <div className="relative flex items-center w-full">
-                                        {Icon && <Icon className={`w-[26.25px] h-[26.25px] mr-4 app-text-primary`} stroke={isActive ? 2.5 : 2} />}
-                                        <span className={`hidden xl:block text-[20px] app-text-primary ${isActive ? "font-bold" : "font-normal"}`}>
+                                    <div className="relative flex items-center w-full justify-center xl:justify-start">
+                                        {Icon && <Icon className={`h-7 w-7 xl:h-6 xl:w-6 xl:mr-3 app-text-primary`} stroke={isActive ? 2.5 : 2} />}
+                                        <span className={`hidden xl:inline app-body-text-title app-text-primary ${isActive ? "font-bold" : "font-normal"}`}>
                                             {item.label}
                                         </span>
                                     </div>
@@ -274,16 +298,17 @@ export default function AdminSidebar() {
                             <div key={item.id} className="mb-2">
                                 <button
                                     onClick={() => toggleGroup(item.id)}
-                                    className={`flex items-center justify-between w-full px-3 py-3 rounded-full transition-all ${isChildActive ? "font-bold" : ""}`}
+                                    className={`flex items-center justify-center xl:justify-between w-fit xl:w-full p-3 xl:p-2 rounded-full xl:rounded-lg transition-all ${isChildActive ? "font-bold" : ""}`}
                                 >
-                                    <div className="flex items-center">
-                                        {Icon && <Icon className={`w-[26.25px] h-[26.25px] mr-4 app-text-primary`} stroke={isChildActive ? 2.5 : 2} />}
-                                        <span className={`hidden xl:block text-[20px] app-text-primary ${isChildActive ? "font-bold" : "font-normal"}`}>
+                                    <div className="flex items-center justify-center xl:justify-start">
+                                        {Icon && <Icon className={`h-7 w-7 xl:h-6 xl:w-6 xl:mr-3 app-text-primary`} stroke={isChildActive ? 2.5 : 2} />}
+                                        <span className={`hidden xl:inline app-body-text-title app-text-primary ${isChildActive ? "font-bold" : "font-normal"}`}>
                                             {item.label}
                                         </span>
                                     </div>
                                     {/* No arrow icon on the right as per user request */}
                                 </button>
+
 
                                 {isExpanded && (
                                     <div className="mt-1 ml-4 xl:ml-3 space-y-1 pl-2">
@@ -366,7 +391,7 @@ export default function AdminSidebar() {
                                 onClick={handleLogout}
                             >
                                 <IconLogout className="h-5 w-5 mr-2" />
-                                {t("sidebar.logout")}
+                                {t("admin.sidebar.logout")}
                             </button>
                         </div>
                     </div>

@@ -16,8 +16,10 @@ import {
 } from "@tabler/icons-react";
 
 import { fetchApi } from "@/lib/api";
+import { useTranslation } from "@/components/TranslationProvider";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [stats, setStats] = useState({
@@ -58,17 +60,17 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { label: "Toplam Kullanıcı", value: stats.totalUsers, icon: IconUsers, color: "text-blue-500", bg: "bg-blue-500/5", border: "border-blue-500/20", href: "/admincp/users" },
-    { label: "Toplam Gönderi", value: stats.totalPosts, icon: IconFileText, color: "text-green-500", bg: "bg-green-500/5", border: "border-green-500/20", href: "/admincp/posts" },
-    { label: "Şikayetler", value: stats.totalReports, icon: IconFlag, color: "text-red-500", bg: "bg-red-500/5", border: "border-red-500/20", href: "/admincp/reports" },
-    { label: "Onay Bekleyenler", value: stats.pendingUsers, icon: IconUserCheck, color: "text-purple-500", bg: "bg-purple-500/5", border: "border-purple-500/20", href: "/admincp/approveuser" },
-    { label: "Rozet Başvuruları", value: stats.pendingBadges || 0, icon: IconRosetteDiscountCheck, color: "text-orange-500", bg: "bg-orange-500/5", border: "border-orange-500/20", href: "/admincp/badges" },
-    { label: "Yasaklanmış Üyeler", value: stats.bannedUsers || 0, icon: IconBan, color: "text-red-600", bg: "bg-red-600/5", border: "border-red-600/20", href: "/admincp/bans" }
+    { label: t('admin.dashboard.total_users', 'Toplam Kullanıcı'), value: stats.totalUsers, icon: IconUsers, color: "text-blue-500", bg: "bg-blue-500/5", border: "border-blue-500/20", href: "/admincp/users" },
+    { label: t('admin.dashboard.total_posts', 'Toplam Gönderi'), value: stats.totalPosts, icon: IconFileText, color: "text-green-500", bg: "bg-green-500/5", border: "border-green-500/20", href: "/admincp/posts" },
+    { label: t('admin.dashboard.reports', 'Şikayetler'), value: stats.totalReports, icon: IconFlag, color: "text-red-500", bg: "bg-red-500/5", border: "border-red-500/20", href: "/admincp/reports" },
+    { label: t('admin.dashboard.pending_approval', 'Onay Bekleyenler'), value: stats.pendingUsers, icon: IconUserCheck, color: "text-purple-500", bg: "bg-purple-500/5", border: "border-purple-500/20", href: "/admincp/approveuser" },
+    { label: t('admin.dashboard.badge_applications', 'Rozet Başvuruları'), value: stats.pendingBadges || 0, icon: IconRosetteDiscountCheck, color: "text-orange-500", bg: "bg-orange-500/5", border: "border-orange-500/20", href: "/admincp/badges" },
+    { label: t('admin.dashboard.banned_users', 'Yasaklanmış Üyeler'), value: stats.bannedUsers || 0, icon: IconBan, color: "text-red-600", bg: "bg-red-600/5", border: "border-red-600/20", href: "/admincp/bans" }
   ];
 
   return (
     <AdmSecondaryLayout sidebarContent={<AdminSidebar />} maxWidth="1200px">
-      <GlobalHeader title="Riskbudur Admin Paneli" subtitle="Dashboard" />
+      <GlobalHeader title={t('admin.dashboard.title', 'Riskbudur Admin Paneli')} subtitle={t('admin.dashboard.subtitle', 'Dashboard')} />
       <div className="p-6">
         {loading ? (
           <div className="flex justify-center py-20">

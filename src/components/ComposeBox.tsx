@@ -255,7 +255,7 @@ export default function ComposeBox({
     e.preventDefault();
 
     if (!content.trim() && !linkPreview && !previewUrl) {
-      setError(t('compose.error_empty', "Post içeriği boş olamaz"));
+      setError(t('user.compose.error_empty', "Post içeriği boş olamaz"));
       return;
     }
 
@@ -266,7 +266,7 @@ export default function ComposeBox({
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setError(t('compose.error_session', "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."));
+        setError(t('user.compose.error_session', "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."));
         return;
       }
 
@@ -280,7 +280,7 @@ export default function ComposeBox({
         const uploadedUrl = await uploadFile(selectedFile);
 
         if (!uploadedUrl) {
-          setError(t('compose.error_upload_failed', "Dosya yüklenemedi"));
+          setError(t('user.compose.error_upload_failed', "Dosya yüklenemedi"));
           setIsLoading(false);
           return;
         }
@@ -303,14 +303,14 @@ export default function ComposeBox({
       if (isPollOpen) {
         const validOptions = pollOptions.filter(opt => opt.trim() !== "");
         if (validOptions.length < 2) {
-          setError(t('compose.error_poll_min_options', "Anket için en az 2 seçenek gereklidir."));
+          setError(t('user.compose.error_poll_min_options', "Anket için en az 2 seçenek gereklidir."));
           setIsLoading(false);
           return;
         }
 
         const totalMinutes = (pollDays * 24 * 60) + (pollHours * 60) + pollMinutes;
         if (totalMinutes < 5) {
-          setError(t('compose.error_poll_min_duration', "Anket süresi en az 5 dakika olmalıdır."));
+          setError(t('user.compose.error_poll_min_duration', "Anket süresi en az 5 dakika olmalıdır."));
           setIsLoading(false);
           return;
         }
@@ -358,7 +358,7 @@ export default function ComposeBox({
       }
       // router.refresh(); // Removed: Client side update via onPostCreated is enough for immediate feedback
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('compose.error_generic', "Bir hata oluştu"));
+      setError(err instanceof Error ? err.message : t('user.compose.error_generic', "Bir hata oluştu"));
     } finally {
       setIsLoading(false);
     }
@@ -368,7 +368,7 @@ export default function ComposeBox({
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 50 * 1024 * 1024) { // 50MB Limit
-        setError(t('compose.error_file_size', "Dosya boyutu çok büyük (Max 50MB)"));
+        setError(t('user.compose.error_file_size', "Dosya boyutu çok büyük (Max 50MB)"));
         return;
       }
 
@@ -592,7 +592,7 @@ export default function ComposeBox({
                     // Actually, if they click back into the @mention string, maybe we should re-open?
                     // For now let's just keep it simple. If they want to trigger it again they can retype or we can add complex cursor tracking later.
                   }}
-                  placeholder={isAnonymous ? t('compose.placeholder_anonymous', "Anonim olarak paylaşacaksınız...") : (placeholder === "Ne düşünüyorsun?" ? t('compose.placeholder', "Ne düşünüyorsun?") : placeholder)}
+                  placeholder={isAnonymous ? t('user.compose.placeholder_anonymous', "Anonim olarak paylaşacaksınız...") : (placeholder === "Ne düşünüyorsun?" ? t('user.compose.placeholder', "Ne düşünüyorsun?") : placeholder)}
                   disabled={isLoading}
                   style={{ color: "var(--app-body-text)" }}
                   className={`w-full bg-transparent text-lg resize-none outline-none overflow-hidden placeholder-[var(--app-subtitle)] ${isTextareaActive ? 'min-h-[80px]' : 'min-h-[40px]'}`}
@@ -671,7 +671,7 @@ export default function ComposeBox({
                 <div className="mt-2 p-3 app-box-style">
                   <div className="flex items-center text-gray-400 text-sm">
                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#1DCD9F] mr-2"></div>
-                    {t('compose.link_preview_loading', "Link önizlemesi yükleniyor...")}
+                    {t('user.compose.link_preview_loading', "Link önizlemesi yükleniyor...")}
                   </div>
                 </div>
               )}
@@ -748,7 +748,7 @@ export default function ComposeBox({
             {isPollOpen && (
               <div className="mb-3 p-3 border rounded-lg" style={{ backgroundColor: "var(--app-body-bg)", borderColor: "var(--app-border)" }}>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium" style={{ color: "var(--app-subtitle)" }}>{t('compose.poll_options', "Anket Seçenekleri")}</span>
+                  <span className="text-sm font-medium" style={{ color: "var(--app-subtitle)" }}>{t('user.compose.poll_options', "Anket Seçenekleri")}</span>
                   <button type="button" onClick={() => setIsPollOpen(false)} className="text-gray-500 hover:text-white"><IconX size={16} /></button>
                 </div>
                 {pollOptions.map((option, index) => (
@@ -757,7 +757,7 @@ export default function ComposeBox({
                       type="text"
                       value={option}
                       onChange={(e) => handleOptionChange(index, e.target.value)}
-                      placeholder={t('compose.poll_option_placeholder', `Seçenek ${index + 1}`)}
+                      placeholder={t('user.compose.poll_option_placeholder', `Seçenek ${index + 1}`)}
                       className="flex-1 border rounded px-3 py-2 text-sm focus:border-[var(--app-global-link-color)] outline-none"
                       style={{ backgroundColor: "var(--app-body-bg)", color: "var(--app-body-text)", borderColor: "var(--app-border)" }}
                       maxLength={25}
@@ -776,14 +776,14 @@ export default function ComposeBox({
                     className="flex items-center text-sm mt-2 hover:underline"
                     style={{ color: "var(--app-global-link-color)" }}
                   >
-                    <IconPlus size={16} className="mr-1" /> {t('compose.add_option', "Seçenek Ekle")}
+                    <IconPlus size={16} className="mr-1" /> {t('user.compose.add_option', "Seçenek Ekle")}
                   </button>
                 )}
                 <div className="mt-3 pt-3 border-t border-theme-border">
-                  <label className="text-sm font-medium mb-2 block" style={{ color: "var(--app-subtitle)" }}>{t('compose.poll_duration', "Anket uzunluğu")}</label>
+                  <label className="text-sm font-medium mb-2 block" style={{ color: "var(--app-subtitle)" }}>{t('user.compose.poll_duration', "Anket uzunluğu")}</label>
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>{t('compose.days', "Gün")}</label>
+                      <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>{t('user.compose.days', "Gün")}</label>
                       <select
                         value={pollDays}
                         onChange={(e) => setPollDays(Number(e.target.value))}
@@ -796,7 +796,7 @@ export default function ComposeBox({
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>{t('compose.hours', "Saat")}</label>
+                      <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>{t('user.compose.hours', "Saat")}</label>
                       <select
                         value={pollHours}
                         onChange={(e) => setPollHours(Number(e.target.value))}
@@ -809,7 +809,7 @@ export default function ComposeBox({
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>{t('compose.minutes', "Dakika")}</label>
+                      <label className="text-xs mb-1 block" style={{ color: "var(--app-subtitle)" }}>{t('user.compose.minutes', "Dakika")}</label>
                       <select
                         value={pollMinutes}
                         onChange={(e) => setPollMinutes(Number(e.target.value))}
@@ -842,8 +842,8 @@ export default function ComposeBox({
                     className={`cursor-pointer hover:opacity-80 ${isAnonymous ? 'text-white' : ''}`}
                     style={{ color: isAnonymous ? 'white' : 'var(--app-global-link-color)' }}
                     onClick={() => setIsAnonymous(!isAnonymous)}
-                    aria-label={t('compose.anonymous_mode', "Anonim mod")}
-                    title={isAnonymous ? t('compose.disable_anonymous', "Anonim modu kapat") : t('compose.enable_anonymous', "Anonim modu aç")}
+                    aria-label={t('user.compose.anonymous_mode', "Anonim mod")}
+                    title={isAnonymous ? t('user.compose.disable_anonymous', "Anonim modu kapat") : t('user.compose.enable_anonymous', "Anonim modu aç")}
                   >
                     {isAnonymous ? (
                       <IconGhostFilled className="w-[20px] h-[20px] md:w-[23px] md:h-[23px] text-[#1DCD9F]" />
@@ -855,7 +855,7 @@ export default function ComposeBox({
 
                 <label htmlFor={photoUploadId} className={`cursor-pointer hover:opacity-80`} style={{ color: 'var(--app-global-link-color)' }}>
                   <IconPhoto className="h-4 w-4 md:h-5 md:w-5" />
-                  <span className="sr-only">{t('compose.add_photo', "Fotoğraf ekle")}</span>
+                  <span className="sr-only">{t('user.compose.add_photo', "Fotoğraf ekle")}</span>
                   <input
                     id={photoUploadId}
                     type="file"
@@ -863,13 +863,13 @@ export default function ComposeBox({
                     className="hidden"
                     onChange={handleMediaChange}
                     disabled={isLoading}
-                    aria-label={t('compose.add_photo', "Fotoğraf ekle")}
+                    aria-label={t('user.compose.add_photo', "Fotoğraf ekle")}
                   />
                 </label>
 
                 <label htmlFor={videoUploadId} className={`cursor-pointer hover:opacity-80`} style={{ color: 'var(--app-global-link-color)' }}>
                   <IconVideo className="h-4 w-4 md:h-5 md:w-5" />
-                  <span className="sr-only">{t('compose.add_video', "Video ekle")}</span>
+                  <span className="sr-only">{t('user.compose.add_video', "Video ekle")}</span>
                   <input
                     id={videoUploadId}
                     type="file"
@@ -877,7 +877,7 @@ export default function ComposeBox({
                     className="hidden"
                     onChange={handleMediaChange}
                     disabled={isLoading}
-                    aria-label={t('compose.add_video', "Video ekle")}
+                    aria-label={t('user.compose.add_video', "Video ekle")}
                   />
                 </label>
 
@@ -886,7 +886,7 @@ export default function ComposeBox({
                   className="cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}
                   onClick={toggleGifPicker}
                   data-gif-button
-                  aria-label={t('compose.add_gif', "GIF ekle")}
+                  aria-label={t('user.compose.add_gif', "GIF ekle")}
                   ref={gifButtonRef}
                 >
                   <IconGif className="w-[25px] h-[25px]" />
@@ -897,7 +897,7 @@ export default function ComposeBox({
                   className="hidden md:block cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}
                   onClick={toggleEmojiPicker}
                   data-emoji-button
-                  aria-label={t('compose.add_emoji', "Emoji ekle")}
+                  aria-label={t('user.compose.add_emoji', "Emoji ekle")}
                   ref={emojiButtonRef}
                 >
                   <IconMoodSmile className="h-4 w-4 md:h-5 md:w-5" />
@@ -907,7 +907,7 @@ export default function ComposeBox({
                   type="button"
                   className="cursor-pointer hover:opacity-80" style={{ color: 'var(--app-global-link-color)' }}
                   onClick={togglePoll}
-                  aria-label={t('compose.add_poll', "Anket ekle")}
+                  aria-label={t('user.compose.add_poll', "Anket ekle")}
                 >
                   <IconChartBar className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
@@ -930,7 +930,7 @@ export default function ComposeBox({
                     }`}
                   disabled={isLoading}
                 >
-                  {isLoading ? t('compose.posting', "Paylaşılıyor...") : (submitButtonText ? submitButtonText : (isReply ? t('compose.reply', "Yanıtla") : t('compose.post', "Paylaş")))}
+                  {isLoading ? t('user.compose.posting', "Paylaşılıyor...") : (submitButtonText ? submitButtonText : (isReply ? t('user.compose.reply', "Yanıtla") : t('user.compose.post', "Paylaş")))}
                 </button>
               </div>
             </div>
@@ -947,7 +947,7 @@ export default function ComposeBox({
                 >
                   <EmojiPicker
                     onEmojiClick={handleEmojiClick}
-                    searchPlaceHolder={t('compose.search_emoji', "Emoji ara...")}
+                    searchPlaceHolder={t('user.compose.search_emoji', "Emoji ara...")}
                     width="100%"
                     height={350}
                   />
@@ -970,7 +970,7 @@ export default function ComposeBox({
                           className="h-5"
                         />
                         <span className="text-[15px] font-medium" style={{ color: "var(--app-body-text)" }}>
-                          {t('compose.select_gif', "GIF Seç")}
+                          {t('user.compose.select_gif', "GIF Seç")}
                         </span>
                       </div>
                       <button
@@ -1003,7 +1003,7 @@ export default function ComposeBox({
                         border: none !important;
                     }
                   `}</style>
-                      <ErrorBoundary fallback={<div className="p-4 text-center" style={{ color: "var(--app-subtitle)" }}>{t('compose.gif_error', "GIF yüklenemedi.")}</div>}>
+                      <ErrorBoundary fallback={<div className="p-4 text-center" style={{ color: "var(--app-subtitle)" }}>{t('user.compose.gif_error', "GIF yüklenemedi.")}</div>}>
                         <GifPicker
                           tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || ""}
                           clientKey="riskbudur_web"
@@ -1034,7 +1034,7 @@ export default function ComposeBox({
                       --gpr-highlight-color: var(--app-accent) !important;
                   }
                 `}</style>
-                    <ErrorBoundary fallback={<div className="p-4 text-center text-gray-500">{t('compose.gif_error', "GIF yüklenemedi.")} API anahtarını kontrol edin.</div>}>
+                    <ErrorBoundary fallback={<div className="p-4 text-center text-gray-500">{t('user.compose.gif_error', "GIF yüklenemedi.")} API anahtarını kontrol edin.</div>}>
                       <GifPicker
                         tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || ""}
                         clientKey="riskbudur_web"

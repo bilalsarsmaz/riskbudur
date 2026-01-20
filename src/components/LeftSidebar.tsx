@@ -38,6 +38,26 @@ export default function LeftSidebar() {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null); // Initialized to null
+
+  // Logo fetch logic
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          setLogoUrl(data.site_logo || "/riskbudurlogo.png?v=2");
+        } else {
+          setLogoUrl("/riskbudurlogo.png?v=2");
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+        setLogoUrl("/riskbudurlogo.png?v=2");
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -102,6 +122,15 @@ export default function LeftSidebar() {
       fetchNotificationCount();
       fetchUnreadMessagesCount();
     }, 30000);
+
+    // Fetch Site Settings (Logo)
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.site_logo) setLogoUrl(data.site_logo);
+      })
+      .catch(console.error);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -182,13 +211,17 @@ export default function LeftSidebar() {
     <div className="px-2 w-full h-[calc(100vh-2rem)] sticky top-4 flex flex-col items-center xl:items-start" style={{ backgroundColor: 'var(--app-header-bg)' }}>
       <div className="mb-4 px-2">
         <Link href="/home" className="flex items-start justify-center xl:justify-start py-2 xl:pr-2 xl:pl-0">
-          <img src="/riskbudurlogo.png?v=2" alt="Logo" style={{ width: "32px", height: "auto", objectFit: "contain", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]" />
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" style={{ width: "36px", height: "auto", objectFit: "contain", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]" />
+          ) : (
+            <div style={{ width: "36px", height: "36px", marginRight: '5px' }} className="xl:mr-[3px] xl:mt-[2px]"></div>
+          )}
           <div className="hidden xl:flex flex-col justify-center" style={{ marginTop: '5px' }}>
-            <h1 className="text-xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
-              riskbudur
+            <h1 className="text-2xl font-extrabold font-montserrat leading-none" style={{ color: 'var(--app-body-text)' }}>
+              {t('common.site_name', 'riskbudur')}
             </h1>
-            <p className="text-[9px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
-              underground sosyal medya
+            <p className="text-[11px] font-medium font-montserrat text-right" style={{ color: 'var(--app-subtitle)', marginTop: '0px' }}>
+              {t('common.slogan', 'underground sosyal medya')}
             </p>
           </div>
         </Link>

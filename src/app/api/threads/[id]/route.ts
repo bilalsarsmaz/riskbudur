@@ -6,10 +6,11 @@ import { verifyToken } from "@/lib/auth";
 // Thread'in tum postlarini getir
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
     const threadRootId = BigInt(id);
 
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
